@@ -1,0 +1,67 @@
+services:
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+    # Healthcheck - inne kontenery poczekaja az Postgres bedzie GOTOWY
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy   # start dopiero gdy Postgres odpowiada
+    restart: always
+
+  electrolab_magazyn:
+    build: ./app/esn_magazyn
+    container_name: electrolab_magazyn
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./app/esn_magazyn/instance:/app/esn_magazyn/instance
+    env_file:
+      - .env
+    restart: always
+
+  adminer:
+    image: adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    restart: always
+    
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - web
+      - electrolab_magazyn
+    restart: always
+
+volumes:
+  postgres_data:    # Baza PostgreSQL (portal, uzytkownicy)
+  magazyn_data:     # Bazy SQLite magazynu

@@ -1,0 +1,24 @@
+# Zmienne środowiskowe (Najważniejsze)
+.env
+
+# Bazy danych SQLite magazynu
+instance/
+*.db
+*.sqlite3
+
+# Pliki wgrywane przez użytkowników (Uploads)
+static/avatars/
+static/projects/
+static/catalog/
+
+# Środowisko Pythona i cache
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.pytest_cache/
+
+# Pliki systemowe
+.DS_Store
+Thumbs.db

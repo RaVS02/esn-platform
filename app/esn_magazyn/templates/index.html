@@ -1,0 +1,1449 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ElectroLab – Mój Magazyn</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="/magazyn/static/magazyn.css?v=1.2">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav id="navbar">
+  <div class="nav-logo">ESN<span>/RS</span></div>
+  <div class="nav-links">
+    <a class="nav-link" href="/" style="text-decoration: none;">← Portal</a>
+    <a class="nav-link active" id="nav-components" onclick="switchView('components',this,'nav')">Komponenty</a>
+    <a class="nav-link" id="nav-projects" onclick="switchView('projects',this,'nav')">Projekty</a>   
+  </div>
+  <div class="nav-right">
+    <span class="nav-badge" id="ai-provider-badge"></span>
+    <button class="ai-toggle-btn" id="ai-toggle-btn" onclick="toggleAI()"><i class="fa-solid fa-robot"></i> AI Asystent</button>
+  </div>
+</nav>
+
+<!-- APP -->
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <span class="sidebar-label">Widok</span>
+      <button class="sidebar-btn active" id="sb-components" onclick="switchView('components',this,'sb')">
+        <span class="sico"><i class="fa-solid fa-microchip"></i></span>Komponenty
+      </button>
+      <button class="sidebar-btn" id="sb-projects" onclick="switchView('projects',this,'sb')">
+        <span class="sico"><i class="fa-solid fa-screwdriver-wrench"></i></span>Projekty
+      </button>
+    </div>
+    <hr class="sidebar-hr">
+    <div class="sidebar-section">
+      <span class="sidebar-label">Kategorie</span>
+      <div id="cat-sidebar"></div>
+      <button class="sidebar-btn" onclick="openAddCat()" style="color:var(--text3)">
+        <span class="sico">＋</span>Nowa kategoria
+      </button>
+    </div>
+    <hr class="sidebar-hr">
+    <div class="sidebar-section">
+      <span class="sidebar-label">Filtry</span>
+      <button class="sidebar-btn" id="sb-lowstock" onclick="toggleLowStock(this)">
+      <span class="sico"><i class="fa-solid fa-triangle-exclamation"></i></span>Niski stan
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- VIEW: COMPONENTS -->
+    <div class="view active" id="view-components">
+      <div class="inv-hero">
+        <div>
+          <div class="hero-tag">Mój Magazyn</div>
+          <h1 class="inv-title">Moje Komponenty <em>Elektroniczne</em></h1>
+        </div>
+        <button class="btn-action primary" onclick="openAddCompModal()">+ Dodaj komponent</button>
+      </div>
+
+      <div class="stats-bar">
+        <div class="stat-cell"><div class="stat-val" id="s-components">–</div><div class="stat-label">Komponentów</div></div>
+        <div class="stat-cell"><div class="stat-val" id="s-quantity">–</div><div class="stat-label">Łączna ilość</div></div>
+        <div class="stat-cell warn"><div class="stat-val" id="s-low">–</div><div class="stat-label">Niski stan</div></div>
+        <div class="stat-cell ok"><div class="stat-val" id="s-projects">–</div><div class="stat-label">Aktywne proj.</div></div>
+        <div class="stat-cell"><div class="stat-val" id="s-cats">–</div><div class="stat-label">Kategorii</div></div>
+      </div>
+
+      <div class="toolbar">
+        <div class="search-wrap">
+          <span class="search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
+          <input type="text" id="search-input" placeholder="Szukaj komponentów..." oninput="onSearch(this.value)">
+        </div>
+      </div>
+
+      <div class="filter-bar" id="cat-filter-bar">
+        <button class="chip-btn active" onclick="filterCat(null,this)">Wszystkie</button>
+      </div>
+
+      <div class="content-area">
+        <div class="comp-grid" id="comp-grid">
+          <div class="empty-state"><div class="e-icon">⏳</div><div class="e-text">Ładowanie...</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW: PROJECTS -->
+    <div class="view" id="view-projects">
+      <div class="inv-hero">
+        <div>
+          <div class="hero-tag">Mój Magazyn</div>
+          <h1 class="inv-title">Projekty <em>&amp; Przypisania</em></h1>
+        </div>
+        <button class="btn-action primary" onclick="openNewProjModal()">+ Nowy projekt</button>
+      </div>
+      <div class="content-area">
+        <div class="project-list" id="project-list">
+          <div class="empty-state"><div class="e-icon">⏳</div><div class="e-text">Ładowanie...</div></div>
+        </div>
+      </div>
+    </div>
+    
+  </main>
+</div>
+
+<!-- DETAIL PANEL -->
+<div class="detail-panel" id="detail-panel">
+  <div class="detail-header">
+    <span class="detail-icon" id="dp-icon">🔧</span>
+    <div style="flex:1;min-width:0">
+      <div class="detail-name" id="dp-name"></div>
+      <div class="detail-symbol" id="dp-symbol"></div>
+    </div>
+    <button class="btn-action" style="font-size:10px;padding:5px 10px" onclick="editCurrentComp()"><i class="fa-solid fa-pen-to-square"></i> Edytuj</button>
+    <button class="close-x" onclick="closeDetail()">✕</button>
+  </div>
+  <div class="detail-body" id="dp-body"></div>
+</div>
+
+<!-- AI PANEL -->
+<div class="ai-panel" id="ai-panel">
+  <div class="ai-panel-header">
+    <div class="ai-logo-box"><i class="fa-solid fa-robot"></i></div>
+    <div style="flex:1">
+      <div class="ai-title-text">ESN Asystent</div>
+      <div class="ai-subtitle" id="ai-provider-label">initializing...</div>
+    </div>
+    <button class="close-x" onclick="toggleAI()">✕</button>
+  </div>
+
+  <div class="ai-session-bar">
+    <span class="ai-session-info" id="ai-session-info">Sesja #1 · 0 wiad.</span>
+    <button class="ai-new-session" onclick="newAISession()" title="Wyczyść historię i zacznij od nowa">⟳ Nowa sesja</button>
+  </div>
+
+  <div class="ai-messages" id="ai-messages"></div>
+
+  <div class="ai-quick-row">
+    <button class="ai-quick-btn" onclick="aiQuick('Co mogę zbudować z dostępnych komponentów?')"><i class="fa-regular fa-lightbulb"></i> Pomysły</button>
+    <button class="ai-quick-btn" onclick="aiQuick('Czego mi brakuje i co powinienem dokupić?')"><i class="fa-solid fa-shopping-cart"></i> Braki</button>
+    <button class="ai-quick-btn" onclick="aiQuick('Sprawdź niskie stany i ostrzeż mnie.')"><i class="fa-solid fa-triangle-exclamation"></i> Stan</button>
+    <button class="ai-quick-btn" onclick="aiQuick('Na co uważać używając moich komponentów?')"><i class="fa-solid fa-question"></i> Uwagi</button>
+  </div>
+
+  <div class="ai-input-area">
+    <textarea class="ai-textarea" id="ai-input" placeholder="Zapytaj o komponenty, projekt, dobór elementów..." rows="1" onkeydown="aiKeydown(event)"></textarea>
+    <button class="ai-send" id="ai-send" onclick="sendAI()">➤</button>
+  </div>
+</div>
+
+<!-- ══ MODALS ══ -->
+
+<!-- COMP MODAL -->
+<div class="modal-overlay" id="comp-modal">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="comp-modal-title">Dodaj komponent</span>
+      <button class="close-x" onclick="closeModal('comp-modal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label"><i class="fa-solid fa-magnifying-glass"></i> Wybierz z katalogu ESN (autouzupełnienie)</label>
+      <select class="form-control" id="f-catalog-pick" onchange="autofillComponent(this.value)">
+        <option value="">— wpisz ręcznie lub wybierz z katalogu —</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nazwa *</label>
+      <input class="form-control" id="f-name" placeholder="np. Rezystor 10kΩ 1/4W">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Symbol</label>
+        <input class="form-control" id="f-symbol" placeholder="R, C, Q, U...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Kategoria *</label>
+        <select class="form-control" id="f-category"></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Ilość całkowita</label>
+        <input type="number" class="form-control" id="f-qty-total" value="0" min="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Dostępne</label>
+        <input type="number" class="form-control" id="f-qty-avail" value="0" min="0">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Jednostka</label>
+        <input class="form-control" id="f-unit" value="szt.">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Min. stan (alarm)</label>
+        <input type="number" class="form-control" id="f-min-stock" value="0" min="0">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Zastosowanie</label>
+        <input class="form-control" id="f-applications" list="app-list" placeholder="Wybierz lub wpisz...">
+        <datalist id="app-list"></datalist>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Lokalizacja</label>
+        <input class="form-control" id="f-location" placeholder="np. Szuflada A1, Półka C2">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tagi (oddzielone przecinkiem)</label>
+      <div style="margin-bottom: 5px; font-size: 11px; color: var(--text3); font-family: var(--mono);">Szybkie tagi:</div>
+      <div class="filter-chips" id="magazyn-quick-tags" style="margin-bottom: 8px; display: flex; flex-wrap: wrap; gap: 6px;"></div>
+      <input class="form-control" id="f-tags" placeholder="THT, 5V, NPN, SMD">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notatki</label>
+      <textarea class="form-control" id="f-notes" rows="2" placeholder="Specyfikacje, uwagi..."></textarea>
+    </div>
+      <div class="form-group">
+      <label class="form-label">Specyfikacja techniczna</label>
+      <textarea class="form-control" id="f-specs" rows="4" placeholder="Wpisz linijka pod linijką:&#10;Napięcie: 5V&#10;Interfejs: I2C&#10;&#10;Lub użyj formatu:&#10;[Napięcie: 5V], [Interfejs: I2C]"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Link do datasheetu</label>
+      <input type="url" class="form-control" id="f-datasheet" placeholder="https://...">
+    </div>
+    <div class="form-actions">
+      <button class="btn-action" onclick="closeModal('comp-modal')">Anuluj</button>
+      <button class="btn-action primary" onclick="saveComp()">Zapisz komponent</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROJECT MODAL -->
+<div class="modal-overlay" id="proj-modal">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="proj-modal-title">Nowy projekt</span>
+      <button class="close-x" onclick="closeModal('proj-modal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nazwa projektu *</label>
+      <input class="form-control" id="pf-name" placeholder="np. Stacja meteo IoT">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Opis</label>
+      <textarea class="form-control" id="pf-desc" rows="2" placeholder="Czym jest ten projekt?"></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select class="form-control" id="pf-status">
+          <option value="planning">Planowanie</option>
+          <option value="active">Aktywny</option>
+          <option value="paused">Wstrzymany</option>
+          <option value="completed">Ukończony</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Kolor znacznika</label>
+        <input type="color" class="form-control" id="pf-color" value="#56e1fd" style="height:41px;padding:4px 8px">
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn-action" onclick="closeModal('proj-modal')">Anuluj</button>
+      <button class="btn-action primary" onclick="saveProject()">Zapisz projekt</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="edit-pc-modal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-title">
+      <span>Edytuj komponent w projekcie</span>
+      <button class="close-x" onclick="closeModal('edit-pc-modal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label" id="epc-qty-label">Ilość</label>
+      <input type="number" class="form-control" id="epc-qty" min="1" oninput="if(this.max && parseInt(this.value) > parseInt(this.max)) this.value = this.max;">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notatka</label>
+      <textarea class="form-control" id="epc-notes" rows="3"></textarea>
+    </div>
+    <div class="form-actions">
+      <button class="btn-action" onclick="closeModal('edit-pc-modal')">Anuluj</button>
+      <button class="btn-action primary" onclick="savePCChange()">Zapisz zmiany</button>
+    </div>
+  </div>
+</div>
+
+<!-- ASSIGN MODAL -->
+<div class="modal-overlay" id="assign-modal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-title">
+      <span id="assign-modal-title">Przypisz do projektu</span>
+      <button class="close-x" onclick="closeModal('assign-modal')">✕</button>
+    </div>
+
+    <div class="callout-note" id="assign-comp-info" style="margin-bottom:14px;font-family:var(--mono);font-size:12px;display:none;"></div>
+
+    <div class="form-group" id="group-atp-proj">
+      <label class="form-label">Wybierz Projekt</label>
+      <select class="form-control" id="atp-proj"></select>
+    </div>
+
+    <div class="form-group" id="group-atp-comp" style="display:none;">
+      <label class="form-label">Wybierz Komponent</label>
+      <select class="form-control" id="atp-comp"></select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" id="atp-qty-label">Ilość do użycia</label>
+      <input type="number" class="form-control" id="atp-qty" value="1" min="1" oninput="if(this.max && parseInt(this.value) > parseInt(this.max)) this.value = this.max;">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notatka (opcjonalnie)</label>
+      <input class="form-control" id="atp-note" placeholder="np. użyte jako wzmacniacz">
+    </div>
+    <div class="form-actions">
+      <button class="btn-action" onclick="closeModal('assign-modal')">Anuluj</button>
+      <button class="btn-action primary" onclick="doAssign()">Przypisz</button>
+    </div>
+  </div>
+</div>
+
+<!-- CATEGORY MODAL -->
+<div class="modal-overlay" id="cat-modal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-title">
+      <span>Nowa kategoria</span>
+      <button class="close-x" onclick="closeModal('cat-modal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nazwa</label>
+      <input class="form-control" id="cf-name" placeholder="np. Zasilacze">
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="flex:2">
+        <label class="form-label">Emoji / ikona</label>
+        <input class="form-control" id="cf-icon" placeholder="🔌 lub fa-solid fa-bolt">
+        <div style="font-family:var(--mono); font-size:9px; color:var(--text3); margin-top:5px; line-height:1.4;">
+          Wklej emotkę (np. 📦) lub wpisz klasę <b>FontAwesome</b> (np. fa-solid fa-robot).
+        </div>
+      </div>
+      <div class="form-group" style="flex:1">
+        <label class="form-label">Kolor</label>
+        <input type="color" class="form-control" id="cf-color" value="#56e1fd" style="height:41px;padding:4px 8px; width:100%;">
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn-action danger" id="btn-del-cat" style="display:none; margin-right:auto;" onclick="delCat()">Usuń</button>
+      <button class="btn-action" onclick="closeModal('cat-modal')">Anuluj</button>
+      <button class="btn-action primary" id="btn-save-cat" onclick="saveCat()">Utwórz</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<!-- ══ JS ══ -->
+<script>
+const S = {
+  components: [], categories: [], projects: [], catalogItems: [], applications: [],
+  view: 'components', filterCat: null, filterLowStock: false, searchQ: '',
+  editingCompId: null, editingProjId: null, selectedCompId: null, assigningCompId: null,
+  aiHistory: [], aiSession: 1, aiMsgCount: 0,
+  pendingCatalogId: null,   
+};
+
+// ── INIT ──────────────────────────────────────────────────────────
+async function init() {
+  await loadTags(); // <--- NOWE
+  await loadApplications();
+  await loadCategories();
+  await Promise.all([loadComponents(), loadProjects(), loadStats()]);
+  loadAIProvider();
+  aiWelcome();
+  loadCatalog();
+}
+
+// --- NOWA FUNKCJA ---
+async function loadTags() {
+  try {
+    const res = await fetch('/api/catalog/tags');
+    if(res.ok) {
+      const tags = await res.json();
+      const container = document.getElementById('magazyn-quick-tags');
+      if(container) {
+        container.innerHTML = tags.map(t => 
+          `<button type="button" class="chip-btn" style="padding: 4px 8px; font-size: 10px;" onclick="addQuickMagazynTag('${t}')">${t}</button>`
+        ).join('');
+      }
+    }
+  } catch(e) { console.warn("Nie załadowano tagów"); }
+}
+
+function addQuickMagazynTag(tag) {
+  const input = document.getElementById('f-tags');
+  let currentTags = input.value.split(',').map(t => t.trim()).filter(t => t);
+  if (!currentTags.includes(tag)) {
+      currentTags.push(tag);
+      input.value = currentTags.join(', ');
+  }
+}
+
+async function loadApplications() {
+  try {
+    const res = await fetch('/api/catalog/applications');
+    if(res.ok) {
+      S.applications = await res.json();
+      const dl = document.getElementById('app-list');
+      if(dl) {
+        // Wypełniamy listę podpowiedzi
+        dl.innerHTML = S.applications.map(a => `<option value="${a}">`).join('');
+      }
+    }
+  } catch(e) { console.warn("Nie załadowano zastosowań"); }
+}
+
+// ── API ───────────────────────────────────────────────────────────
+async function api(endpoint, options = {}) {
+  const url = '/magazyn' + endpoint; 
+
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers
+    }
+  });
+  
+  if (!res.ok) {
+    let errMsg = `HTTP ${res.status}`;
+    try {
+      // Próbujemy wyciągnąć ludzką wiadomość o błędzie z backendu
+      const errData = await res.json();
+      if (errData.error) errMsg = errData.error;
+    } catch(e) {}
+    
+    // Zwracamy błąd, aby kod wyżej mógł go złapać w bloku catch i wrzucić do toast()
+    throw new Error(errMsg); 
+  }
+  return res.json();
+}
+// ── STATS ─────────────────────────────────────────────────────────
+async function loadStats() {
+  const s = await api('/api/stats');
+  document.getElementById('s-components').textContent = s.total_components;
+  document.getElementById('s-quantity').textContent   = s.total_quantity;
+  document.getElementById('s-low').textContent        = s.low_stock;
+  document.getElementById('s-projects').textContent   = s.active_projects;
+  document.getElementById('s-cats').textContent       = s.categories;
+}
+
+// ── CATEGORIES ────────────────────────────────────────────────────
+async function loadCategories() {
+  S.categories = await api('/api/categories');
+  renderCatSidebar(); renderCatFilters(); renderCatSelect();
+}
+
+let editingCatId = null; // Zmienna stanu dla edytowanej kategorii
+
+function renderCatSidebar() {
+  const official = S.categories.filter(c => !c.is_custom);
+  const custom = S.categories.filter(c => c.is_custom);
+
+  let html = official.map(c => `
+    <button class="sidebar-btn ${S.filterCat==c.id?'active':''}" style="color:${c.color}" onclick="filterCat(${c.id},this,'sb')">
+      <span class="sico">${renderIcon(c.icon)}</span><span style="flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;">${c.name}</span>
+    </button>`).join('');
+
+  if (custom.length > 0) {
+    html += `<div class="sidebar-label" style="margin-top:16px;">Własne kategorie</div>`;
+    html += custom.map(c => `
+      <div style="display:flex; align-items:center; width:100%;">
+        <button class="sidebar-btn ${S.filterCat==c.id?'active':''}" style="color:${c.color}; flex:1;" onclick="filterCat(${c.id},this,'sb')">
+          <span class="sico">${renderIcon(c.icon)}</span></i></span><span style="flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;">${c.name}</span>
+        </button>
+        <button onclick="openEditCat(${c.id})" style="background:none; border:none; cursor:pointer; font-size:11px; color:var(--text3); padding:0 8px; transition:0.2s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'" title="Edytuj kategorię"><i class="fa-regular fa-pen"></i></button>
+      </div>`).join('');
+  }
+  document.getElementById('cat-sidebar').innerHTML = html;
+}
+
+function renderCatFilters() {
+  // Przycisk "Wszystkie" jest teraz czysty, a mapa korzysta z renderIcon()
+  document.getElementById('cat-filter-bar').innerHTML =
+    `<button class="chip-btn ${S.filterCat===null?'active':''}" onclick="filterCat(null,this)">Wszystkie</button>` +
+    S.categories.map(c=>`<button class="chip-btn ${S.filterCat==c.id?'active':''}" onclick="filterCat(${c.id},this)">${renderIcon(c.icon)} ${c.name}</button>`).join('') +
+    `<button class="chip-btn ${S.filterLowStock?'active':''}" onclick="toggleLowStock(this)"><i class="fa-solid fa-triangle-exclamation"></i> Niski stan</button>`;
+}
+
+function renderCatSelect() {
+  // Naprawione podwójne przypisanie
+  document.getElementById('f-category').innerHTML = S.categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+}
+
+function openAddCat() {
+  editingCatId = null;
+  document.querySelector('#cat-modal .modal-title span').textContent = 'Nowa kategoria';
+  document.getElementById('cf-name').value = '';
+  document.getElementById('cf-icon').value = '';
+  document.getElementById('cf-color').value = '#56e1fd';
+  document.getElementById('btn-del-cat').style.display = 'none'; // Ukrywamy usuwanie przy tworzeniu
+  document.getElementById('btn-save-cat').textContent = 'Utwórz';
+  openModal('cat-modal');
+}
+
+function openEditCat(id) {
+  const c = S.categories.find(x => x.id === id);
+  if(!c) return;
+  editingCatId = id;
+  document.querySelector('#cat-modal .modal-title span').textContent = 'Edytuj kategorię';
+  document.getElementById('cf-name').value = c.name;
+  document.getElementById('cf-icon').value = c.icon;
+  document.getElementById('cf-color').value = c.color;
+  document.getElementById('btn-del-cat').style.display = 'block'; // Pokazujemy usuwanie przy edycji
+  document.getElementById('btn-save-cat').textContent = 'Zapisz';
+  openModal('cat-modal');
+}
+
+async function delCat() {
+  if (!editingCatId) return;
+  if (!confirm('Na pewno usunąć tę kategorię?')) return;
+  try {
+    const res = await api(`/api/categories/${editingCatId}`, {method: 'DELETE'});
+    if(res.error) {
+      toast(res.error, 'error'); // Wyświetla komunikat z backendu jeśli kategoria nie jest pusta
+      return;
+    }
+    toast('Kategoria usunięta', 'success');
+    closeModal('cat-modal');
+    if (S.filterCat === editingCatId) filterCat(null, null); // Reset filtra jeśli usunęliśmy aktywny
+    await loadCategories();
+    loadStats();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// Podepnij wyczyszczenie ID przy zamykaniu modala
+document.querySelector('#cat-modal .close-x').addEventListener('click', () => { editingCatId = null; });
+
+async function saveCat() {
+  const name = document.getElementById('cf-name').value.trim();
+  if (!name) return toast('Podaj nazwę', 'warn');
+
+  const data = {
+    name,
+    icon: document.getElementById('cf-icon').value || '🔧',
+    color: document.getElementById('cf-color').value
+  };
+
+  try {
+    if (editingCatId) {
+      await api(`/api/categories/${editingCatId}`, {method: 'PUT', body: JSON.stringify(data)});
+      toast('Kategoria zaktualizowana', 'success');
+      editingCatId = null;
+    } else {
+      await api('/api/categories', {method: 'POST', body: JSON.stringify(data)});
+      toast('Kategoria dodana', 'success');
+    }
+    closeModal('cat-modal');
+    document.getElementById('cf-name').value = '';
+    document.getElementById('cf-icon').value = '';
+
+    // Przywrócenie tytułu okienka
+    document.querySelector('#cat-modal .modal-title span').textContent = 'Nowa kategoria';
+
+    await loadCategories();
+    loadStats();
+  } catch(e) {
+    toast(e.message, 'error');
+  }
+}
+
+// ── COMPONENTS ────────────────────────────────────────────────────
+async function loadComponents() {
+  const p = new URLSearchParams();
+  if (S.searchQ)        p.set('q', S.searchQ);
+  if (S.filterCat)      p.set('category', S.filterCat);
+  if (S.filterLowStock) p.set('low_stock','1');
+  S.components = await api(`/api/components?${p}`);
+  renderComps();
+}
+
+function renderComps() {
+  const grid = document.getElementById('comp-grid');
+  if (!S.components.length) {
+    grid.innerHTML=`<div class="empty-state"><div class="e-icon"><i class="fa-solid fa-box-open"></i></div><div class="e-text">Brak komponentów</div></div>`;
+    return;
+  }
+  grid.innerHTML = S.components.map(c => {
+    const pct = c.quantity_total>0 ? Math.round(c.quantity_available/c.quantity_total*100) : 0;
+    const tags = (c.tags||[]).slice(0,3);
+    const mainApp = (c.applications && c.applications.length > 0) ? c.applications[0] : null; // <--- Pierwsze zastosowanie
+
+    return `
+    <div class="comp-card ${c.low_stock?'low-stock':''}"
+         style="--cat-color:${c.category_color}"
+         onclick="openDetail(${c.id})">
+      <div class="comp-card-header">
+        <div class="comp-icon" style="color: ${c.category_color}">${renderIcon(c.category_icon)}</div>
+        <div style="min-width:0">
+          <div class="comp-name">${c.name}</div>
+          <div class="comp-symbol">${c.symbol||''}${c.location?' · '+c.location:''}</div>
+        </div>
+      </div>
+      
+      ${mainApp ? `<div style="font-size:10px; color:var(--accent); font-family:var(--mono); margin-bottom:8px;"><i class="fa-solid fa-crosshairs"></i> ${mainApp.toUpperCase()}</div>` : ''}
+
+      <div class="comp-qty-row">
+        <div>
+          <div class="qty-num">${c.quantity_available}</div>
+          <div class="qty-of">/ ${c.quantity_total} ${c.unit}</div>
+        </div>
+        <div class="qty-bar"><div class="qty-fill" style="width:${pct}%;background:${c.category_color}"></div></div>
+      </div>
+      ${c.low_stock?'<div class="low-badge"><i class="fa-solid fa-triangle-exclamation"></i> niski stan</div>':''}
+      ${tags.length?`<div class="comp-tags">${tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>`:''}
+      <div class="comp-quick-actions" onclick="event.stopPropagation()">
+        <button class="btn-action" style="padding:4px 8px;font-size:10px" onclick="quickAdj(${c.id},1)">+1</button>
+        <button class="btn-action" style="padding:4px 8px;font-size:10px" onclick="quickAdj(${c.id},-1)">−1</button>
+        <button class="btn-action" style="padding:4px 8px;font-size:10px" onclick="openAssign(${c.id})">⚲</button>
+        <button class="btn-action danger" style="padding:4px 8px;font-size:10px" onclick="delComp(${c.id})">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function quickAdj(id, delta) {
+  try {
+    const c = await api(`/api/components/${id}/adjust`,{method:'POST',body:JSON.stringify({delta,field:'available'})});
+    const i = S.components.findIndex(x=>x.id===id);
+    if(i>=0) S.components[i]=c;
+    renderComps(); loadStats();
+    toast(`${delta>0?'+':''}${delta} · ${c.name}`,'success');
+  } catch(e){ toast(e.message,'error'); }
+}
+
+async function delComp(id) {
+  if(!confirm('Usunąć komponent?')) return;
+  try {
+    await api(`/api/components/${id}`,{method:'DELETE'});
+    await loadComponents(); loadStats();
+    toast('Usunięto komponent','success');
+  } catch(e){ toast(e.message,'error'); }
+}
+
+// ── DETAIL PANEL ──────────────────────────────────────────────────
+async function openDetail(id) {
+  S.selectedCompId = id;
+  const c = await api(`/api/components/${id}`);
+  document.getElementById('dp-icon').innerHTML = renderIcon(c.category_icon);
+  document.getElementById('dp-name').textContent   = c.name;
+  document.getElementById('dp-symbol').textContent = `${c.symbol||''} ${c.category||''}`.trim();
+
+  const pct = c.quantity_total>0 ? Math.round(c.quantity_available/c.quantity_total*100) : 0;
+
+  document.getElementById('dp-body').innerHTML = `
+    <div class="detail-section">
+      <div class="section-title">Stan magazynowy</div>
+      <div class="adj-row">
+        <button class="adj-btn" onclick="adjDetail(-5)">−5</button>
+        <button class="adj-btn" onclick="adjDetail(-1)">−</button>
+        <input type="number" id="dp-avail-input" value="${c.quantity_available}"
+               style="width:52px; height:30px; border-radius:6px; border:1px solid var(--border); background:var(--bg3); color:var(--accent); font-family:var(--mono); font-size:18px; font-weight:700; text-align:center; outline:none;"
+               onchange="setDetailQty(this.value)">
+        <button class="adj-btn" onclick="adjDetail(1)">+</button>
+        <button class="adj-btn" onclick="adjDetail(5)">+5</button>
+        <span class="adj-note" id="dp-total-note">/ ${c.quantity_total} ${c.unit}</span>
+      </div>
+      <div class="qty-bar" style="margin-top:10px;height:4px">
+        <div class="qty-fill" id="dp-bar" style="width:${pct}%;background:${c.category_color}"></div>
+      </div>
+      ${c.low_stock?'<div class="low-badge" style="margin-top:10px"><i class="fa-solid fa-triangle-exclamation"></i> Niski stan – uzupełnij zapasy</div>':''}
+    </div>
+
+    <div class="detail-section">
+      <div class="section-title">Informacje</div>
+      <table class="info-table">
+        <tbody id="dp-info-table">
+          <tr><td>Kategoria</td><td>${renderIcon(c.category_icon)} ${c.category}</td></tr>
+          <tr><td>Zastosowanie</td><td style="color:var(--text2)">${(c.applications||[]).join(', ') || 'Brak'}</td></tr>
+          ${c.location?`<tr><td>Lokalizacja</td><td>${c.location}</td></tr>`:''}
+          <tr><td>Dostępne</td><td style="color:var(--accent)">${c.quantity_available} ${c.unit}</td></tr>
+          <tr><td>W użyciu</td><td>${c.quantity_used} ${c.unit}</td></tr>
+          <tr><td>Łącznie</td><td>${c.quantity_total} ${c.unit}</td></tr>
+          <tr><td>Min. stan</td><td>${c.min_stock} ${c.unit}</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    ${c.notes?`<div class="detail-section"><div class="section-title">Notatki</div><p style="font-size:13px;color:var(--text2);line-height:1.65">${c.notes}</p></div>`:''}
+    ${c.specs ? `
+    <div class="detail-section">
+      <div class="section-title">Specyfikacja techniczna</div>
+      ${formatSpecsToTable(c.specs)}
+    </div>` : ''}
+    ${(c.tags||[]).length?`<div class="detail-section"><div class="section-title">Tagi</div><div class="comp-tags">${c.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div></div>`:''}
+    ${c.datasheet_url?`<div class="detail-section"><a href="${c.datasheet_url}" target="_blank" class="btn-action" ><i class="fa-solid fa-file-pdf"></i> Otwórz datasheet</a></div>`:''}
+
+    <div class="detail-section">
+      <div class="section-title">Przypisane projekty (${c.projects.length})</div>
+      ${c.projects.length
+        ? `<table class="proj-comp-table" style="table-layout: fixed; width: 100%;">
+            <thead><tr><th style="width: 50%;">Projekt</th><th style="width: 20%;">Ilość</th><th style="width: 30%;">Status</th></tr></thead>
+            <tbody>${c.projects.map(pc=>`
+              <tr>
+                <td style="font-family:var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${pc.project_name}">
+                  ${pc.project_name}
+                </td>
+                <td style="color:var(--accent);font-family:var(--mono)">${pc.quantity_used}×</td>
+                <td>${pillHtml(pc.status)}</td>
+              </tr>`).join('')}
+            </tbody>
+          </table>`
+        : `<p style="font-family:var(--mono);font-size:11px;color:var(--text3)">Nie przypisano do żadnego projektu</p>`}
+      <button class="btn-action" style="margin-top:10px;font-size:10px" onclick="openAssign(${c.id})">⚲ Przypisz do projektu</button>
+    </div>
+
+    <div style="display:flex;gap:8px;padding-top:14px;border-top:1px solid var(--border)">
+      <button class="btn-action" onclick="editCurrentComp()"><i class="fa-solid fa-pen-to-square"></i> Edytuj</button>
+      <button class="btn-action danger" onclick="delComp(${c.id})"><i class="fa-solid fa-trash"></i> Usuń</button>
+    </div>
+  `;
+  document.getElementById('detail-panel').classList.add('open');
+}
+
+// Obsługa wpisywania ręcznego
+async function setDetailQty(val) {
+  if(!S.selectedCompId) return;
+  try {
+    const c = await api(`/api/components/${S.selectedCompId}/adjust`, {
+      method:'POST', body:JSON.stringify({set_available: parseInt(val)})
+    });
+    updateDetailView(c);
+  } catch(e){ toast(e.message,'error'); }
+}
+
+// Zaktualizowana funkcja przycisków +1/-1
+async function adjDetail(delta) {
+  if(!S.selectedCompId) return;
+  try {
+    const c = await api(`/api/components/${S.selectedCompId}/adjust`,{method:'POST',body:JSON.stringify({delta,field:'available'})});
+    updateDetailView(c);
+  } catch(e){ toast(e.message,'error'); }
+}
+
+// Pomocnicza funkcja odświeżająca na żywo panel boczny
+function updateDetailView(c) {
+  document.getElementById('dp-avail-input').value = c.quantity_available;
+  const pct = c.quantity_total>0 ? Math.round(c.quantity_available/c.quantity_total*100) : 0;
+  document.getElementById('dp-bar').style.width = pct+'%';
+  document.getElementById('dp-total-note').textContent = `/ ${c.quantity_total} ${c.unit}`;
+
+  // Odświeżenie tabelki z informacjami
+  document.getElementById('dp-info-table').innerHTML = `
+    <tr><td>Kategoria</td><td><span style="color:${c.category_color}">${renderIcon(c.category_icon)}</span> ${c.category}</td></tr>
+    <tr><td>Zastosowanie</td><td style="color:var(--text2)">${(c.applications||[]).join(', ') || 'Brak'}</td></tr>
+    ${c.location?`<tr><td>Lokalizacja</td><td>${c.location}</td></tr>`:''}
+    <tr><td>Dostępne</td><td style="color:var(--accent)">${c.quantity_available} ${c.unit}</td></tr>
+    <tr><td>W użyciu</td><td>${c.quantity_used} ${c.unit}</td></tr>
+    <tr><td>Łącznie</td><td>${c.quantity_total} ${c.unit}</td></tr>
+    <tr><td>Min. stan</td><td>${c.min_stock} ${c.unit}</td></tr>
+  `;
+  const i = S.components.findIndex(x=>x.id===c.id);
+  if(i>=0) S.components[i]=c;
+  renderComps(); loadStats();
+}
+
+function closeDetail() {
+  document.getElementById('detail-panel').classList.remove('open');
+  S.selectedCompId=null;
+}
+
+// ── ADD / EDIT COMPONENT ──────────────────────────────────────────
+function openAddCompModal() {
+  S.editingCompId = null;
+  S.pendingCatalogId = null;
+  document.getElementById('comp-modal-title').textContent='Dodaj komponent';
+  ['f-name','f-symbol','f-location','f-tags','f-notes','f-datasheet','f-specs', 'f-applications'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-qty-total').value='0';
+  document.getElementById('f-qty-avail').value='0';
+  document.getElementById('f-unit').value='szt.';
+  document.getElementById('f-min-stock').value='0';
+  openModal('comp-modal');
+}
+
+async function editCurrentComp() {
+  if(!S.selectedCompId) return;
+  const c = S.components.find(x=>x.id===S.selectedCompId) || await api(`/api/components/${S.selectedCompId}`);
+  S.editingCompId=c.id;
+  document.getElementById('comp-modal-title').textContent='Edytuj komponent';
+  document.getElementById('f-name').value      = c.name;
+  document.getElementById('f-symbol').value    = c.symbol||'';
+  document.getElementById('f-category').value  = c.category_id;
+  document.getElementById('f-applications').value = (c.applications && c.applications.length > 0) ? c.applications[0] : '';
+  document.getElementById('f-qty-total').value = c.quantity_total;
+  document.getElementById('f-qty-avail').value = c.quantity_available;
+  document.getElementById('f-unit').value      = c.unit;
+  document.getElementById('f-location').value  = c.location||'';
+  document.getElementById('f-tags').value      = (c.tags||[]).join(', ');
+  document.getElementById('f-notes').value     = c.notes||'';
+  document.getElementById('f-datasheet').value = c.datasheet_url||'';
+  document.getElementById('f-min-stock').value = c.min_stock;
+  document.getElementById('f-specs').value     = c.specs||'';
+  openModal('comp-modal');
+}
+
+async function saveComp() {
+  const name = document.getElementById('f-name').value.trim();
+  if(!name) return toast('Podaj nazwę komponentu','warn');
+  
+  const appVal = document.getElementById('f-applications').value.trim();
+  
+  const data = {
+    name, symbol: document.getElementById('f-symbol').value.trim(),
+    category_id: parseInt(document.getElementById('f-category').value),
+    applications: appVal ? [appVal] : [], // Wysyłamy jako jednoelementową tablicę
+    quantity_total: parseInt(document.getElementById('f-qty-total').value)||0,
+    quantity_available: parseInt(document.getElementById('f-qty-avail').value)||0,
+    unit: document.getElementById('f-unit').value||'szt.',
+    location: document.getElementById('f-location').value.trim(),
+    tags: document.getElementById('f-tags').value.split(',').map(t=>t.trim()).filter(Boolean),
+    notes: document.getElementById('f-notes').value.trim(),
+    datasheet_url: document.getElementById('f-datasheet').value.trim(),
+    min_stock: parseInt(document.getElementById('f-min-stock').value)||0,
+    specs: document.getElementById('f-specs').value.trim(),
+    catalog_item_id: S.pendingCatalogId || null,
+  };
+  try {
+    if(S.editingCompId) {
+      await api(`/api/components/${S.editingCompId}`,{method:'PUT',body:JSON.stringify(data)});
+      toast('Zaktualizowano komponent','success');
+      if(S.selectedCompId===S.editingCompId) setTimeout(()=>openDetail(S.editingCompId),150);
+    } else {
+      await api('/api/components',{method:'POST',body:JSON.stringify(data)});
+      toast('Komponent dodany!','success');
+    }
+    closeModal('comp-modal');
+    await loadComponents(); loadStats();
+  } catch(e){ toast(e.message,'error'); }
+}
+
+// ── PROJECTS ──────────────────────────────────────────────────────
+async function loadProjects() {
+  S.projects = await api('/api/projects');
+  renderProjects();
+}
+
+function renderProjects() {
+  const list = document.getElementById('project-list');
+  if(!S.projects.length){
+    list.innerHTML=`<div class="empty-state" style="grid-column:unset"><div class="e-icon"><i class="fa-regular fa-screwdriver-wrench"></i></div><div class="e-text">Brak projektów — utwórz pierwszy</div></div>`;
+    return;
+  }
+  list.innerHTML = S.projects.map(p=>`
+    <div class="project-row" id="proj-row-${p.id}">
+      <div class="project-row-header" onclick="toggleProj(${p.id}, this)">
+        <div class="proj-dot" style="background:${p.color}"></div>
+        <div style="flex:1;min-width:0">
+          <div class="proj-name">${p.name}</div>
+          ${p.description?`<div class="proj-desc-small">${p.description.substring(0,80)}${p.description.length>80?'…':''}</div>`:''}
+        </div>
+        ${pillHtml(p.status)}
+        <span style="font-family:var(--mono);font-size:11px;color:var(--text3)">${p.components_count} komp.</span>
+        <button class="btn-action" style="font-size:10px;padding:4px 9px" onclick="event.stopPropagation();openEditProj(${p.id})"><i class="fa-solid fa-pen-to-square"></i></button>
+        <button class="btn-action danger" style="font-size:10px;padding:4px 9px" onclick="event.stopPropagation();delProj(${p.id})"><i class="fa-solid fa-trash"></i></button>
+        <span class="proj-chevron" id="chev-${p.id}">›</span>
+      </div>
+      <div class="project-row-body" id="proj-body-${p.id}">
+        <div id="proj-comps-${p.id}"></div>
+        <button class="btn-action primary" style="margin-top:10px;font-size:10px" onclick="openAssignForProj(${p.id})">+ Dodaj komponent do projektu</button>
+      </div>
+    </div>`).join('');
+}
+
+async function toggleProj(id, headerEl) {
+  const body = document.getElementById(`proj-body-${id}`);
+  const chev = document.getElementById(`chev-${id}`);
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open',!isOpen);
+  chev.classList.toggle('open',!isOpen);
+  if(!isOpen) await loadProjComps(id);
+}
+
+async function loadProjComps(id) {
+  const el = document.getElementById(`proj-comps-${id}`);
+  el.innerHTML = `<p style="font-family:var(--mono);font-size:11px;color:var(--text3);padding:8px 0">Ładowanie...</p>`;
+  try {
+    const proj = await api(`/api/projects/${id}`);
+    if(!proj.components.length){
+      el.innerHTML=`<p style="font-family:var(--mono);font-size:11px;color:var(--text3);padding:8px 0">Brak przypisanych komponentów</p>`;
+      return;
+    }
+    el.innerHTML = `
+  <table class="proj-comp-table">
+    <thead><tr><th>Komponent</th><th>Ilość</th><th>Status</th><th>Akcje</th></tr></thead>
+    <tbody>${proj.components.map(pc => `
+      <tr>
+        <td>
+          <div style="font-weight:500;">${renderIcon(pc.category_icon)} ${pc.component_name}</div>
+          ${pc.notes ? `<div style="font-size:10px;color:var(--text3);margin-top:2px;">${pc.notes}</div>` : ''}
+        </td>
+        <td style="font-family:var(--mono);color:var(--accent)">${pc.quantity_used}×</td>
+        <td>${pillHtml(pc.status)}</td>
+        <td>
+          <div style="display:flex;gap:4px">
+            <button class="btn-action" style="font-size:10px;padding:3px 7px" data-notes="${pc.notes || ''}" onclick="openEditPC(${id}, ${pc.id}, ${pc.quantity_used}, ${pc.component_available}, this.getAttribute('data-notes'))" title="Edytuj"><i class="fa-solid fa-pen-to-square"></i></button>
+            ${pc.status==='active' ? `
+              <button class="btn-action" style="font-size:10px;padding:3px 7px" onclick="updProjComp(${id},${pc.id},'returned')" title="Zwróć"><i class="fa-solid fa-undo"></i></button>
+              <button class="btn-action danger" style="font-size:10px;padding:3px 7px" onclick="updProjComp(${id},${pc.id},'broken')" title="Uszkodzony"><i class="fa-solid fa-bolt"></i></button>` : ''}
+            <button class="btn-action danger" style="font-size:10px;padding:3px 7px" onclick="delProjComp(${id},${pc.id})" title="Usuń"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        </td>
+      </tr>`).join('')}
+    </tbody>
+  </table>`;
+  } catch(e){ el.innerHTML=`<p style="color:var(--red);font-size:12px">${e.message}</p>`; }
+}
+
+async function updProjComp(projId, pcId, status) {
+  try {
+    await api(`/api/projects/${projId}/components/${pcId}`,{method:'PUT',body:JSON.stringify({status})});
+    await loadProjComps(projId); loadComponents(); loadStats();
+    toast(`Status zmieniony → ${status}`,'success');
+  } catch(e){ toast(e.message,'error'); }
+}
+
+async function delProjComp(projId, pcId) {
+  if(!confirm('Usunąć komponent z projektu? Zostanie zwrócony do magazynu.')) return;
+  try {
+    await api(`/api/projects/${projId}/components/${pcId}`,{method:'DELETE'});
+    await loadProjComps(projId); loadComponents(); loadStats();
+    toast('Usunięto z projektu','success');
+  } catch(e){ toast(e.message,'error'); }
+}
+
+function openNewProjModal() {
+  S.editingProjId=null;
+  document.getElementById('proj-modal-title').textContent='Nowy projekt';
+  ['pf-name','pf-desc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('pf-status').value='planning';
+  document.getElementById('pf-color').value='#56e1fd';
+  openModal('proj-modal');
+}
+
+function openEditProj(id) {
+  const p = S.projects.find(x=>x.id===id); if(!p) return;
+  S.editingProjId=id;
+  document.getElementById('proj-modal-title').textContent='Edytuj projekt';
+  document.getElementById('pf-name').value   = p.name;
+  document.getElementById('pf-desc').value   = p.description||'';
+  document.getElementById('pf-status').value = p.status;
+  document.getElementById('pf-color').value  = p.color;
+  openModal('proj-modal');
+}
+
+async function saveProject() {
+  const name = document.getElementById('pf-name').value.trim();
+  if(!name) return toast('Podaj nazwę projektu','warn');
+  const data={
+    name, description:document.getElementById('pf-desc').value.trim(),
+    status:document.getElementById('pf-status').value,
+    color:document.getElementById('pf-color').value,
+  };
+  try {
+    if(S.editingProjId){
+      await api(`/api/projects/${S.editingProjId}`,{method:'PUT',body:JSON.stringify(data)});
+      toast('Projekt zaktualizowany!','success');
+    } else {
+      await api('/api/projects',{method:'POST',body:JSON.stringify(data)});
+      toast('Projekt utworzony!','success');
+    }
+    S.editingProjId=null;
+    closeModal('proj-modal');
+    await loadProjects(); loadStats();
+  } catch(e){ toast(e.message,'error'); }
+}
+
+async function delProj(id) {
+  if(!confirm('Usunąć projekt? Komponenty zostaną zwrócone do magazynu.')) return;
+  try {
+    await api(`/api/projects/${id}`,{method:'DELETE'});
+    await loadProjects(); loadComponents(); loadStats();
+    toast('Projekt usunięty','success');
+  } catch(e){ toast(e.message,'error'); }
+}
+
+// ── ASSIGN ────────────────────────────────────────────────────────
+function openAssign(compId) {
+  S.assigningCompId = compId;
+  S.assigningProjId = null;
+
+  const c = S.components.find(x => x.id === compId);
+  const infoEl = document.getElementById('assign-comp-info');
+  infoEl.textContent = c ? `📦 ${c.name} · dostępne: ${c.quantity_available} ${c.unit}` : '';
+  infoEl.style.display = 'block';
+
+  document.getElementById('assign-modal-title').textContent = 'Przypisz komponent do projektu';
+
+  document.getElementById('group-atp-proj').style.display = 'block';
+  document.getElementById('group-atp-comp').style.display = 'none';
+  document.getElementById('atp-proj').innerHTML = S.projects.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+
+  const qtyInput = document.getElementById('atp-qty');
+  qtyInput.value = '1';
+  qtyInput.max = c ? c.quantity_available : 1;
+  document.getElementById('atp-qty-label').textContent = `Ilość do użycia (Maks: ${qtyInput.max})`;
+
+  document.getElementById('atp-note').value = '';
+
+  openModal('assign-modal');
+}
+
+function openAssignForProj(projId) {
+  S.assigningProjId = projId;
+  S.assigningCompId = null;
+
+  const p = S.projects.find(x => x.id === projId);
+  const infoEl = document.getElementById('assign-comp-info');
+  infoEl.textContent = p ? `<i class="fa-regular fa-screwdriver-wrench"></i> Projekt: ${p.name}` : '';
+  infoEl.style.display = 'block';
+
+  document.getElementById('assign-modal-title').textContent = 'Dodaj komponent do projektu';
+  document.getElementById('group-atp-proj').style.display = 'none';
+  document.getElementById('group-atp-comp').style.display = 'block';
+
+  const availableComps = S.components.filter(c => c.quantity_available > 0);
+  const compSelect = document.getElementById('atp-comp');
+  compSelect.innerHTML = availableComps.length
+    ? availableComps.map(c => `<option value="${c.id}" data-avail="${c.quantity_available}">${c.name} (Dostępne: ${c.quantity_available} ${c.unit})</option>`).join('')
+    : `<option value="">Brak dostępnych komponentów w magazynie</option>`;
+
+  // Aktualizacja max limitu w przypadku zmiany opcji na liście rozwijanej
+  const updateMax = () => {
+    const opt = compSelect.options[compSelect.selectedIndex];
+    if(opt && opt.dataset.avail) {
+      document.getElementById('atp-qty').max = opt.dataset.avail;
+      document.getElementById('atp-qty-label').textContent = `Ilość do użycia (Maks: ${opt.dataset.avail})`;
+      document.getElementById('atp-qty').value = '1';
+    }
+  };
+  compSelect.onchange = updateMax;
+  if(availableComps.length > 0) updateMax(); // Uruchom od razu dla pierwszego z listy
+
+  document.getElementById('atp-note').value = '';
+  openModal('assign-modal');
+}
+
+async function doAssign() {
+  // Pobieramy ID z zapisanego stanu LUB z aktywnego selecta
+  const projId = S.assigningProjId || parseInt(document.getElementById('atp-proj').value);
+  const compId = S.assigningCompId || parseInt(document.getElementById('atp-comp').value);
+
+  if(!compId || isNaN(compId)) {
+    return toast('Brak dostępnych komponentów do przypisania.', 'warn');
+  }
+  if(!projId || isNaN(projId)) {
+    return toast('Wybierz poprawny projekt.', 'warn');
+  }
+
+  const qty = parseInt(document.getElementById('atp-qty').value) || 1;
+
+  try {
+    await api(`/api/projects/${projId}/components`, {
+      method: 'POST',
+      body: JSON.stringify({
+        component_id: compId,
+        quantity: qty,
+        notes: document.getElementById('atp-note').value
+      })
+    });
+
+    closeModal('assign-modal');
+    await loadComponents();
+    await loadProjects();
+    loadStats();
+
+    // Odświeżenie listy komponentów wewnątrz otwartego panelu projektu
+    if (S.assigningProjId) {
+        await loadProjComps(projId);
+    }
+
+    toast('Przypisano do projektu!', 'success');
+
+    // Jeśli mieliśmy otwarty panel boczny konkretnego komponentu, odśwież go
+    if(S.selectedCompId === compId) openDetail(compId);
+
+  } catch(e) {
+    toast(e.message, 'error');
+  }
+}
+
+// ── VIEW / FILTER ─────────────────────────────────────────────────
+function switchView(view, btn, src) {
+  S.view=view;
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById(`view-${view}`).classList.add('active');
+  document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
+  document.querySelectorAll('.sidebar-btn[id^="sb-view"], #sb-components, #sb-projects').forEach(b=>b.classList.remove('active'));
+  document.getElementById(`nav-${view}`)?.classList.add('active');
+  document.getElementById(`sb-${view}`)?.classList.add('active');
+  if(view==='projects') loadProjects();
+}
+
+function filterCat(catId, btn) {
+  S.filterCat=catId;
+  renderCatFilters(); renderCatSidebar();
+  if(S.view!=='components') switchView('components',document.getElementById('nav-components'),'nav');
+  loadComponents();
+}
+
+function toggleLowStock(btn) {
+  S.filterLowStock=!S.filterLowStock;
+  document.getElementById('sb-lowstock').classList.toggle('active',S.filterLowStock);
+  renderCatFilters();
+  loadComponents();
+}
+
+let _st;
+function onSearch(q){ S.searchQ=q; clearTimeout(_st); _st=setTimeout(loadComponents,280); }
+
+// ── HELPERS ───────────────────────────────────────────────────────
+function pillHtml(s) {
+  const m = {
+    active:    ['pill-active',   'dot-g','Aktywny'],
+    planning:  ['pill-planning', 'dot-p','Planowanie'],
+    paused:    ['pill-paused',   'dot-o','Wstrzymany'],
+    completed: ['pill-completed','dot-b','Ukończony'],
+    returned:  ['pill-returned', 'dot-b','Zwrócony'],
+    broken:    ['pill-broken',   'dot-r','Uszkodzony'],
+  };
+  const [c,d,l]=m[s]||['pill-planning','dot-p',s];
+  return `<span class="pill ${c}"><span class="pill-dot ${d}"></span>${l}</span>`;
+}
+function formatSpecsToTable(specsStr) {
+  if (!specsStr || !specsStr.trim()) return '';
+
+  let specsObj = {};
+  
+  // Próba 1: Szukamy formatu z nawiasami kwadratowymi np. [Napięcie: 5V], [Interfejs: I2C]
+  const bracketRegex = /\[([^:]+):(.*?)\]/g;
+  let match;
+  let foundBrackets = false;
+  
+  while ((match = bracketRegex.exec(specsStr)) !== null) {
+      foundBrackets = true;
+      specsObj[match[1].trim()] = match[2].trim();
+  }
+
+  // Próba 2: Jeśli nie ma nawiasów, czytamy linijka po linijce (Klucz: Wartość)
+  if (!foundBrackets) {
+      try {
+          // Sprawdzamy czy to nie jest przypadkiem czysty JSON
+          specsObj = JSON.parse(specsStr);
+      } catch(e) {
+          // Jeśli nie JSON, to zwykły tekst z dwukropkami
+          const lines = specsStr.split('\n');
+          lines.forEach(line => {
+              const colonIdx = line.indexOf(':');
+              if (colonIdx > -1) {
+                  const key = line.substring(0, colonIdx).trim();
+                  const val = line.substring(colonIdx + 1).trim();
+                  if (key) specsObj[key] = val;
+              }
+          });
+      }
+  }
+
+  // Jeśli po parsowaniu obiekt jest nadal pusty, zwracamy zwykły tekst
+  if (Object.keys(specsObj).length === 0) {
+      return `<pre style="font-family:var(--mono); font-size:12px; color:var(--text2); background:var(--bg3); padding:10px; border-radius:6px; white-space:pre-wrap;">${specsStr}</pre>`;
+  }
+
+  // Generowanie pięknej tabeli na wzór Katalogu Podzespołów
+  let html = '<div style="background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 0 14px;"><table style="width: 100%; border-collapse: collapse; font-size: 13px;"><tbody>';
+  
+  const entries = Object.entries(specsObj);
+  entries.forEach(([key, value], index) => {
+      const isLast = index === entries.length - 1;
+      const borderStyle = isLast ? '' : 'border-bottom: 1px solid var(--border);';
+      html += `
+      <tr>
+          <td style="color: var(--text3); font-family: var(--mono); font-size: 11px; padding: 12px 0; width: 40%; ${borderStyle}">${key}</td>
+          <td style="color: var(--text2); font-family: var(--mono); font-size: 12px; padding: 12px 0; text-align: right; ${borderStyle}">${value}</td>
+      </tr>`;
+  });
+  
+  html += '</tbody></table></div>';
+  return html;
+}
+
+function renderIcon(iconStr) {
+  if (!iconStr) return '🔧';
+  // Jeśli to klasa FontAwesome (zaczyna się od fa- lub ma w sobie fa )
+  if (iconStr.startsWith('fa-') || iconStr.includes('fa ')) {
+    return `<i class="${iconStr}"></i>`;
+  }
+  // W przeciwnym razie zwróć jako czysty tekst (dla emotek ⚡, 📦 itp.)
+  return iconStr;
+}
+
+// ── MODALS ────────────────────────────────────────────────────────
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(el=>
+  el.addEventListener('click',e=>{ if(e.target===el) el.classList.remove('open'); })
+);
+
+// ── TOAST ─────────────────────────────────────────────────────────
+function toast(msg, type='success') {
+  const el=document.getElementById('toast');
+  el.textContent=({success:'✔ ',error:'✖ ',warn:'⚠ '}[type]||'')+msg;
+  el.className=`toast ${type} show`;
+  clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),5000);
+}
+
+// ── AI ────────────────────────────────────────────────────────────
+function toggleAI(){
+  document.getElementById('ai-panel').classList.toggle('open');
+  document.getElementById('ai-toggle-btn').classList.toggle('open');
+}
+
+async function loadAIProvider(){
+  try{
+    const d=await api('/api/ai/provider');
+    const ok=d.configured;
+    document.getElementById('ai-provider-label').textContent=ok?d.name:`${d.name} · LMSTUDIO/GEMINI`;
+    document.getElementById('ai-provider-badge').textContent=d.provider.toUpperCase();
+  }catch(e){}
+}
+
+function aiWelcome(){
+  aiAppend('assistant',`Cześć! Jestem Asystent ESN \n\nZnam Twój aktualny stan magazynu. Mogę:\n• Zaproponować projekty z dostępnych komponentów\n• Sprawdzić czy masz wszystko do danego projektu\n• Ostrzec o niskich stanach i pułapkach technicznych\n• Doradzić co warto dokupić\n\nZapytaj mnie o cokolwiek!`);
+  updateSessionInfo();
+}
+
+function newAISession(){
+  if(!confirm('Rozpocząć nową sesję? Historia chatu zostanie wyczyszczona.')) return;
+  S.aiHistory=[]; S.aiSession++; S.aiMsgCount=0;
+  document.getElementById('ai-messages').innerHTML='';
+  updateSessionInfo();
+  aiWelcome();
+  toast('Nowa sesja AI','success');
+}
+
+function updateSessionInfo(){
+  document.getElementById('ai-session-info').textContent=`Sesja #${S.aiSession} · ${S.aiMsgCount} wiad.`;
+}
+
+function aiQuick(msg){ document.getElementById('ai-input').value=msg; sendAI(); }
+function aiKeydown(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendAI(); } }
+
+async function sendAI(){
+  const input=document.getElementById('ai-input');
+  const msg=input.value.trim(); if(!msg) return;
+  const btn=document.getElementById('ai-send');
+  btn.disabled=true; input.value='';
+
+  aiAppend('user',msg);
+  S.aiHistory.push({role:'user',content:msg}); S.aiMsgCount++;
+  updateSessionInfo();
+
+  const loader=aiAppend('assistant','Analizuję stan magazynu...',true);
+  try{
+    const r=await fetch('/magazyn/api/ai/chat',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({message:msg,history:S.aiHistory.slice(-12)})});
+    const d=await r.json();
+    loader.remove();
+    if(d.error){ aiAppend('assistant','❌ '+d.error); }
+    else{
+      aiAppend('assistant',d.reply);
+      S.aiHistory.push({role:'assistant',content:d.reply}); S.aiMsgCount++;
+      updateSessionInfo();
+    }
+  }catch(e){ loader.remove(); aiAppend('assistant','❌ Błąd połączenia z AI'); }
+  btn.disabled=false; input.focus();
+}
+
+function aiAppend(role, text, loading=false){
+  const msgs=document.getElementById('ai-messages');
+  const el=document.createElement('div');
+  el.className=`ai-msg ${role}${loading?' loading':''}`;
+  el.textContent=text;
+  msgs.appendChild(el);
+  msgs.scrollTop=msgs.scrollHeight;
+  return el;
+}
+
+let currentEditingPC = { projId: null, pcId: null };
+
+function openEditPC(projId, pcId, qty, available, notes) {
+  currentEditingPC = { projId, pcId };
+
+  // Maksymalna ilość to ta używana obecnie + to co leży luźno na magazynie
+  const maxAllowed = qty + available;
+
+  const qtyInput = document.getElementById('epc-qty');
+  qtyInput.value = qty;
+  qtyInput.max = maxAllowed;
+
+  document.getElementById('epc-qty-label').textContent = `Ilość (Maksymalnie: ${maxAllowed})`;
+  document.getElementById('epc-notes').value = notes;
+  openModal('edit-pc-modal');
+}
+
+async function savePCChange() {
+  const { projId, pcId } = currentEditingPC;
+  const qty = document.getElementById('epc-qty').value;
+  const notes = document.getElementById('epc-notes').value;
+
+  try {
+    await api(`/api/projects/${projId}/components/${pcId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ quantity: qty, notes: notes })
+    });
+    closeModal('edit-pc-modal');
+    await loadProjComps(projId); // Odśwież tabelę w projekcie
+    loadComponents(); // Odśwież magazyn (jeśli zmieniła się ilość)
+    toast('Zmiany zapisane', 'success');
+  } catch(e) {
+    toast(e.message, 'error');
+  }
+}
+
+// ── KATALOG – ładowanie i autouzupełnianie ─────────────────────────
+async function loadCatalog() {
+  try {
+    // Katalog jest w FastAPI (port 8000), dostępny przez Nginx bez prefixu /magazyn
+    // Zwiększamy limit do 1000, aby pobrać wszystkie komponenty do listy wyboru!
+    const res = await fetch('/api/catalog?limit=1000', { headers: { 'Content-Type': 'application/json' } });
+    if (!res.ok) return;
+    
+    const data = await res.json();
+    // POPRAWKA: Wyciągamy tablicę z klucza "items" (nowy format FastAPI)
+    S.catalogItems = data.items || [];
+    
+    const sel = document.getElementById('f-catalog-pick');
+    if (!sel) return;
+    // Grupuj po kategorii
+    const byCategory = {};
+    S.catalogItems.forEach(c => {
+      const cat = c.inventory_category || 'Inne';
+      if (!byCategory[cat]) byCategory[cat] = [];
+      byCategory[cat].push(c);
+    });
+    sel.innerHTML = '<option value="">— wpisz ręcznie lub wybierz z katalogu —</option>';
+    Object.entries(byCategory).sort().forEach(([cat, items]) => {
+      const grp = document.createElement('optgroup');
+      grp.label = cat;
+      items.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item.id;
+        opt.textContent = item.name + (item.symbol ? ` (${item.symbol})` : '');
+        grp.appendChild(opt);
+      });
+      sel.appendChild(grp);
+    });
+  } catch(e) {
+    console.warn('Katalog niedostępny:', e.message);
+  }
+}
+
+function autofillComponent(catalogId) {
+  if (!catalogId || !S.catalogItems) return;
+  const comp = S.catalogItems.find(c => String(c.id) === String(catalogId));
+  if (!comp) return;
+
+  document.getElementById('f-name').value      = comp.name || '';
+  document.getElementById('f-symbol').value    = comp.symbol || '';
+  document.getElementById('f-category').value  = ''; // Nie ustawiamy kategorii, bo może nie pasować do magazynu
+  document.getElementById('f-datasheet').value = comp.datasheet_url || '';
+  document.getElementById('f-notes').value     = comp.description || '';
+  document.getElementById('f-applications').value = (comp.applications && comp.applications.length > 0) ? comp.applications[0] : '';
+  // NOWOŚĆ: Automatyczne przenoszenie tagów z katalogu do magazynu!
+  document.getElementById('f-tags').value = Array.isArray(comp.tags) ? comp.tags.join(', ') : '';
+
+  // Konwertuj technical_specs (JSON obiekt) → format [Klucz: Wartość]
+  let specsText = '';
+  if (comp.technical_specs && typeof comp.technical_specs === 'object' && Object.keys(comp.technical_specs).length) {
+    specsText = Object.entries(comp.technical_specs)
+      .map(([k, v]) => `[${k}: ${v}]`)
+      .join(', ');
+  }
+  document.getElementById('f-specs').value = specsText;
+
+  // Ustaw kategorię jeśli pasuje
+  const catSel = document.getElementById('f-category');
+  if (catSel && comp.inventory_category) {
+    const opt = Array.from(catSel.options).find(o =>
+      o.textContent.toLowerCase().includes(comp.inventory_category.toLowerCase())
+    );
+    if (opt) catSel.value = opt.value;
+  }
+
+  S.pendingCatalogId = comp.id;  // zachowaj powiązanie
+  toast('Dane z katalogu ESN wczytane!', 'success');
+}
+
+// ── START ─────────────────────────────────────────────────────────
+init();
+</script>
+<!-- VIEW: FOOTER -->
+    <footer class="site-footer" style="margin-top: 40px;">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <div class="footer-logo">ESN<span>/RS</span></div>
+          <p>Kompleksowa platforma do nauki architektury, programowania C/C++ oraz projektowania układów elektronicznych dla systemów wbudowanych.</p>
+          <div class="social-links">
+        <a href="https://github.com/RaVS02" target="_blank" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
+        <a href="https://buymeacoffee.com/sobalarafaa" target="_blank" aria-label="Kup mi kawę na buycoffee.to"><i class="fa-solid fa-mug-hot"></i></a>
+
+      </div>
+        </div>
+        <div class="footer-links">
+          <div class="link-col">
+            <h4>Platforma</h4>
+            <a href="/#home">Strona Główna</a>
+            <a href="/#theory">Teoria i Wykłady</a>
+            <a href="/#projects">Baza Projektów</a>
+            <a href="/#components">Katalog Czujników</a>
+          </div>
+          <div class="link-col">
+            <h4>Twórca</h4>
+            <a href="https://www.rs-projects.ovh" target="_blank">O mnie (Portfolio) ↗</a>
+            <a href="/#contact">Napisz wiadomość</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 ESN/RS - Rafał S. Wszelkie prawa zastrzeżone.</p>
+        <p>Wersja 2.2.0 | <span class="status-dot"></span> System Online</p>
+      </div>
+    </footer>
+</body>
+</html>
