@@ -103,9 +103,11 @@ shape: text | 50,95 | napis                 # sam podpis
 Rodzaje kształtów (`kind`): `pcb`, `chip`, `conn` (złącze), `btn` (przycisk), `led`, `part` (domyślny).
 Numer w punkcie jest ucinany do 3 znaków – używaj krótkich numerów/oznaczeń (`1`, `Q3`, `U2`).
 
-**Zdjęcie zamiast kształtów:** wgraj zdjęcie jako *Obrazek główny* komponentu i ustaw `layout: board`.
-Zdjęcie staje się tłem, a punkty `@x,y` leżą na nim (kształty `shape:` są wtedy pomijane). Ustaw `aspect` zgodnie z proporcjami zdjęcia.
-Zdjęcie w edytorze demo możesz wczytać lokalnie przyciskiem „Zdjęcie płytki…”.
+**Zdjęcie zamiast kształtów:** wgraj zdjęcie jako *Obrazek główny* komponentu, ustaw `layout: board` i dopisz
+`image_as_background: tak`. Zdjęcie staje się wtedy tłem, a punkty `@x,y` leżą na nim (kształty `shape:` są pomijane).
+Ustaw `aspect` zgodnie z proporcjami zdjęcia. **Domyślnie (`nie` lub brak linii) zdjęcie główne NIE jest używane** –
+rysowane są kształty. Dzięki temu obrazek główny karty może być czymkolwiek, a pinout i tak wygląda tak, jak go opisałeś.
+W edytorze demo zdjęcie wczytasz przyciskiem „Zdjęcie płytki…” (to samo ustawia `image_as_background: tak`).
 
 **Jak znaleźć współrzędne:** w edytorze (`pinout-demo.html` → *Edytor na żywo*) włącz „klik na rysunku = nowy punkt” i klikaj
 na płytce – każdy klik dopisuje linię `N @x,y | PINN | other` do tekstu. Zmień nazwę i kategorię i gotowe.
@@ -151,6 +153,7 @@ i zrób dla nich osobną grupę.
   "pins": [ { "n": "1", "name": "IN1", "cat": "analog", "type": "…", "fn": "…", "note": "…",
               "pad": false,               // opcjonalnie: pad pod obudową
               "x": 34, "y": 7 } ],        // tylko board: położenie w %
+  "image_as_background": false,           // tylko board: czy użyć zdjęcia głównego komponentu jako tła
   "board":  { "aspect": 1.6, "labels": true },
   "shapes": [ { "t": "rect", "x": 0, "y": 36, "w": 9, "h": 28, "label": "USB-C", "kind": "conn" } ],
   "groups": [ { "name": "Qwiic", "pins": ["Q1","Q2","Q3","Q4"], "note": "…" } ],

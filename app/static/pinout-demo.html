@@ -233,9 +233,11 @@ src.addEventListener("input", draw);
 $("pick").addEventListener("change", draw);
 $("img").addEventListener("change", function (e) {
   var f = e.target.files[0]; if (!f) return;
-  var r = new FileReader(); r.onload = function () { image = String(r.result); $("noImg").hidden = false; draw(); }; r.readAsDataURL(f);
+  var r = new FileReader(); r.onload = function () { image = String(r.result); $("noImg").hidden = false;
+    if (!/^\s*image_as_background\s*:/m.test(src.value)) src.value = src.value.replace(/^(layout:.*)$/m, "$1\nimage_as_background: tak");
+    draw(); }; r.readAsDataURL(f);
 });
-$("noImg").addEventListener("click", function () { image = ""; this.hidden = true; $("img").value = ""; draw(); });
+$("noImg").addEventListener("click", function () { image = ""; src.value = src.value.replace(/^image_as_background:.*\n?/m, ""); this.hidden = true; $("img").value = ""; draw(); });
 function copy(text, btn) {
   var done = function () { var t = btn.textContent; btn.textContent = "Skopiowano ✓"; setTimeout(function () { btn.textContent = t; }, 1400); };
   if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, function () { window.prompt("Skopiuj:", text); });

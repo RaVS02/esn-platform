@@ -711,6 +711,8 @@ def clean_pinout(p):
            "sources": sources, "notes": s(p.get("notes"), 3000)}
     if p.get("layout") in PINOUT_LAYOUTS:
         out["layout"] = p["layout"]
+    if isinstance(p.get("image_as_background"), bool):
+        out["image_as_background"] = p["image_as_background"]
     if shapes: out["shapes"] = shapes
     if groups: out["groups"] = groups
     board = p.get("board")

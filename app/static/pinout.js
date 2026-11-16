@@ -4,7 +4,8 @@
  *   quad   – obudowa czterostronna (QFN/QFP/LQFP)       dual – dwurzędowa (DIP/SOIC/TSSOP)
  *   sip    – jeden rząd (złącze, prosty moduł)          to92 / to220 – tranzystory, stabilizatory (widok z przodu)
  *   sot23  – małe SMD 3–8 pinów                         axial – dioda/rezystor/kondensator, 2 wyprowadzenia
- *   board  – płytka/moduł: uproszczony rysunek z kształtów (shapes) ALBO zdjęcie + numerowane punkty (x,y w %)
+ *   board  – płytka/moduł: uproszczony rysunek z kształtów (shapes) ALBO zdjęcie + numerowane punkty (x,y w %);
+ *            zdjęcie jako tło tylko przy image_as_background: true
  *   none   – tylko tabela
  *
  * API:  ESNPinout.render(el, data, {title, image, onBoardClick})
@@ -79,7 +80,7 @@
   }
 
   function normalize(src) {
-    var d = { pins: [], sources: [], shapes: [], groups: [], board: { aspect: 1.6, labels: null },
+    var d = { pins: [], sources: [], shapes: [], groups: [], board: { aspect: 1.6, labels: null }, imageAsBackground: false,
               package: "", view: "", notes: "", layout: "none", warning: "" };
     if (!src || typeof src !== "object" || !Array.isArray(src.pins)) return d;
     d.package = str(src.package); d.view = str(src.view); d.notes = str(src.notes);
@@ -92,6 +93,7 @@
       return { label: str(x && x.label), url: safeUrl(str(x && x.url)) };
     }).filter(function (x) { return x.label || x.url; });
 
+    d.imageAsBackground = src.image_as_background === true;   // zdjęcie komponentu jako tło trybu board (domyślnie: nie)
     var b = src.board || {};
     d.board.aspect = Math.max(0.4, Math.min(4, num(b.aspect) || 1.6));
     d.board.labels = b.labels === true || b.labels === false ? b.labels : null;
@@ -302,7 +304,7 @@
   function render(root, data, opts) {
     opts = opts || {};
     var d = normalize(data), id = ++uid;
-    var image = d.layout === "board" ? safeImg(str(opts.image)) : "";
+    var image = d.layout === "board" && d.imageAsBackground ? safeImg(str(opts.image)) : "";
     root.textContent = "";
     root.classList.add("pinout");
     if (!d.pins.length) return null;
@@ -557,13 +559,14 @@
     text.split(/\r?\n/).forEach(function (raw, i) {
       var line = raw.trim(), ln = "Linia " + (i + 1) + ": ";
       if (!line || line.charAt(0) === "#") return;
-      var m = line.match(/^(package|view|layout|source|notes|aspect|labels|shape|group)\s*:\s*(.*)$/i);
+      var m = line.match(/^(package|view|layout|source|notes|aspect|labels|image_as_background|shape|group)\s*:\s*(.*)$/i);
       if (m) {
         var k = m[1].toLowerCase(), v = m[2].trim(), f = v.split("|").map(function (x) { return x.trim(); });
         if (!v) return;
         if (k === "source") out.sources.push({ label: f[0], url: f[1] || "" });
         else if (k === "aspect") { var a = num(v); if (a === null) throw new Error(ln + "aspect musi być liczbą, np. 1.6"); (out.board = out.board || {}).aspect = a; }
         else if (k === "labels") (out.board = out.board || {}).labels = /^(tak|yes|true|1)$/i.test(v);
+        else if (k === "image_as_background") out.image_as_background = /^(tak|yes|true|1)$/i.test(v);
         else if (k === "shape") {
           var t = f[0].toLowerCase(), c;
           if (t === "rect") { c = parseXY(f[1] || "", 4); if (!c) throw new Error(ln + "shape: rect | x,y,szer,wys | etykieta | rodzaj"); out.shapes.push({ t: t, x: c[0], y: c[1], w: c[2], h: c[3], label: f[2] || "", kind: f[3] || "part" }); }
@@ -593,6 +596,7 @@
     ["package", "view", "layout"].forEach(function (k) { if (p[k]) lines.push(k + ": " + clean(p[k])); });
     if (p.board && p.board.aspect) lines.push("aspect: " + p.board.aspect);
     if (p.board && typeof p.board.labels === "boolean") lines.push("labels: " + (p.board.labels ? "tak" : "nie"));
+    if (typeof p.image_as_background === "boolean") lines.push("image_as_background: " + (p.image_as_background ? "tak" : "nie"));
     (p.sources || []).forEach(function (x) { lines.push("source: " + clean(x.label) + " | " + str(x.url)); });
     if (p.notes) lines.push("notes: " + clean(p.notes));
     (p.shapes || []).forEach(function (x) {
