@@ -20,6 +20,11 @@ from database import engine, get_db
 # Inicjalizacja bazy
 models.Base.metadata.create_all(bind=engine)
 
+# create_all nie dodaje kolumn do istniejących tabel – lekka migracja dla pola pinout
+from sqlalchemy import text as _sql_text
+with engine.begin() as _conn:
+    _conn.execute(_sql_text("ALTER TABLE official_components ADD COLUMN IF NOT EXISTS pinout JSON"))
+
 app = FastAPI(title="ESN Platform API")
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -624,6 +629,104 @@ def require_admin(current_user: models.User = Depends(get_current_user)):
 #  KATALOG KOMPONENTÓW – OfficialComponent CRUD
 # ═══════════════════════════════════════════════════════════════════
 
+
+PINOUT_CATS = {"power", "ground", "analog", "digital", "spi", "i2c", "i2s", "uart", "usb", "can", "pwm",
+               "debug", "rf", "clock", "control", "nc", "other"}
+PINOUT_LAYOUTS = {"quad", "dual", "sip", "to92", "to220", "sot23", "axial", "board", "none"}
+PINOUT_SHAPES = {"rect", "circle", "text"}
+PINOUT_SHAPE_KINDS = {"pcb", "chip", "conn", "btn", "led", "part"}
+
+def clean_pinout(p):
+    """Walidacja i czyszczenie pinoutu (admin wpisuje dane, które trafiają do widoku publicznego)."""
+    if p in (None, "", {}):
+        return None
+    if not isinstance(p, dict) or not isinstance(p.get("pins"), list) or not p["pins"]:
+        raise HTTPException(status_code=400, detail="pinout: wymagany obiekt z niepustą listą 'pins'")
+    if len(p["pins"]) > 400:
+        raise HTTPException(status_code=400, detail="pinout: maksymalnie 400 pinów")
+
+    def s(v, n):
+        return "" if v is None else str(v).strip()[:n]
+
+    def f(v, lo=None, hi=None):
+        try:
+            v = float(v)
+        except (TypeError, ValueError):
+            return None
+        if v != v or v in (float("inf"), float("-inf")):
+            return None
+        if lo is not None: v = max(lo, v)
+        if hi is not None: v = min(hi, v)
+        return round(v, 2)
+
+    pins = []
+    for x in p["pins"]:
+        if not isinstance(x, dict):
+            raise HTTPException(status_code=400, detail="pinout: każdy pin musi być obiektem")
+        n, name = s(x.get("n"), 10), s(x.get("name"), 40)
+        if not n and not name:
+            raise HTTPException(status_code=400, detail="pinout: pin bez numeru i nazwy")
+        pin = {"n": n, "name": name or n,
+               "cat": x.get("cat") if x.get("cat") in PINOUT_CATS else "other",
+               "type": s(x.get("type"), 60), "fn": s(x.get("fn"), 300), "note": s(x.get("note"), 1200)}
+        if x.get("pad") is True:
+            pin["pad"] = True
+        px, py = f(x.get("x"), 0, 100), f(x.get("y"), 0, 100)
+        if px is not None and py is not None:   # punkt na rysunku płytki (w % szerokości/wysokości)
+            pin["x"], pin["y"] = px, py
+        pins.append(pin)
+
+    sources = []
+    for x in (p.get("sources") or [])[:10]:
+        if isinstance(x, dict):
+            url = s(x.get("url"), 500)
+            sources.append({"label": s(x.get("label"), 200), "url": url if url.lower().startswith(("http://", "https://")) else ""})
+
+    shapes = []
+    for x in (p.get("shapes") or [])[:120]:
+        if not isinstance(x, dict) or x.get("t") not in PINOUT_SHAPES:
+            continue
+        sh = {"t": x["t"], "x": f(x.get("x"), -50, 150), "y": f(x.get("y"), -50, 150),
+              "label": s(x.get("label"), 40), "kind": x.get("kind") if x.get("kind") in PINOUT_SHAPE_KINDS else "part"}
+        if sh["x"] is None or sh["y"] is None:
+            continue
+        if sh["t"] == "rect":
+            sh["w"], sh["h"] = f(x.get("w"), 0, 200), f(x.get("h"), 0, 200)
+            if sh["w"] is None or sh["h"] is None:
+                continue
+        elif sh["t"] == "circle":
+            sh["r"] = f(x.get("r"), 0, 100)
+            if sh["r"] is None:
+                continue
+        shapes.append(sh)
+
+    groups = []
+    for x in (p.get("groups") or [])[:30]:
+        if isinstance(x, dict) and s(x.get("name"), 80) and isinstance(x.get("pins"), list):
+            refs = [s(r, 40) for r in x["pins"][:60] if s(r, 40)]
+            if refs:
+                groups.append({"name": s(x.get("name"), 80), "pins": refs, "note": s(x.get("note"), 400)})
+
+    out = {"package": s(p.get("package"), 40), "view": s(p.get("view"), 40), "pins": pins,
+           "sources": sources, "notes": s(p.get("notes"), 3000)}
+    if p.get("layout") in PINOUT_LAYOUTS:
+        out["layout"] = p["layout"]
+    if shapes: out["shapes"] = shapes
+    if groups: out["groups"] = groups
+    board = p.get("board")
+    if isinstance(board, dict):
+        b = {}
+        if f(board.get("aspect"), 0.4, 4) is not None: b["aspect"] = f(board.get("aspect"), 0.4, 4)
+        if isinstance(board.get("labels"), bool): b["labels"] = board["labels"]
+        if b: out["board"] = b
+    return out
+
+def pinout_summary(item):
+    po = getattr(item, "pinout", None)
+    if isinstance(po, dict) and po.get("pins"):
+        return {"package": po.get("package", ""), "count": len(po["pins"])}
+    return None
+
 @app.get("/api/catalog",tags=["Globalny Katalog Sprzętowy"])
 def list_catalog(
     q: Optional[str] = Query(None),
@@ -669,6 +772,7 @@ def list_catalog(
             "image_gallery_1": getattr(item, 'image_gallery_1', None),
             "image_gallery_2": getattr(item, 'image_gallery_2', None),
             "image_gallery_3": getattr(item, 'image_gallery_3', None),
+            "pinout_summary": pinout_summary(item),  # pełny pinout tylko w GET /api/catalog/{id}
             "created_at": item.created_at.isoformat() if item.created_at else None,
         }
         if tag:
@@ -741,6 +845,7 @@ def get_catalog_item(item_id: int, db: Session = Depends(get_db)):
         "image_gallery_1": getattr(item, 'image_gallery_1', None),
         "image_gallery_2": getattr(item, 'image_gallery_2', None),
         "image_gallery_3": getattr(item, 'image_gallery_3', None),
+        "pinout": getattr(item, 'pinout', None),
         "created_at": item.created_at.isoformat() if item.created_at else None,
     }
 
@@ -758,7 +863,8 @@ def create_catalog_item(
         tags=data.get("tags", []),
         technical_specs=data.get("technical_specs", {}),
         description=data.get("description"),
-        datasheet_url=data.get("datasheet_url")
+        datasheet_url=data.get("datasheet_url"),
+        pinout=clean_pinout(data.get("pinout"))
     )
     db.add(item)
     db.commit()
@@ -780,6 +886,8 @@ def update_catalog_item(
                   "technical_specs", "description", "datasheet_url"]:
         if field in data:
             setattr(item, field, data[field])
+    if "pinout" in data:
+        item.pinout = clean_pinout(data["pinout"])
 
     db.commit()
     db.refresh(item)

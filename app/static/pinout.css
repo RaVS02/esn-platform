@@ -1,0 +1,110 @@
+/* ESN Pinout – style komponentu (wszystko pod .pinout / .po-section, korzysta ze zmiennych z style.css) */
+.po-section { margin-bottom: 40px; }
+.po-section .section-title { margin-bottom: 14px; }
+.po-empty { font-size: 13px; color: var(--text3); font-family: var(--sans); margin-bottom: 12px; }
+
+.pinout { font-family: var(--sans); color: var(--text); container-type: inline-size; }
+.pinout .po-meta { font-family: var(--mono); font-size: 12px; color: var(--accent); margin-bottom: 4px; }
+.pinout .po-help { font-size: 12.5px; color: var(--text3); margin: 0 0 12px; max-width: 80ch; line-height: 1.5; }
+.pinout .po-warn { font-size: 12.5px; color: var(--orange); margin: 0 0 12px; }
+
+.pinout .po-filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+.pinout .po-filters button {
+  background: var(--bg2); color: var(--text); border: 1px solid var(--border2);
+  border-left: 5px solid var(--c, var(--text3)); border-radius: 6px;
+  padding: 5px 11px; font: 12px var(--mono); cursor: pointer;
+}
+.pinout .po-filters button:hover { background: var(--card2); }
+.pinout .po-filters button[aria-pressed="true"] {
+  background: var(--card2); border-color: var(--c, var(--accent)); outline: 1px solid var(--c, var(--accent));
+}
+
+.pinout .po-grid { display: grid; gap: 16px; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); align-items: start; }
+.pinout .po-grid-table { grid-template-columns: minmax(0, 1fr); }
+.pinout .po-grid-table .po-left { order: 2; }
+/* diagram zostaje na ekranie podczas przewijania długiej tabeli */
+.pinout .po-left { position: sticky; top: 84px; }
+.pinout .po-grid-table .po-left { position: static; }
+/* układ pionowy zależy od szerokości kontenera (karta, edytor), nie okna */
+@container (max-width: 900px) { .pinout .po-grid { grid-template-columns: minmax(0, 1fr); } .pinout .po-left { position: static; } }
+
+.pinout .po-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+.pinout .po-svg { width: 100%; height: auto; display: block; }
+
+/* piny na rysunku */
+.pinout .po-pin { cursor: pointer; outline: none; }
+.pinout .po-pin rect, .pinout .po-pin circle { fill: var(--c); fill-opacity: .2; stroke: var(--c); stroke-width: 1.5; transition: fill-opacity .12s; }
+.pinout .po-pin text { fill: var(--text); font: 12px var(--mono); pointer-events: none; }
+.pinout .po-pin .po-num { font-size: 11px; font-weight: 700; fill: #fff; }
+.pinout .po-pin.hl rect, .pinout .po-pin:focus-visible rect,
+.pinout .po-pin.hl circle, .pinout .po-pin:focus-visible circle { fill-opacity: .85; stroke: #fff; stroke-width: 2.5; }
+.pinout .po-pin.sel rect, .pinout .po-pin.sel circle, .pinout .po-pin.grp rect, .pinout .po-pin.grp circle { fill-opacity: .6; stroke: #fff; stroke-width: 2.5; }
+.pinout .po-pin.dim { opacity: .18; pointer-events: none; }
+.pinout .po-body { fill: var(--card); stroke: var(--border2); stroke-width: 2; }
+.pinout .po-notch { fill: var(--bg2); stroke: var(--border2); stroke-width: 2; }
+.pinout .po-mark { fill: var(--accent); }
+.pinout .po-lbl { fill: var(--text3); font: 12px var(--sans); }
+.pinout .po-title { fill: var(--text); font-family: var(--mono); font-weight: 700; }
+
+/* panel szczegółów */
+.pinout .po-detail {
+  min-height: 6.5em; margin-top: 10px; padding: 10px 14px;
+  background: var(--card); border: 1px solid var(--border); border-left: 5px solid var(--c, var(--border2)); border-radius: 8px;
+}
+.pinout .po-detail h4 { margin: 0 0 4px; font-size: 14px; font-family: var(--mono); color: var(--text); }
+.pinout .po-detail p { margin: 4px 0; font-size: 13px; color: var(--text2); line-height: 1.55; }
+.pinout .po-src { font-size: 12px; color: var(--text3); line-height: 1.5; }
+.pinout .po-detail p.po-src { color: var(--text3); font-size: 12.5px; }
+
+/* tabela */
+.pinout .po-tw { overflow-x: auto; padding: 0; }
+.pinout table { border-collapse: collapse; width: 100%; min-width: 520px; font-size: 13px; }
+.pinout th, .pinout td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.pinout th { position: sticky; top: 0; background: var(--bg2); color: var(--text3); font-weight: 600; font-size: 11px; font-family: var(--mono); text-transform: uppercase; letter-spacing: .04em; }
+.pinout tbody tr { cursor: pointer; border-left: 5px solid var(--c); }
+.pinout tbody tr:hover, .pinout tbody tr.hl { background: var(--card2); }
+.pinout tbody tr.sel, .pinout tbody tr.grp { background: var(--bg3); }
+.pinout tbody tr:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.pinout tr[hidden] { display: none; }
+.pinout td.n { font-weight: 700; font-variant-numeric: tabular-nums; font-family: var(--mono); }
+.pinout td.nm { font-family: var(--mono); white-space: nowrap; color: var(--text); }
+.pinout td { color: var(--text2); }
+.pinout .po-chip {
+  display: inline-block; border: 1px solid var(--c); color: var(--c);
+  border-radius: 99px; padding: 0 8px; font-size: 11px; white-space: nowrap; font-family: var(--mono);
+}
+
+/* stopka */
+.pinout .po-lim { margin-top: 16px; }
+.pinout .po-sources { margin-top: 10px; }
+.pinout .po-sources a { color: var(--accent); }
+
+/* nowe układy */
+.pinout .po-band { fill: var(--text2); opacity: .55; }
+.pinout .po-svg-board { border-radius: 8px; }
+.pinout .po-svg-board.po-pick { cursor: crosshair; }
+.pinout .po-pcb { fill: var(--card); stroke: var(--border2); stroke-width: 3; }
+.pinout .po-sh { fill: var(--card2); stroke: var(--border2); stroke-width: 2; }
+.pinout .po-sh-pcb  { fill: var(--bg3); stroke: var(--border2); }
+.pinout .po-sh-chip { fill: #20262e; stroke: var(--text3); }
+.pinout .po-sh-conn { fill: #2b323b; stroke: var(--text2); }
+.pinout .po-sh-btn  { fill: #3a2f2a; stroke: var(--orange); }
+.pinout .po-sh-led  { fill: rgba(86,225,253,.18); stroke: var(--accent); }
+.pinout .po-sh-lbl { fill: var(--text3); font: 11px var(--mono); pointer-events: none; }
+.pinout .po-bl { fill: var(--text2); font: 11px var(--mono); pointer-events: none; paint-order: stroke; stroke: var(--card); stroke-width: 3px; }
+.pinout .po-pin.grp circle, .pinout .po-pin.grp rect { stroke: #fff; stroke-width: 2.5; }
+
+/* grupy: złącza i magistrale */
+.pinout .po-groups { margin-top: 16px; }
+.pinout .po-groups h4 { margin: 0 0 8px; font: 600 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text3); }
+.pinout .po-glist { display: flex; flex-wrap: wrap; gap: 10px; }
+.pinout .po-group {
+  display: flex; flex-direction: column; gap: 3px; text-align: left; cursor: pointer;
+  background: var(--bg2); border: 1px solid var(--border2); border-radius: 8px; padding: 8px 12px;
+  color: var(--text2); font: 12px var(--mono);
+}
+.pinout .po-group strong { color: var(--text); font-size: 12px; }
+.pinout .po-group:hover { background: var(--card2); }
+.pinout .po-group[aria-pressed="true"] { border-color: var(--accent); outline: 1px solid var(--accent); }
+
+@media (prefers-reduced-motion: reduce) { .pinout * { transition: none !important; } }

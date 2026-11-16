@@ -110,6 +110,9 @@ class OfficialComponent(Base):
     image_gallery_1 = Column(String(255), nullable=True)
     image_gallery_2 = Column(String(255), nullable=True)
     image_gallery_3 = Column(String(255), nullable=True) 
+
+    # Interaktywny pinout: {package, view, layout, pins:[{n,name,cat,type,fn,note,pad}], sources, notes}
+    pinout = Column(JSON, nullable=True)
     
     created_at = Column(DateTime, default=datetime.utcnow)
 class ContactMessage(Base):

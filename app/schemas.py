@@ -108,6 +108,7 @@ class OfficialComponentBase(BaseModel):
     image_gallery_1: Optional[str] = None
     image_gallery_2: Optional[str] = None
     image_gallery_3: Optional[str] = None
+    pinout: Optional[dict] = None
 
 class OfficialComponentCreate(OfficialComponentBase):
     pass

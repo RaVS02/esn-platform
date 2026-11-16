@@ -1,0 +1,275 @@
+{
+  "name": "ADS1293",
+  "symbol": "ADS1293",
+  "inventory_category": "Układy scalone",
+  "applications": [
+    "Medycyna"
+  ],
+  "tags": [
+    "SPI",
+    "ECG",
+    "EMG",
+    "24-bit",
+    "AFE"
+  ],
+  "technical_specs": {
+    "Kanały": "3 × 24-bit",
+    "Zasilanie analogowe (VDD)": "2,7–5,5 V",
+    "Zasilanie cyfrowe (VDDIO)": "1,65–3,6 V",
+    "Interfejs": "SPI, do 20 MHz",
+    "Obudowa": "WQFN-28"
+  },
+  "description": "Trzykanałowy 24-bitowy analogowy front-end do pomiarów biopotencjałów (ECG/EMG) firmy Texas Instruments.",
+  "datasheet_url": "https://www.ti.com/lit/ds/symlink/ads1293.pdf",
+  "pinout": {
+    "package": "WQFN-28",
+    "view": "widok z góry",
+    "layout": "quad",
+    "pins": [
+      {
+        "n": "1",
+        "name": "IN1",
+        "cat": "analog",
+        "type": "Analog Input",
+        "fn": "Wejście sygnału elektrody 1",
+        "note": "Elektroda; dowolny z IN1–IN6 można skierować do CH1–3 i kanału pace przez przełącznik routingu (§8.3.1). Wejście ma filtr EMI. Napięcie na pinie: −0,3 V do VDD+0,3 V (abs. max.). Opcjonalnie wstrzykiwany prąd lead-off (§8.3.15)."
+      },
+      {
+        "n": "2",
+        "name": "IN2",
+        "cat": "analog",
+        "type": "Analog Input",
+        "fn": "Wejście sygnału elektrody 2",
+        "note": "Elektroda; dowolny z IN1–IN6 można skierować do CH1–3 i kanału pace przez przełącznik routingu (§8.3.1). Wejście ma filtr EMI. Napięcie na pinie: −0,3 V do VDD+0,3 V (abs. max.)."
+      },
+      {
+        "n": "3",
+        "name": "IN3",
+        "cat": "analog",
+        "type": "Analog Input",
+        "fn": "Wejście sygnału elektrody 3",
+        "note": "Elektroda; dowolny z IN1–IN6 można skierować do CH1–3 i kanału pace przez przełącznik routingu (§8.3.1). Wejście ma filtr EMI. Napięcie na pinie: −0,3 V do VDD+0,3 V (abs. max.)."
+      },
+      {
+        "n": "4",
+        "name": "IN4",
+        "cat": "analog",
+        "type": "Analog Input",
+        "fn": "Wejście sygnału elektrody 4",
+        "note": "Gdy GOLDINT=1, pin jest wewnętrznie połączony z G1=(BUF2+BUF3)/2 (Tab. 3). Może też przyjąć wyjście RLD (SELRLD, §8.3.12). Elektroda; dowolny z IN1–IN6 można skierować do CH1–3 i kanału pace przez przełącznik routingu (§8.3.1). Wejście ma filtr EMI. Napięcie na pinie: −0,3 V do VDD+0,3 V (abs. max.)."
+      },
+      {
+        "n": "5",
+        "name": "IN5",
+        "cat": "analog",
+        "type": "Analog Input",
+        "fn": "Wejście sygnału elektrody 5",
+        "note": "Gdy GOLDINT=1, pin jest wewnętrznie połączony z G2=(BUF1+BUF3)/2 (Tab. 3). Elektroda; dowolny z IN1–IN6 można skierować do CH1–3 i kanału pace przez przełącznik routingu (§8.3.1). Wejście ma filtr EMI. Napięcie na pinie: −0,3 V do VDD+0,3 V (abs. max.)."
+      },
+      {
+        "n": "6",
+        "name": "IN6",
+        "cat": "analog",
+        "type": "Analog Input",
+        "fn": "Wejście sygnału elektrody 6",
+        "note": "Gdy WILSONINT=1 – połączony z WCTOUT; gdy GOLDINT=1 – z G3=(BUF1+BUF2)/2. WILSONINT i GOLDINT nie mogą być równocześnie 1 (zwarcie, Tab. 3). Elektroda; dowolny z IN1–IN6 można skierować do CH1–3 i kanału pace przez przełącznik routingu (§8.3.1). Wejście ma filtr EMI. Napięcie na pinie: −0,3 V do VDD+0,3 V (abs. max.)."
+      },
+      {
+        "n": "7",
+        "name": "WCT",
+        "cat": "analog",
+        "type": "Analog Output",
+        "fn": "Wyjście odniesienia Wilsona lub wyjście kanału analogowego pace",
+        "note": "Przy PACE2WCT=1 pin podaje Vpaceout=3,5·(Vinp−Vinm)+RLDREF i jest odłączony od wyjścia Wilsona. Wyjście o wysokiej impedancji – datasheet zaleca ekranowanie połączeń zewnętrznych (§8.3.10)."
+      },
+      {
+        "n": "8",
+        "name": "CMOUT",
+        "cat": "analog",
+        "type": "Output",
+        "fn": "Wyjście detektora składowej wspólnej (CM)",
+        "note": "Uśrednia do 6 wejść wybranych w CMDET_EN; wyjście może sterować ekranem kabla (do 8 nF, §8.3.11) i wejściem pętli RLD."
+      },
+      {
+        "n": "9",
+        "name": "RLDOUT",
+        "cat": "analog",
+        "type": "Analog Output",
+        "fn": "Wyjście wzmacniacza prawej nogi (RLD)",
+        "note": "Zawsze podłączone do wyjścia wzmacniacza RLD; dodatkowo może być skierowane do jednego z IN1–IN6 (SELRLD, §8.3.12). Zdolność obciążenia pojemnościowego programowana w RLD_CN."
+      },
+      {
+        "n": "10",
+        "name": "RLDINV",
+        "cat": "analog",
+        "type": "Analog Input",
+        "fn": "Wejście odwracające wzmacniacza RLD",
+        "note": "Wejście ujemne wzmacniacza RLD jest zawsze podłączone do tego pinu (§8.3.12)."
+      },
+      {
+        "n": "11",
+        "name": "RLDIN",
+        "cat": "analog",
+        "type": "Analog I/O",
+        "fn": "Wejście dodatnie wzmacniacza RLD lub wyjście kanału pace",
+        "note": "Domyślnie wejście „+” RLD. Przy PACE2RLDIN=1 pin jest wyjściem kanału analogowego pace, a wejście „+” RLD łączy się wewnętrznie z odniesieniem RLD (§8.3.9)."
+      },
+      {
+        "n": "12",
+        "name": "RLDREF",
+        "cat": "analog",
+        "type": "Analog Output",
+        "fn": "Wewnętrzne odniesienie RLD / składowej wspólnej",
+        "note": "Wartość ≈ (VDD−VSS)/2,2. Wymagany kondensator 0,1 µF do masy; odniesienie musi działać, gdy pracuje modulator sigma-delta (§8.3.29)."
+      },
+      {
+        "n": "13",
+        "name": "SYNCB",
+        "cat": "control",
+        "type": "Digital I/O",
+        "fn": "Synchronizacja wielu układów (wejście lub wyjście, aktywna stanem niskim)",
+        "note": "Wewnętrzny rezystor podciągający 1 MΩ. Układ „slave” ustawia SYNCB_CN=0x40 (pin jako wejście); źródło synchronizacji to układ o najwolniejszym tempie danych (§8.3.22)."
+      },
+      {
+        "n": "14",
+        "name": "VSSIO",
+        "cat": "ground",
+        "type": "Digital Supply",
+        "fn": "Masa zasilania wejść/wyjść cyfrowych",
+        "note": "W warunkach pracy VSS = VSSIO (§7.3) – masy analogowa i cyfrowa łączy się na PCB (wniosek: oba piny do jednej masy)."
+      },
+      {
+        "n": "15",
+        "name": "ALARMB",
+        "cat": "control",
+        "type": "Digital Output",
+        "fn": "Wyjście alarmu (aktywne niskim)",
+        "note": "Wyjście typu open-drain – przechodzi w stan niski przy nowym alarmie z ERROR_STATUS; maskowanie w MASK_ERR; zwalnia się po odczycie ERROR_STATUS (§8.3.26). Open-drain wymaga zewnętrznego podciągnięcia (wniosek)."
+      },
+      {
+        "n": "16",
+        "name": "CSB",
+        "cat": "spi",
+        "type": "Digital Input",
+        "fn": "Wybór układu SPI (aktywny niskim)",
+        "note": "Każde opadnięcie CSB zaczyna nowy dostęp do rejestru; zapis jest ważny tylko, jeśli CSB wróci do 1 po 16. zboczu SCLK (§8.5.3)."
+      },
+      {
+        "n": "17",
+        "name": "SCLK",
+        "cat": "spi",
+        "type": "Digital Input",
+        "fn": "Zegar interfejsu SPI",
+        "note": "Maks. 20 MHz. Dane wejściowe próbkowane zboczem narastającym, wyjściowe wystawiane zboczem opadającym (§7.6, §8.5.3)."
+      },
+      {
+        "n": "18",
+        "name": "SDI",
+        "cat": "spi",
+        "type": "Digital Input",
+        "fn": "Wejście danych szeregowych SPI",
+        "note": "Próbkowane zboczem narastającym SCLK; ramka 16 bitów: R/WB + 7-bitowy adres + 8 bitów danych (§8.5.3)."
+      },
+      {
+        "n": "19",
+        "name": "SDO",
+        "cat": "spi",
+        "type": "Digital Output",
+        "fn": "Wyjście danych szeregowych SPI",
+        "note": "Siła sterowania programowana na 4 poziomy w DIGO_STRENGTH – wybrać najniższą działającą (§8.5.2). Dane odczytu na zboczach opadających zegarów 8–15."
+      },
+      {
+        "n": "20",
+        "name": "DRDYB",
+        "cat": "control",
+        "type": "Digital Output",
+        "fn": "Gotowość danych (aktywna niskim)",
+        "note": "Źródło wybiera DRDYB_SRC; ustawić tylko jedno źródło, najlepiej kanał o najszybszym tempie danych (§8.5.7). Wygasa na 14. zboczu narastającym SCLK odczytu."
+      },
+      {
+        "n": "21",
+        "name": "CLK",
+        "cat": "clock",
+        "type": "Digital I/O",
+        "fn": "Wyjście wewn. zegara lub wejście zegara zewnętrznego",
+        "note": "Wyjście włącza EN_CLKOUT (OSC_CN); przy SHDN_OSC=1 pin jest wejściem zewn. zegara 409,6 kHz (370–450 kHz, wypełnienie 40–60 %). W układach wielokrotnych piny CLK łączy się razem (§8.3.19)."
+      },
+      {
+        "n": "22",
+        "name": "VDDIO",
+        "cat": "power",
+        "type": "Digital Supply",
+        "fn": "Zasilanie wejść/wyjść cyfrowych",
+        "note": "1,65–3,6 V, gdy VDD>3,6 V; 1,65 V…VDD, gdy VDD≤3,6 V (§7.3). Poziomy logiczne odnoszą się do VDDIO (VIH=0,8·VDDIO)."
+      },
+      {
+        "n": "23",
+        "name": "XTAL1",
+        "cat": "clock",
+        "type": "Digital Input",
+        "fn": "Wejście kwarcu oscylatora",
+        "note": "Kwarc 4,096 MHz między XTAL1 a XTAL2; tekst §8.3.19 wymaga 20 pF na każdym pinie (Rys. 27 pokazuje 22 pF – niezgodność w datasheecie). Oscylator dzielony przez 10 daje 409,6 kHz."
+      },
+      {
+        "n": "24",
+        "name": "XTAL2",
+        "cat": "clock",
+        "type": "Digital Input",
+        "fn": "Wyjście/wejście kwarcu oscylatora",
+        "note": "Datasheet podaje typ „Digital Input” także dla XTAL2. Warunki jak dla XTAL1: kwarc 4,096 MHz i kondensatory obciążające (§8.3.19)."
+      },
+      {
+        "n": "25",
+        "name": "RSTB",
+        "cat": "control",
+        "type": "Digital Input",
+        "fn": "Reset (aktywny niskim)",
+        "note": "Wewnętrzny rezystor podciągający 1 MΩ (tabela charakterystyk nazywa pin RESETB). Nazwa w tabeli pinów: RSTB."
+      },
+      {
+        "n": "26",
+        "name": "CVREF",
+        "cat": "analog",
+        "type": "Analog I/O",
+        "fn": "Zewnętrzny kondensator wewnętrznego odniesienia 2,4 V",
+        "note": "Wymagany niskoimpedancyjny kondensator 1 µF do masy; pin nie jest przeznaczony do obciążania. Odniesienie można podać z zewnątrz po wyłączeniu generatora wewn. (§8.3.29)."
+      },
+      {
+        "n": "27",
+        "name": "VSS",
+        "cat": "ground",
+        "type": "Analog Supply",
+        "fn": "Masa zasilania analogowego",
+        "note": "Masa odniesienia dla wszystkich napięć (§7.1); VSS = VSSIO (§7.3)."
+      },
+      {
+        "n": "28",
+        "name": "VDD",
+        "cat": "power",
+        "type": "Analog Supply",
+        "fn": "Dodatnie zasilanie analogowe",
+        "note": "2,7–5,5 V (abs. max. 6,0 V). Napięcie z tego pinu jest też mierzone w trybie monitora baterii (§8.3.2). Alarm BATLOW poniżej 2,7 V."
+      },
+      {
+        "n": "DAP",
+        "name": "DAP",
+        "cat": "nc",
+        "type": "",
+        "fn": "Pad termiczny (die attach pad) – wg tabeli „No connect”",
+        "note": "Tabela pinów podaje DAP bez numeru i bez typu, z opisem „No connect”. Zalecenia układu PCB dla padu: patrz rozdz. 11 datasheetu (nie weryfikowano).",
+        "pad": true
+      }
+    ],
+    "sources": [
+      {
+        "label": "Oficjalny datasheet ADS1293 (TI, SNAS602C, rev. XII 2014)",
+        "url": "https://www.ti.com/lit/ds/symlink/ads1293.pdf"
+      },
+      {
+        "label": "Strona produktu ADS1293 na ti.com",
+        "url": "https://www.ti.com/product/ADS1293"
+      }
+    ],
+    "notes": "Numery, nazwy i typy pinów zweryfikowano z tekstem tabeli „Pin Functions” oficjalnego datasheetu TI (SNAS602C). Wyciąg tekstowy podaje piny wejściowe jako zakres „IN1–IN6 = 1–6”, więc przypisanie IN1→1 … IN6→6 wynika z kolejności, a nie z osobnych wierszy. Rysunku „Top View” nie dało się odczytać jako obrazu: położenie pinów na bokach rysunku (numeracja przeciwnie do ruchu wskazówek zegara od lewego górnego rogu, po 7 pinów na bok) to standardowa konwencja obudów QFN zgodna z grupowaniem sygnałów w tabeli – sprawdź ją z rysunkiem w datasheecie przed zamówieniem PCB. Opisy po polsku są własnym streszczeniem datasheetu; uwagi oznaczone „(wniosek)” nie są dosłownym zapisem. Nie sprawdzano rozdziału Layout (zalecenia dla padu DAP)."
+  }
+}

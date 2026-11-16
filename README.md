@@ -181,3 +181,6 @@ Po poprawnym uruchomieniu, platforma jest dostępna pod następującymi adresami
 * Aplikacja Frontendowa: http://localhost:8000
 * Interaktywna Dokumenacja API (Swagger): http://localhost:8000/docs
 * Zarządzanie Bazą Danych (Adminer): http://localhost:8080
+
+## Pinout komponentów
+Interaktywny opis wyprowadzeń i wyglądu podzespołów w katalogu: [docs/PINOUT.md](docs/PINOUT.md) · demo i edytor: `/static/pinout-demo.html`.
