@@ -15,7 +15,9 @@ from fastapi import UploadFile, File
 import shutil
 from pydantic import BaseModel
 import models, schemas, utils, auth
-from database import engine, get_db
+from database import engine, get_db, SessionLocal
+import media_service
+from fastapi.responses import JSONResponse
 
 # Inicjalizacja bazy
 models.Base.metadata.create_all(bind=engine)
@@ -26,6 +28,28 @@ with engine.begin() as _conn:
     _conn.execute(_sql_text("ALTER TABLE official_components ADD COLUMN IF NOT EXISTS pinout JSON"))
 
 app = FastAPI(title="ESN Platform API")
+
+# Istniejące zdjęcia (kolumny image_*) → tabela media. Idempotentne, nigdy nie blokuje startu aplikacji.
+try:
+    print("[media] migracja zdjęć:", media_service.migrate_legacy(SessionLocal))
+except Exception as _e:
+    print("[media] UWAGA: migracja zdjęć nie powiodła się:", _e)
+
+
+@app.middleware("http")
+async def upload_guard(request: Request, call_next):
+    """1) odrzuca zbyt duże żądania zanim zostaną wczytane, 2) utwardza pliki wgrane przez użytkowników."""
+    if request.method in ("POST", "PUT", "PATCH") and request.url.path.startswith("/api/"):
+        cl = request.headers.get("content-length")
+        if cl and cl.isdigit() and int(cl) > media_service.CFG["max_request_bytes"]:
+            return JSONResponse({"detail": "Żądanie jest za duże."}, status_code=413)
+    response = await call_next(request)
+    parts = request.url.path.split("/")
+    if len(parts) > 2 and parts[1] == "static" and parts[2] in ("media", "projects", "catalog", "avatars"):
+        # Nawet gdyby w katalogu uploadów znalazł się stary plik .html/.svg – przeglądarka nie wykona w nim skryptów.
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["Content-Security-Policy"] = "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; sandbox"
+    return response
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
@@ -243,24 +267,14 @@ def update_profile(data: schemas.ProfileUpdate, current_user: models.User = Depe
 
 @app.post("/api/users/me/avatar",tags=["Konta i Uwierzytelnianie (JWT)"])
 async def upload_avatar(file: UploadFile = File(...), current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
-    avatar_dir = os.path.join("static", "avatars")
-    os.makedirs(avatar_dir, exist_ok=True)
-    
-    # Usuwanie starego zdjęcia z dysku
-    if current_user.avatar_path:
-        old_path = os.path.join("static", current_user.avatar_path)
-        if os.path.exists(old_path):
-            try: os.remove(old_path)
-            except: pass
-            
-    ext = file.filename.split('.')[-1]
-    new_filename = f"avatar_{current_user.id}_{int(datetime.utcnow().timestamp())}.{ext}"
-    filepath = os.path.join(avatar_dir, new_filename)
-    
-    with open(filepath, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-        
-    current_user.avatar_path = f"avatars/{new_filename}"
+    data = await media_service.read_limited(file, media_service.CFG["avatar_max_bytes"])
+    try:
+        clean, ext, _mime, _w, _h = media_service.validate_image(data, media_service.CFG["avatar_max_bytes"])
+    except media_service.ImageError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    # Stary avatar usuwamy dopiero po poprawnej walidacji nowego (i tylko z katalogu uploadów)
+    media_service.remove_static_file(current_user.avatar_path)
+    current_user.avatar_path = media_service.store_bytes("avatars", ext, clean)
     db.commit()
     return {"avatar_path": current_user.avatar_path}
 
@@ -408,6 +422,8 @@ def create_project(
     # 2. Bezpieczne wypakowanie danych (zapobieganie błędowi 'multiple values')
     project_data = project.dict()
     project_data.pop("is_official", None) # <--- TO NAPRAWIA TWÓJ BŁĄD!
+    for _f in ("image_main", "image_schematic", "image_gallery_1", "image_gallery_2", "markdown_path"):
+        project_data.pop(_f, None)   # ścieżki plików ustala wyłącznie serwer (system mediów) – nigdy klient
 
     # 3. Zapis do bazy
     new_project = models.Project(
@@ -443,6 +459,8 @@ def update_project(
     update_data = project_update.dict()
     # Usuwamy is_official z danych wejściowych, aby nie nadpisać go przypadkiem
     update_data.pop("is_official", None) 
+    for _f in ("image_main", "image_schematic", "image_gallery_1", "image_gallery_2", "markdown_path"):
+        update_data.pop(_f, None)   # ścieżki plików ustala wyłącznie serwer (system mediów) – nigdy klient
 
     # Aktualizacja pól tekstowych
     for key, value in update_data.items():
@@ -478,6 +496,7 @@ def delete_project(
     if os.path.exists(project_dir):
         shutil.rmtree(project_dir, ignore_errors=True)
     
+    media_service.delete_owner(db, "project", project.id)
     # Po usunięciu plików kasujemy wpis w bazie danych
     db.delete(project)
     db.commit()
@@ -492,45 +511,27 @@ async def upload_project_image(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    """Endpoint zgodności wstecznej. Zdjęcia: użyj POST /api/media. Tu zostaje m.in. plik .md projektu."""
     project = db.query(models.Project).filter(models.Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Projekt nie istnieje")
-
     if project.owner_id != current_user.id and current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Brak uprawnień")
 
-    # NOWOŚĆ: Usuwamy stary plik z dysku, jeśli wgrywamy nowy w to samo miejsce!
-    old_db_path = getattr(project, field, None)
-    if old_db_path:
-        old_full_path = os.path.join("static", old_db_path)
-        if os.path.exists(old_full_path):
-            try:
-                os.remove(old_full_path)
-            except Exception:
-                pass # Ignorujemy błąd, by nie zablokować wgrywania nowego
-
-    # 1. Tworzymy dedykowany folder projektu
-    project_dir = os.path.join("static", "projects", project.slug)
-    os.makedirs(project_dir, exist_ok=True)
-
-    # 2. Czyszczenie nazwy i zapis
-    safe_filename = re.sub(r'[^a-zA-Z0-9_.-]', '_', file.filename)
-    final_filename = f"{int(datetime.utcnow().timestamp())}_{safe_filename}"
-    file_path = os.path.join(project_dir, final_filename)
-
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-
-    # 3. Zapisujemy w bazie
-    db_path = f"projects/{project.slug}/{final_filename}"
-    if hasattr(project, field):
-        setattr(project, field, db_path)
+    if field == "markdown_path":
+        data = await media_service.read_limited(file, media_service.CFG["markdown_max_bytes"])
+        try:
+            data = media_service.validate_markdown(data)
+        except media_service.ImageError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        media_service.remove_static_file(project.markdown_path)
+        project.markdown_path = media_service.store_bytes(f"projects/{project.slug}", "md", data)
         db.commit()
-        db.refresh(project)
-    else:
-        raise HTTPException(status_code=400, detail="Błędne pole zdjęcia")
+        return {"message": "Plik wgrany pomyślnie", "path": project.markdown_path}
 
-    return {"message": "Zdjęcie wgrane pomyślnie", "path": db_path}
+    role, replace = media_service.legacy_slot("project", field)   # 400 dla nieznanego pola
+    item = await media_service.ingest(db, current_user, "project", project.id, role, "", file, replace=replace)
+    return {"message": "Zdjęcie wgrane pomyślnie", "path": item["path"]}
 
 @app.delete("/api/projects/{project_id}/file/{field}",tags=["Baza Projektów -- Główna"])
 async def delete_project_file(
@@ -542,27 +543,17 @@ async def delete_project_file(
     project = db.query(models.Project).filter(models.Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Projekt nie istnieje")
-
-    # Sprawdzenie uprawnień
     if project.owner_id != current_user.id and current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Brak uprawnień")
 
-    valid_fields = ["image_main", "image_schematic", "image_gallery_1", "image_gallery_2", "markdown_path"]
-    if field not in valid_fields:
-        raise HTTPException(status_code=400, detail="Nieprawidłowe pole")
-
-    file_path = getattr(project, field)
-    if file_path:
-        # Fizyczne usunięcie pliku z dysku serwera
-        full_path = os.path.join("static", file_path)
-        if os.path.exists(full_path):
-            os.remove(full_path)
-        
-        # Wyczyszczenie pola w bazie danych
-        setattr(project, field, None)
+    if field == "markdown_path":
+        media_service.remove_static_file(project.markdown_path)
+        project.markdown_path = None
         db.commit()
-
+    else:
+        media_service.legacy_delete(db, "project", project.id, field)
     return {"message": "Plik usunięty pomyślnie"}
+
 # --- FORMULARZ KONTAKTOWY ---
 
 class ContactFormInput(BaseModel):
@@ -903,40 +894,13 @@ async def upload_catalog_image(
     current_user: models.User = Depends(require_admin_or_mod),
     db: Session = Depends(get_db)
 ):
+    """Endpoint zgodności wstecznej – zdjęcia trafiają do systemu mediów (POST /api/media)."""
     item = db.query(models.OfficialComponent).filter(models.OfficialComponent.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Nie znaleziono komponentu")
-
-    valid_fields = ["image_main", "image_gallery_1", "image_gallery_2", "image_gallery_3"]
-    if field not in valid_fields:
-        raise HTTPException(status_code=400, detail="Nieprawidłowe pole zdjęcia")
-
-    # Usuwanie starego zdjęcia
-    old_db_path = getattr(item, field, None)
-    if old_db_path:
-        old_full_path = os.path.join("static", old_db_path)
-        if os.path.exists(old_full_path):
-            try: os.remove(old_full_path)
-            except Exception: pass
-
-    # Tworzenie folderu
-    safe_name = re.sub(r'[^a-z0-9]+', '-', item.name.lower()).strip('-')
-    catalog_dir = os.path.join("static", "catalog", f"{item.id}_{safe_name}")
-    os.makedirs(catalog_dir, exist_ok=True)
-
-    safe_filename = re.sub(r'[^a-zA-Z0-9_.-]', '_', file.filename)
-    final_filename = f"{int(datetime.utcnow().timestamp())}_{safe_filename}"
-    file_path = os.path.join(catalog_dir, final_filename)
-
-    with open(file_path, "wb") as buffer:
-        import shutil
-        shutil.copyfileobj(file.file, buffer)
-
-    db_path = f"catalog/{item.id}_{safe_name}/{final_filename}"
-    setattr(item, field, db_path)
-    db.commit()
-    
-    return {"message": "Zdjęcie wgrane pomyślnie", "path": db_path}
+    role, replace = media_service.legacy_slot("component", field)
+    saved = await media_service.ingest(db, current_user, "component", item.id, role, "", file, replace=replace)
+    return {"message": "Zdjęcie wgrane pomyślnie", "path": saved["path"]}
 
 @app.delete("/api/catalog/{item_id}",tags=["Globalny Katalog Sprzętowy"])
 def delete_catalog_item(
@@ -949,7 +913,8 @@ def delete_catalog_item(
     if not item:
         raise HTTPException(status_code=404, detail="Nie znaleziono komponentu")
     
-    # KASOWANIE FIZYCZNEGO FOLDERU Z DYSKU
+    media_service.delete_owner(db, "component", item.id)
+    # KASOWANIE FIZYCZNEGO FOLDERU Z DYSKU (stare uploady sprzed systemu mediów)
     safe_name = re.sub(r'[^a-z0-9]+', '-', item.name.lower()).strip('-')
     catalog_dir = os.path.join("static", "catalog", f"{item.id}_{safe_name}")
     if os.path.exists(catalog_dir):
@@ -967,24 +932,11 @@ async def delete_catalog_file(
     current_user: models.User = Depends(require_admin_or_mod),
     db: Session = Depends(get_db)
 ):
-    """Usuwa konkretne zdjęcie komponentu z dysku."""
+    """Zgodność wsteczna – usuwa zdjęcie z systemu mediów."""
     item = db.query(models.OfficialComponent).filter(models.OfficialComponent.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Nie znaleziono komponentu")
-
-    valid_fields = ["image_main", "image_gallery_1", "image_gallery_2", "image_gallery_3"]
-    if field not in valid_fields:
-        raise HTTPException(status_code=400, detail="Nieprawidłowe pole")
-
-    file_path = getattr(item, field)
-    if file_path:
-        full_path = os.path.join("static", file_path)
-        if os.path.exists(full_path):
-            os.remove(full_path)
-        
-        setattr(item, field, None)
-        db.commit()
-
+    media_service.legacy_delete(db, "component", item.id, field)
     return {"message": "Plik usunięty"}
 
 @app.put("/api/users/{user_id}/role",tags=["Zarządzanie Administracyjne"])
@@ -1004,3 +956,7 @@ def set_user_role(
     user.role = new_role
     db.commit()
     return {"user_id": user_id, "role": new_role, "message": "Rola zmieniona"}
+
+
+# --- SYSTEM MEDIÓW (zdjęcia projektów, komponentów i platformy) ---
+app.include_router(media_service.build_router(get_db, get_current_user))

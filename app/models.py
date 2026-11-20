@@ -125,3 +125,26 @@ class ContactMessage(Base):
     message = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     is_read = Column(Boolean, default=False)
+
+class Media(Base):
+    """Plik graficzny przypięty do dowolnego obiektu platformy (projekt, komponent, strona…).
+
+    Źródło prawdy dla zdjęć. Stare kolumny image_* w projektach/komponentach są tylko
+    synchronizowanym lustrem (karty, lista, Magazyn), patrz media_service.sync_legacy().
+    """
+    __tablename__ = "media"
+
+    id = Column(Integer, primary_key=True, index=True)
+    owner_type = Column(String(20), nullable=False, index=True)   # project | component | platform
+    owner_id = Column(Integer, nullable=False, index=True)        # platform: 0
+    role = Column(String(20), nullable=False, default="gallery")  # main | gallery | schematic | pinout
+    path = Column(String(255), nullable=False)                    # względem katalogu static/
+    original_name = Column(String(255), nullable=True)
+    mime = Column(String(50), nullable=True)
+    size_bytes = Column(Integer, default=0)
+    width = Column(Integer, nullable=True)
+    height = Column(Integer, nullable=True)
+    caption = Column(String(300), nullable=True)
+    position = Column(Integer, default=0)
+    uploaded_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)

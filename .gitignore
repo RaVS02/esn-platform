@@ -7,9 +7,11 @@ instance/
 *.sqlite3
 
 # Pliki wgrywane przez użytkowników (Uploads)
-static/avatars/
-static/projects/
-static/catalog/
+# (ścieżki muszą zaczynać się od app/ – wzorzec 'static/…' dotyczy tylko katalogu głównego repo)
+app/static/avatars/
+app/static/projects/
+app/static/catalog/
+app/static/media/
 
 # Środowisko Pythona i cache
 __pycache__/

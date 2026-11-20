@@ -11,6 +11,8 @@
 <link rel="stylesheet" href="{{ url_for('static', path='/pinout.css') }}?v=3">
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="{{ url_for('static', path='/pinout.js') }}?v=3"></script>
+<link rel="stylesheet" href="{{ url_for('static', path='/media.css') }}?v=1">
+<script src="{{ url_for('static', path='/media.js') }}?v=1"></script>
 
 </head>
 <body>
@@ -314,38 +316,7 @@
             style="resize:vertical;font-family:var(--mono);font-size:11px;white-space:pre;"></textarea>
         </div>
       </div>
-      <div style="margin-top: 15px; margin-bottom: 15px; padding: 12px; border: 1px dashed var(--border2); border-radius: 8px; background: var(--bg2);">
-          
-          <label style="font-size:11px; color:var(--accent); font-family:var(--mono); display:block; margin-bottom:6px;">
-              ⛶ Obrazek Główny: <span id="cm-name-image_main" style="color:var(--text3); font-style:italic; margin-left:10px;"></span>
-              <a href="javascript:void(0)" id="del-cm-image_main" style="display:none; color:var(--red); text-decoration:none; margin-left:10px;" onclick="deleteCatalogFile('image_main')">🗑️ Usuń</a>
-          </label>
-          <input type="file" id="cm-image-main" accept="image/*" style="font-size: 12px; color: var(--text2); margin-bottom: 15px; width: 100%;">
-
-          <div style="display:flex; gap: 10px;">
-              <div style="flex:1;">
-                  <label style="font-size:11px; color:var(--accent); font-family:var(--mono); display:block; margin-bottom:6px;">
-                       ⛶ Galeria 1: <span id="cm-name-image_gallery_1" style="color:var(--text3); font-style:italic; margin-left:5px;"></span>
-                       <a href="javascript:void(0)" id="del-cm-image_gallery_1" style="display:none; color:var(--red); text-decoration:none; margin-left:5px;" onclick="deleteCatalogFile('image_gallery_1')">🗑️ Usuń</a>
-                  </label>
-                  <input type="file" id="cm-image-gallery-1" accept="image/*" style="font-size: 12px; color: var(--text2); width:100%;">
-              </div>
-              <div style="flex:1;">
-                  <label style="font-size:11px; color:var(--accent); font-family:var(--mono); display:block; margin-bottom:6px;">
-                       ⛶ Galeria 2: <span id="cm-name-image_gallery_2" style="color:var(--text3); font-style:italic; margin-left:5px;"></span>
-                       <a href="javascript:void(0)" id="del-cm-image_gallery_2" style="display:none; color:var(--red); text-decoration:none; margin-left:5px;" onclick="deleteCatalogFile('image_gallery_2')">🗑️ Usuń</a>
-                  </label>
-                  <input type="file" id="cm-image-gallery-2" accept="image/*" style="font-size: 12px; color: var(--text2); width:100%;">
-              </div>
-              <div style="flex:1;">
-                  <label style="font-size:11px; color:var(--accent); font-family:var(--mono); display:block; margin-bottom:6px;">
-                       ⛶ Galeria 3: <span id="cm-name-image_gallery_3" style="color:var(--text3); font-style:italic; margin-left:5px;"></span>
-                       <a href="javascript:void(0)" id="del-cm-image_gallery_3" style="display:none; color:var(--red); text-decoration:none; margin-left:5px;" onclick="deleteCatalogFile('image_gallery_3')">🗑️ Usuń</a>
-                  </label>
-                  <input type="file" id="cm-image-gallery-3" accept="image/*" style="font-size: 12px; color: var(--text2); width:100%;">
-              </div>
-          </div>
-      </div>
+      <div id="cm-media-manager"></div>
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
         <button class="btn-action" onclick="closeCatalogModal()">Anuluj</button>
         <button class="btn-action" id="cm-delete-btn" style="display:none;color:var(--red);
@@ -2475,41 +2446,7 @@
       <textarea id="p-notes" placeholder="Notatki techniczne..." class="text-input" style="height:80px; resize:none; font-family:var(--sans)"></textarea>
       <textarea id="p-code" placeholder="Wklej fragment najważniejszego kodu..." class="text-input" style="height:120px; resize:none; font-family:var(--mono); font-size:12px;"></textarea>
 
-      <div style="margin-bottom: 15px; padding: 12px; border: 1px dashed var(--border2); border-radius: 8px; background: var(--bg2);">
-          
-          <label style="font-size:11px; color:var(--accent); font-family:var(--mono); display:block; margin-bottom:6px;">
-              ⛶ Obrazek Główny: 
-              <span id="name-image_main" style="color:var(--text3); font-style:italic; margin-left:10px;"></span>
-              <a href="javascript:void(0)" id="del-image_main" style="display:none; color:var(--red); text-decoration:none; margin-left:10px;" onclick="deleteProjectFile('image_main')">🗑️ Usuń</a>
-          </label>
-          <input type="file" id="p-image-main" accept="image/*" style="font-size: 12px; color: var(--text2); margin-bottom: 15px; width: 100%;">
-
-          <label style="font-size:11px; color:var(--accent); font-family:var(--mono); display:block; margin-bottom:6px;">
-              <i class="fa-solid fa-drafting-compass"></i> Schemat techniczny: 
-              <span id="name-image_schematic" style="color:var(--text3); font-style:italic; margin-left:10px;"></span>
-              <a href="javascript:void(0)" id="del-image_schematic" style="display:none; color:var(--red); text-decoration:none; margin-left:10px;" onclick="deleteProjectFile('image_schematic')">🗑️ Usuń</a>
-          </label>
-          <input type="file" id="p-image-schematic" accept="image/*" style="font-size: 12px; color: var(--text2); margin-bottom: 15px; width: 100%;">
-
-          <div style="display:flex; gap: 10px;">
-              <div style="flex:1;">
-                  <label style="font-size:11px; color:var(--accent); font-family:var(--mono); display:block; margin-bottom:6px;">
-                       ⛶ Galeria 1: 
-                      <span id="name-image_gallery_1" style="color:var(--text3); font-style:italic; margin-left:5px;"></span>
-                      <a href="javascript:void(0)" id="del-image_gallery_1" style="display:none; color:var(--red); text-decoration:none; margin-left:5px;" onclick="deleteProjectFile('image_gallery_1')">🗑️ Usuń</a>
-                  </label>
-                  <input type="file" id="p-image-gallery-1" accept="image/*" style="font-size: 12px; color: var(--text2); width:100%;">
-              </div>
-              <div style="flex:1;">
-                  <label style="font-size:11px; color:var(--accent); font-family:var(--mono); display:block; margin-bottom:6px;">
-                       ⛶ Galeria 2: 
-                      <span id="name-image_gallery_2" style="color:var(--text3); font-style:italic; margin-left:5px;"></span>
-                      <a href="javascript:void(0)" id="del-image_gallery_2" style="display:none; color:var(--red); text-decoration:none; margin-left:5px;" onclick="deleteProjectFile('image_gallery_2')">🗑️ Usuń</a>
-                  </label>
-                  <input type="file" id="p-image-gallery-2" accept="image/*" style="font-size: 12px; color: var(--text2); width:100%;">
-              </div>
-          </div>
-      </div>
+      <div id="p-media-manager"></div>
 
       <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border2);">
           <label style="font-size:11px; color:var(--accent); font-family:var(--mono); display:block; margin-bottom:6px;">
@@ -2817,27 +2754,6 @@ function openFullProjectView(slug) {
 
     currentLightboxImages = allImages;
 
-    let collageHtml = '';
-    if (allImages.length > 0) {
-        const maxVisible = 4;
-        const visibleImages = allImages.slice(0, maxVisible);
-        const remainingCount = allImages.length - maxVisible;
-
-        collageHtml = `<div class="project-collage" data-count="${visibleImages.length}" style="margin-bottom: 30px;">`;
-        visibleImages.forEach((img, index) => {
-            let overlayHtml = '';
-            if (index === maxVisible - 1 && remainingCount > 0) {
-                overlayHtml = `<div class="collage-overlay-more">+${remainingCount}</div>`;
-            }
-            collageHtml += `
-                <div class="collage-item" style="position: relative;" onclick="openLightbox(${index})">
-                    <img src="/static/${img.url}" alt="${img.caption}">
-                    ${overlayHtml}
-                    <div class="collage-caption">${img.caption}</div>
-                </div>`;
-        });
-        collageHtml += `</div>`;
-    }
     // --- LOGIKA STATUSU (Kolory i tekst) ---
     const statusMap = {
         'stable':   { label: 'SYSTEM_STABLE', color: 'var(--green)' },
@@ -2928,7 +2844,7 @@ function openFullProjectView(slug) {
             </div>
         </div>
         
-        ${collageHtml} 
+        <div id="project-gallery-slot"></div>
         
         <div style="display:flex; gap:10px; margin-bottom: 30px;">${tagsHtml}</div>
         
@@ -2939,6 +2855,8 @@ function openFullProjectView(slug) {
         
         ${controlButtonsHtml}
     `;
+
+    ESNMedia.mountGallery(document.getElementById('project-gallery-slot'), 'project', p.id, { fallback: allImages });
 
     if (p.markdown_path) {
         const mdContainer = document.getElementById(`markdown-container-${p.id}`);
@@ -3133,6 +3051,9 @@ function removeProjectStatus(status) {
     updateProjectsView();
 }
 // 3. Pobieranie danych do edycji
+let projMedia = null;   // menedżer zdjęć w oknie projektu
+let catMedia = null;    // menedżer zdjęć w oknie komponentu
+
 function editProject(slug) {
     const p = allLoadedProjects.find(item => item.slug === slug);
     if(!p) return;
@@ -3169,6 +3090,9 @@ function editProject(slug) {
         }
     });
 
+    if (projMedia) projMedia.destroy();
+    projMedia = ESNMedia.manager(document.getElementById('p-media-manager'), { ownerType: 'project', ownerId: p.id, roles: ['main', 'schematic', 'gallery'] });
+
     document.querySelector('#projectModal h2').innerText = "Edytuj Projekt";
     document.querySelector('#projectModal button.primary').innerText = "Zapisz zmiany";
     document.getElementById('projectModal').style.display = 'flex';
@@ -3178,6 +3102,7 @@ function openProjectModal() {
     // Resetujemy ID edycji, aby system wiedział, że to NOWY projekt, a nie edycja starego
     editingProjectId = null;
     editingProjectData = null;
+    if (projMedia) { projMedia.destroy(); projMedia = null; }
     
     // Przywracamy domyślne napisy w modalu
     document.querySelector('#projectModal h2').innerText = "Nowy Projekt";
@@ -3199,11 +3124,15 @@ function openProjectModal() {
         if (nameSpan) nameSpan.innerText = '';
     });
 
+    // Nowy projekt: zdjęcia czekają w przeglądarce i wgrają się po pierwszym zapisie
+    projMedia = ESNMedia.manager(document.getElementById('p-media-manager'), { ownerType: 'project', ownerId: null, roles: ['main', 'schematic', 'gallery'] });
+
     // Na koniec pokazujemy modal
     document.getElementById('projectModal').style.display = 'flex';
 }
 
 function closeProjectModal() {
+    if (projMedia) { projMedia.destroy(); projMedia = null; }
     editingProjectId = null;
     editingProjectData = null;
     document.getElementById('projectModal').style.display = 'none';
@@ -3265,14 +3194,7 @@ async function submitProject() {
         status: document.getElementById('p-status').value
     };
 
-    // BARDZO WAŻNE: Jeśli edytujemy, zachowujemy stare ścieżki zdjęć!
-    if (editingProjectData) {
-        projectData.image_main = editingProjectData.image_main;
-        projectData.image_schematic = editingProjectData.image_schematic;
-        projectData.image_gallery_1 = editingProjectData.image_gallery_1;
-        projectData.image_gallery_2 = editingProjectData.image_gallery_2;
-        projectData.markdown_path = editingProjectData.markdown_path; // <--- TEJ LINIJKI BRAKOWAŁO!
-    }
+    // Ścieżki zdjęć i pliku .md ustala serwer (system mediów) – nie wysyłamy ich w JSON.
 
     const method = editingProjectId ? 'PUT' : 'POST';
     const url = editingProjectId ? `/api/projects/${editingProjectId}` : '/api/projects';
@@ -3301,29 +3223,27 @@ async function submitProject() {
             return alert("❌ Błąd zapisu projektu: " + JSON.stringify(err));
         }
 
-        // ETAP 2: Masowe wgrywanie zdjęć do nowo utworzonego folderu
-        // Definiujemy jakie pola w HTML odpowiadają jakim polom w Bazie Danych
-        const uploadQueue = [
-            { id: 'p-image-main', field: 'image_main' },
-            { id: 'p-image-schematic', field: 'image_schematic' },
-            { id: 'p-image-gallery-1', field: 'image_gallery_1' },
-            { id: 'p-image-gallery-2', field: 'image_gallery_2' },
-            { id: 'p-markdown-file', field: 'markdown_path' } // <--- NOWE: Automatycznie wrzuci plik .md do folderu!
-        ];
+        // ETAP 2a: plik .md (jeśli wybrano)
+        const mdInput = document.getElementById('p-markdown-file');
+        if (mdInput && mdInput.files.length > 0 && savedProjectId) {
+            const formData = new FormData();
+            formData.append('file', mdInput.files[0]);
+            formData.append('field', 'markdown_path');
+            const mdRes = await fetch(`/api/projects/${savedProjectId}/upload`, {
+                method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData
+            });
+            if (!mdRes.ok) { const e = await mdRes.json().catch(() => ({})); toast('Plik .md: ' + (e.detail || 'błąd wgrywania'), 'error'); }
+        }
 
-        // Pętla sprawdzająca i wgrywająca każdy plik po kolei
-        for (const item of uploadQueue) {
-            const fileInput = document.getElementById(item.id);
-            if (fileInput && fileInput.files.length > 0 && savedProjectId) {
-                const formData = new FormData();
-                formData.append('file', fileInput.files[0]);
-                formData.append('field', item.field); // Mówimy serwerowi, CO wgrywamy
-
-                await fetch(`/api/projects/${savedProjectId}/upload`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` },
-                    body: formData
-                });
+        // ETAP 2b: zdjęcia z menedżera mediów (wgrywane po zapisie projektu)
+        if (projMedia) {
+            const r = await projMedia.flush(savedProjectId);
+            if (r.failed.length) {
+                editingProjectId = savedProjectId;   // projekt już istnieje – kolejne zapisy to edycja
+                document.querySelector('#projectModal h2').innerText = "Edytuj Projekt";
+                toast(`Projekt zapisany, ale nie wgrano ${r.failed.length} zdjęć: ` + r.failed.map(f => `${f.name} (${f.error})`).join('; '), 'error');
+                updateProjectsView();
+                return;
             }
         }
 
@@ -3458,21 +3378,6 @@ function openFullCatalogView(id) {
         { url: item.image_gallery_3, caption: "Galeria (3)" }
     ].filter(img => img.url);
 
-    let collageHtml = '';
-    if (allImages.length > 0) {
-        const visibleImages = allImages.slice(0, 4);
-        collageHtml = `<div class="project-collage" data-count="${visibleImages.length}" style="margin-bottom: 30px;">`;
-        visibleImages.forEach((img, index) => {
-            const safeData = encodeURIComponent(JSON.stringify(allImages));
-            collageHtml += `
-                <div class="collage-item" style="position: relative;" onclick="openCatalogLightbox('${safeData}', ${index})">
-                    <img src="/static/${img.url}" alt="${img.caption}">
-                    <div class="collage-caption">${img.caption}</div>
-                </div>`;
-        });
-        collageHtml += `</div>`;
-    }
-
     const specsHtml = renderSpecsBlock(item.technical_specs);
 
     let adminBtns = isAdmin ? `
@@ -3495,7 +3400,7 @@ function openFullCatalogView(id) {
             </h1>
         </div>
         
-        ${collageHtml} 
+        <div id="catalog-gallery-slot"></div>
         
         <div style="display:flex; gap:10px; margin-bottom: 30px;">${tagsHtml}</div>
         
@@ -3516,6 +3421,7 @@ function openFullCatalogView(id) {
 
         ${adminBtns}
     `;
+    ESNMedia.mountGallery(document.getElementById('catalog-gallery-slot'), 'component', item.id, { fallback: allImages });
     loadCatalogPinout(item, isAdmin);
 }
 
@@ -3809,8 +3715,6 @@ async function openCatalogModal(id = null) {
     const appSelect = document.getElementById('cm-applications');
     appSelect.innerHTML = `<option value="">Wybierz...</option>` + applications.map(a => `<option value="${a}">${a}</option>`).join('');
 
-    const fileFields = ['image_main', 'image_gallery_1', 'image_gallery_2', 'image_gallery_3'];
-
     if (!id) {
         document.getElementById('cm-name').value = '';
         document.getElementById('cm-symbol').value = '';
@@ -3820,12 +3724,6 @@ async function openCatalogModal(id = null) {
         document.getElementById('cm-datasheet').value = '';
         document.getElementById('cm-pinout').value = '';
 
-        // Czyścimy pliki dla nowego
-        fileFields.forEach(f => {
-            document.getElementById('cm-' + f.replace(/_/g, '-')).value = '';
-            document.getElementById('del-cm-' + f).style.display = 'none';
-            document.getElementById('cm-name-' + f).innerText = '';
-        });
     } else {
         const res = await fetch(`/api/catalog/${id}`);
         const data = await res.json(); 
@@ -3840,51 +3738,15 @@ async function openCatalogModal(id = null) {
         document.getElementById('cm-datasheet').value = data.datasheet_url || '';
         document.getElementById('cm-pinout').value = ESNPinout.toText(data.pinout);
 
-        // Ustawianie widoczności usuwania i wyciąganie samej nazwy pliku
-        fileFields.forEach(f => {
-            document.getElementById('cm-' + f.replace(/_/g, '-')).value = '';
-            const btn = document.getElementById('del-cm-' + f);
-            const nameSpan = document.getElementById('cm-name-' + f);
-            if (data[f]) {
-                if (btn) btn.style.display = 'inline-block';
-                if (nameSpan) {
-                    const cleanName = data[f].split('/').pop().replace(/^\d+_/, ''); 
-                    nameSpan.innerText = `(${cleanName})`;
-                }
-            } else {
-                if (btn) btn.style.display = 'none';
-                if (nameSpan) nameSpan.innerText = '';
-            }
-        });
     }
-}
 
-async function deleteCatalogFile(field) {
-    if (!catalogEditingId) return;
-    const isConfirmed = await customConfirm("Czy na pewno usunąć ten plik z serwera?", "Usuwanie pliku");
-    if (!isConfirmed) return;
-    
-    try {
-        const res = await fetch(`/api/catalog/${catalogEditingId}/file/${field}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
-        
-        if (res.ok) {
-            document.getElementById('del-cm-' + field).style.display = 'none'; 
-            document.getElementById('cm-name-' + field).innerText = ''; 
-            toast("Plik został usunięty z dysku", "success");
-            await loadCatalog(); // Odświeżamy by uaktualnić interfejs w tle
-        } else {
-            const err = await res.json();
-            toast("Błąd usuwania: " + err.detail, "error");
-        }
-    } catch (e) {
-        toast("Błąd połączenia: " + e.message, "error");
-    }
+    // Zdjęcia: komponent zapisany → wgrywanie od razu; nowy → po pierwszym zapisie
+    if (catMedia) catMedia.destroy();
+    catMedia = ESNMedia.manager(document.getElementById('cm-media-manager'), { ownerType: 'component', ownerId: id || null, roles: ['main', 'gallery', 'pinout'] });
 }
 
 function closeCatalogModal() {
+    if (catMedia) { catMedia.destroy(); catMedia = null; }
     document.getElementById('catalogModal').style.display = 'none';
 }
 
@@ -3938,26 +3800,14 @@ async function saveCatalogItem() {
                 savedCatalogId = data.id;
             }
 
-            // --- WGRYWANIE ZDJĘĆ MASOWO ---
-            const uploadQueue = [
-                { id: 'cm-image-main', field: 'image_main' },
-                { id: 'cm-image-gallery-1', field: 'image_gallery_1' },
-                { id: 'cm-image-gallery-2', field: 'image_gallery_2' },
-                { id: 'cm-image-gallery-3', field: 'image_gallery_3' }
-            ];
-
-            for (const item of uploadQueue) {
-                const fileInput = document.getElementById(item.id);
-                if (fileInput && fileInput.files.length > 0 && savedCatalogId) {
-                    const formData = new FormData();
-                    formData.append('file', fileInput.files[0]);
-                    formData.append('field', item.field);
-
-                    await fetch(`/api/catalog/${savedCatalogId}/upload`, {
-                        method: 'POST',
-                        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-                        body: formData
-                    });
+            // --- ZDJĘCIA z menedżera mediów (wgrywane po zapisie komponentu) ---
+            if (catMedia) {
+                const r = await catMedia.flush(savedCatalogId);
+                if (r.failed.length) {
+                    catalogEditingId = savedCatalogId;   // komponent już istnieje – kolejne zapisy to edycja
+                    toast(`Zapisano, ale nie wgrano ${r.failed.length} zdjęć: ` + r.failed.map(f => `${f.name} (${f.error})`).join('; '), 'error');
+                    await loadCatalog();
+                    return;
                 }
             }
 
@@ -3978,8 +3828,7 @@ async function saveCatalogItem() {
 function openCatalogLightbox(encodedData, index) {
     currentLightboxImages = JSON.parse(decodeURIComponent(encodedData));
     currentLightboxIndex = index;
-    document.getElementById('lightbox').style.display = 'block';
-    updateLightboxImg();
+    ESNMedia.openLightbox(currentLightboxImages, index);
 }
 function editCatalogItem(id) {
   openCatalogModal(id);
@@ -4214,8 +4063,7 @@ let currentLightboxIndex = 0;
 
 function openLightbox(index) {
     currentLightboxIndex = index;
-    document.getElementById('lightbox').style.display = 'block';
-    updateLightboxImg();
+    ESNMedia.openLightbox(currentLightboxImages, index);   // nowy lightbox z powiększaniem
 }
 function closeLightbox() { 
     document.getElementById('lightbox').style.display = 'none'; 

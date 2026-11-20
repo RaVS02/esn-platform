@@ -184,3 +184,6 @@ Po poprawnym uruchomieniu, platforma jest dostępna pod następującymi adresami
 
 ## Pinout komponentów
 Interaktywny opis wyprowadzeń i wyglądu podzespołów w katalogu: [docs/PINOUT.md](docs/PINOUT.md) · demo i edytor: `/static/pinout-demo.html`.
+
+## Zdjęcia (system mediów)
+Wiele zdjęć na projekt/komponent, role, powiększanie, limity i zabezpieczenia: [docs/MEDIA.md](docs/MEDIA.md).
