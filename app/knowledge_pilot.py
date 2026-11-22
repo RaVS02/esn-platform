@@ -10,12 +10,12 @@ ARTICLES = [
   'kind': 'essential',
   'level': 'basic',
   'title': 'Typy pinów i poziomy logiczne',
-  'summary': 'Ściąga: rodzaje pinów mikrokontrolera (GPIO, ADC, PWM, magistrale) i dlaczego 5 V potrafi zniszczyć układ 3,3 V.',
+  'summary': 'Ściąga: rodzaje pinów mikrokontrolera (GPIO, ADC, PWM, magistrale) i dlaczego 5 V może uszkodzić układ 3,3 V.',
   'tags': ['pinout', 'gpio', 'logika', 'esp32'],
   'body': r''':::summary Szybkie podsumowanie
 - **GPIO:** Piny ogólnego przeznaczenia (wejścia/wyjścia cyfrowe).
 - **ADC / DAC:** Piny analogowe (czytanie / generowanie płynnych napięć).
-- **Logika 3.3V vs 5V:** ESP32 działa na 3.3V. Podanie 5V na pin GPIO natychmiast go spali!
+- **Logika 3.3V vs 5V:** ESP32 działa na 3.3V. Podanie 5V na pin GPIO może go uszkodzić!
 :::
 
 :::card Zrozumienie pinoutu (mapy płytki)
@@ -24,13 +24,13 @@ Mikrokontrolery komunikują się ze światem przez fizyczne wyprowadzenia. Na sc
 
 :::kv
 <span class="badge badge-accent">Digital (GPIO)</span> | Odbiera lub wysyła stany logiczne (0 lub 1 / LOW lub HIGH).
-<span class="badge badge-green">Analog (ADC)</span> | Czyta płynne napięcie (np. z potencjometru). ESP32 ma ADC 12-bitowe.
+<span class="badge badge-green">Analog (ADC)</span> | Czyta płynne napięcie (np. z potencjometru). ESP32 ma ADC 12-bitowe (nieliniowy, a ADC2 bywa niedostępny przy włączonym Wi-Fi).
 <span class="badge badge-orange">PWM</span> | Udaje sygnał analogowy poprzez bardzo szybkie miganie pinem cyfrowym (sterowanie jasnością LED, silnikami).
 <span class="badge badge-purple">Komunikacja</span> | Sprzętowe piny dla UART (TX/RX), I2C (SDA/SCL) oraz SPI (MOSI/MISO/SCK).
 :::
 
 :::danger Krytyczne: poziomy logiczne (3.3V vs 5V)
-Starsze systemy (jak Arduino UNO) operują na logice <span class="text-red">5V</span>. Nowoczesne układy (ESP32, STM32, Raspberry Pi) operują na <span class="text-red">3.3V</span>. Jeśli podłączysz czujnik 5V bezpośrednio do pinu RX w ESP32, napięcie „przebije" zabezpieczenia i <span class="text-red">spali cały mikrokontroler</span>. Zawsze używaj <span class="text-red">dwukierunkowych konwerterów poziomów logicznych</span> (Level Shifter)!
+Starsze systemy (jak Arduino UNO) operują na logice <span class="text-red">5V</span>. Nowoczesne układy (ESP32, Raspberry Pi i większość STM32) operują na <span class="text-red">3.3V</span> (część pinów STM32 toleruje 5V, więc sprawdź to w nocie katalogowej). Jeśli podłączysz czujnik 5V bezpośrednio do pinu RX w ESP32, napięcie wykracza poza dopuszczalny zakres i <span class="text-red">może uszkodzić wejście, a w skrajnym przypadku cały mikrokontroler</span>. Dla linii jednokierunkowej (np. wyjście czujnika → RX) wystarczy <span class="text-red">dzielnik rezystorowy</span>, a dla magistral dwukierunkowych (np. I²C) używaj <span class="text-red">konwerterów poziomów logicznych</span> (Level Shifter)!
 :::''',
   'position': 1,
  },
@@ -44,7 +44,7 @@ Starsze systemy (jak Arduino UNO) operują na logice <span class="text-red">5V</
   'body': r''':::summary Szybkie podsumowanie
 - ADC zamienia napięcie → liczbę. Bitowość = ile „schodków" w zakresie 0–Vref.
 - 10-bit (Arduino): 1024 wartości. 12-bit (ESP32): 4096. 24-bit (medyczne): 16M.
-- Dane 24-bit → pakuj w `uint32_t` (bajt MSB zawsze = 0).
+- Dane 24-bit nie mieszczą się w `int16_t` – zapisz je w zmiennej 32-bitowej (`int32_t`, jeśli wynik jest ze znakiem; format sprawdź w nocie układu).
 :::
 
 :::card Czym jest przetwornik ADC i rozdzielczość?
@@ -95,6 +95,10 @@ Kluczowym parametrem ADC jest jego **rozdzielczość** podawana w bitach. Okreś
               <text x="600" y="148" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="var(--green)">→ pakuj w uint32</text>
               <text x="350" y="185" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="var(--text3)">Rozdzielczość rośnie wykładniczo: każdy bit to ×2 więcej kroków</text>
             </svg>
+:::
+
+:::note Uwaga do wartości na diagramie
+Podane kroki dotyczą pełnego zakresu (Arduino 5 V, ESP32 3,3 V). W ESP32 realny zakres zależy od tłumienia wejścia (domyślnie jest to ok. 0–1,1 V), a dla układów 24-bit krok zależy od napięcia odniesienia i wzmocnienia. Efektywna rozdzielczość jest dodatkowo ograniczona szumem (ENOB < 24 bity).
 :::
 
 :::card Sprawdź sam: jak bitowość zmienia pomiar
@@ -183,12 +187,12 @@ Przesuń suwak poniżej. Niebieska linia to prawdziwe napięcie, pomarańczowa t
   'tags': ['uart', 'serial', 'struct', 'python'],
   'body': r''':::summary Szybkie podsumowanie
 - Format tekstowy (ASCII) – czytelny, wolny, „puchnie"; używaj do debugowania.
-- Format binarny – szybki, mały; jedyna opcja dla ≥500 Hz. Wymaga `struct` w Pythonie.
+- Format binarny – szybki, mały; konieczny, gdy ramka tekstowa nie mieści się w przepustowości łącza (zob. lekcja 3). Wymaga `struct` w Pythonie.
 - ASCII: liczba 4000 → 4 bajty. Binarnie: 4000 → 2 bajty (int16).
 :::
 
 :::card Format tekstowy (ASCII)
-Zasada: wartości liczbowe są zamieniane na ciąg znaków (np. `analogRead()` → `"1024\n"`) i wysyłane bajt po bajcie. Każda cyfra to osobny bajt ASCII.
+Zasada: wartości liczbowe są zamieniane na ciąg znaków (np. `analogRead()` → `"1023\n"`) i wysyłane bajt po bajcie. Każda cyfra to osobny bajt ASCII.
 
 Czytelne bezpośrednio w Serial Monitorze ArduinoIDE. Proste parsowanie po stronie Pythona (`split()`, `int()`). Jednak liczba `4000` zajmuje **4 bajty** zamiast możliwych 2 bajtów w formacie binarnym.
 :::
@@ -202,7 +206,7 @@ Czytelne bezpośrednio w Serial Monitorze ArduinoIDE. Proste parsowanie po stron
 :::cons MINUSY — ASCII
 - Bardzo wolny (3–5× więcej bajtów)
 - Obciąża CPU konwersją
-- Niedopuszczalny przy ≥200 Hz
+- Przy wysokich częstotliwościach i wielu kanałach łatwo przekracza przepustowość łącza
 :::
 
 :::card Format binarny
@@ -214,7 +218,7 @@ Po stronie Pythona używamy biblioteki `struct` do dekodowania: `struct.unpack('
 :::pros PLUSY — BINARNY
 - Maksymalna przepustowość
 - Minimalne zużycie CPU
-- Jedyna opcja dla ≥500 Hz
+- Zwykle jedyna opcja przy wysokich częstotliwościach i wielu kanałach
 :::
 
 :::cons MINUSY — BINARNY
@@ -238,11 +242,11 @@ Po stronie Pythona używamy biblioteki `struct` do dekodowania: `struct.unpack('
             </defs>
             <rect x="10" y="20" width="100" height="44" rx="6" fill="#1a2030" stroke="#243040"/>
             <text x="60" y="38" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#8a9ab5">ADC</text>
-            <text x="60" y="54" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e0eaf5">1024</text>
+            <text x="60" y="54" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e0eaf5">1023</text>
             <line x1="110" y1="42" x2="148" y2="42" stroke="#3a4a5a" stroke-width="1.5" marker-end="url(#arrowGrey)"/>
             <rect x="150" y="20" width="130" height="44" rx="6" fill="#1a2030" stroke="#243040"/>
             <text x="215" y="37" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#ffab70">itoa() / sprintf()</text>
-            <text x="215" y="55" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e0eaf5">"1024\n" = 5 B</text>
+            <text x="215" y="55" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e0eaf5">"1023\n" = 5 B</text>
             <line x1="280" y1="42" x2="318" y2="42" stroke="#3a4a5a" stroke-width="1.5" marker-end="url(#arrowGrey)"/>
             <rect x="320" y="20" width="130" height="44" rx="6" fill="#1a2030" stroke="#243040"/>
             <text x="385" y="37" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#8a9ab5">UART 115200</text>
@@ -254,11 +258,11 @@ Po stronie Pythona używamy biblioteki `struct` do dekodowania: `struct.unpack('
             <text x="380" y="12" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#ff4466" font-weight="600">ASCII — wolno, czytelnie</text>
             <rect x="10" y="112" width="100" height="44" rx="6" fill="rgba(0,212,255,0.08)" stroke="rgba(0,212,255,0.3)"/>
             <text x="60" y="130" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#8a9ab5">ADC</text>
-            <text x="60" y="146" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e0eaf5">1024</text>
+            <text x="60" y="146" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e0eaf5">1023</text>
             <line x1="110" y1="134" x2="148" y2="134" stroke="#00d4ff" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
             <rect x="150" y="112" width="130" height="44" rx="6" fill="rgba(0,212,255,0.08)" stroke="rgba(0,212,255,0.3)"/>
             <text x="215" y="129" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#00d4ff">cast uint16_t</text>
-            <text x="215" y="147" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e0eaf5">0x04 0x00 = 2 B</text>
+            <text x="215" y="147" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e0eaf5">0xFF 0x03 = 2 B</text>
             <line x1="280" y1="134" x2="318" y2="134" stroke="#00d4ff" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
             <rect x="320" y="112" width="130" height="44" rx="6" fill="rgba(0,212,255,0.08)" stroke="rgba(0,212,255,0.3)"/>
             <text x="385" y="129" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#00d4ff">UART 115200</text>
@@ -276,27 +280,37 @@ import serial
 import struct
 
 ser = serial.Serial('/dev/ttyUSB0', 115200)
+SYNC = b'\xAA\xBB'          # znacznik początku ramki
+buf = bytearray()
 
 while True:
-    # Czekaj na sync word: 0xAA 0xBB
-    if ser.read(1) == b'\xAA' and ser.read(1) == b'\xBB':
-        raw = ser.read(8)          # 8 bajtów danych
-        # Format: uint32 timestamp, int16 ecg, int16 accel_x
-        ts, ecg, ax = struct.unpack('<IhH', raw)
+    buf += ser.read(ser.in_waiting or 1)
+    while True:
+        i = buf.find(SYNC)
+        if i < 0:
+            del buf[:-1]      # zostaw ostatni bajt: może być początkiem znacznika
+            break
+        if len(buf) < i + 2 + 8:
+            del buf[:i]       # ramka jeszcze niepełna, czekamy na resztę
+            break
+        raw = bytes(buf[i + 2:i + 10])   # 8 bajtów danych
+        del buf[:i + 10]
+        # Format (little-endian): uint32 timestamp, int16 ecg, int16 accel_x
+        ts, ecg, ax = struct.unpack('<Ihh', raw)
         print(f"t={ts}ms  ecg={ecg}  ax={ax}")
 ```
 
 ```cpp C++ / Arduino: wysyłanie binarne
 // Wysyłanie surowych bajtów struct przez UART
-uint16_t adc_val = analogRead(A0);     // 0–1023
+uint16_t adc_val = analogRead(A0);     // 0–1023 (10-bit ADC)
 uint8_t  header[] = {0xAA, 0xBB};
 Serial.write(header, 2);
 Serial.write((uint8_t*)&adc_val, sizeof(adc_val));
-// Razem: 4 bajty zamiast np. "1024\n" = 5 bajtów ASCII
+// Razem: 4 bajty zamiast np. "1023\n" = 5 bajtów ASCII
 ```
 
 :::info Pro tip
-Binarny przesył redukuje liczbę przesyłanych bajtów o ponad 50%, co pozwala na osiągnięcie znacznie wyższych częstotliwości próbkowania przy tym samym Baud Rate.
+Binarny przesył potrafi zmniejszyć liczbę bajtów o połowę lub więcej (np. liczba 4000: 5 B w ASCII razem z końcem linii, 2 B binarnie), co pozwala na znacznie wyższe częstotliwości próbkowania przy tym samym baud rate. Przy pojedynczej próbce z 2-bajtowym nagłówkiem zysk jest mniejszy (4 B zamiast 5 B), dlatego opłaca się pakować wiele próbek w jedną ramkę.
 :::''',
  },
  {
@@ -368,6 +382,17 @@ struct DataFrame {
 DataFrame frame;
 uint8_t   seqCounter = 0;
 
+// Prosty CRC-8 (wielomian 0x07) po wszystkich bajtach ramki oprócz ostatniego
+uint8_t calcCRC(const uint8_t* data, size_t len) {
+  uint8_t crc = 0;
+  while (len--) {
+    crc ^= *data++;
+    for (uint8_t i = 0; i < 8; i++)
+      crc = (crc & 0x80) ? (crc << 1) ^ 0x07 : (crc << 1);
+  }
+  return crc;
+}
+
 void sendFrame(int16_t ecg, int16_t ax, int16_t ay) {
   frame.sync0 = 0xAA;
   frame.sync1 = 0xBB;
@@ -379,7 +404,11 @@ void sendFrame(int16_t ecg, int16_t ax, int16_t ay) {
   frame.crc   = calcCRC((uint8_t*)&frame, sizeof(frame) - 1);
   Serial.write((uint8_t*)&frame, sizeof(frame));
 }
-```''',
+```
+
+:::warn Uwaga: wyrównanie pól i kolejność bajtów
+Na AVR i ESP32 struktura `packed` działa bez problemu, ale na rdzeniach ARM Cortex-M0 dostęp do niewyrównanego pola (np. `uint32_t ts`) może wywołać błąd sprzętowy. Wtedy kopiuj pola przez `memcpy`. AVR i ESP32 są little-endian, co zgadza się ze znakiem `<` w `struct` Pythona. Pamiętaj też, że `millis()` przepełnia `uint32_t` po ok. 49 dniach.
+:::''',
  },
  {
   'slug': 'waskie-gardla-baud-rate',
@@ -392,7 +421,7 @@ void sendFrame(int16_t ecg, int16_t ax, int16_t ay) {
   'tags': ['baud', 'uart', 'przepustowość'],
   'body': r''':::summary Szybkie podsumowanie
 - 1 bajt danych = ~10 bitów na łączu UART (start + 8 bitów + stop).
-- 500 Hz × 10 B/ramkę × 10 bit/B = **50 000 b/s** → wymaga min. 115200 baud.
+- 500 Hz × 10 B/ramkę × 10 bit/B = **50 000 b/s** → po doliczeniu zapasu 30–50% potrzebujesz 115200 baud (57600 byłoby na styk).
 - 9600 baud przy 500 Hz = natychmiastowe przepełnienie bufora i utrata danych.
 :::
 
@@ -411,7 +440,27 @@ Każdy bajt wysyłany przez UART zajmuje na łączu faktycznie **10 bitów**: 1 
 :::note Wzór matematyczny
 Wymagane_baudrate = Częstotliwość [Hz] × Rozmiar_ramki [B] × 10
 
-Zawsze dobieraj baud rate z 30–50% zapasem, bo wbudowany sprzętowy bufor UART ma tylko 64 bajty pojemności.
+Zawsze dobieraj baud rate z 30–50% zapasem, bo bufor odbiorczy UART jest niewielki (np. 64 B w Arduino AVR, domyślnie 256 B w ESP32 z Arduino), a wartość zależy od platformy.
 :::''',
  },
 ]
+
+# Skróty (sha256) wcześniejszych wersji próbek. Wiersz w bazie jest aktualizowany do bieżącej wersji tylko wtedy,
+# gdy jego treść zgadza się z jedną z nich, czyli gdy nikt jej nie edytował (zob. knowledge_service.upgrade_pilot).
+OLD_HASHES = {
+ "typy-pinow-i-poziomy-logiczne": [
+  "1f199360eee9075f22a6313519d87111413a24562abe2a42f46552648dbb7ba5"
+ ],
+ "adc-przetworniki-analogowo-cyfrowe": [
+  "04c5aa9c1829a3b9c25b53b467a5c7f259b86f7bf1ed26c99648796e253096a7"
+ ],
+ "ascii-vs-binarny": [
+  "0a43a64eb3f08aa653fa8b5f525e60c9e4e01fc5422fee4007f9997976cecb57"
+ ],
+ "budowa-ramki-binarnej": [
+  "1c1cd910197ba1ba38f464accba424a533b33fca9d977aa009e1053e39bd3597"
+ ],
+ "waskie-gardla-baud-rate": [
+  "c4853cf1f9e09602ca7744b8e83c07e8cbd87f7f7c5809ec77a32bbb19bc83a6"
+ ]
+}

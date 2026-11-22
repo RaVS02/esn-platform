@@ -50,6 +50,17 @@ akceptacji. Poniżej miejsca, które warto sprawdzić. Pozycje oznaczone ❗ to 
   zapasowi 30–50% z tej samej lekcji. Można to powiedzieć wprost.
 - Rachunki w tabeli (1 200, 14 000, 50 000, 175 000, 400 000 b/s) sprawdzono: są poprawne.
 
+## Poprawione w v7
+- „Podanie 5 V natychmiast spali pin” → „może go uszkodzić” (zależy od układu i ilości prądu).
+- ADC ESP32: dopisano nieliniowość oraz niedostępność ADC2 przy włączonym Wi-Fi.
+- STM32: nie wszystkie układy są 3,3 V-owe, część pinów toleruje 5 V (FT) – sformułowanie złagodzone.
+- Dane 24-bit: usunięto „pakuj w uint32_t, MSB = 0” (dla wartości ze znakiem to błąd) → 32-bitowa zmienna, format wg noty.
+- Dodano uwagę, że podane kroki ADC dotyczą pełnego zakresu; w ESP32 zależą od tłumienia wejścia, w 24-bit od Vref i wzmocnienia.
+- Przykład ASCII: `analogRead()` zwraca max 1023 (UNO), więc `"1023\n"` = 5 B, a binarnie 0xFF 0x03 (little-endian), nie 1024 / 0x04 0x00.
+- Twarde progi „≥200 Hz niedopuszczalny”, „≥500 Hz jedyna opcja” zastąpiono sformułowaniem zależnym od przepustowości łącza.
+- Odbiornik w Pythonie: poprzednia pętla gubiła ramki przy przesunięciu; nowa szuka znacznika w buforze, a format `struct` jest zgodny
+  z rozmiarem ramki.
+
 ## Uwagi ogólne
 - Cudzysłowy: w nowych treściach używam polskich „…”. W archiwum są proste "…".
 - Terminologia: proponuję słowniczek (bufor, ramka, próbka, przerwanie) i trzymanie się jednego tłumaczenia.

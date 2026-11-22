@@ -8,6 +8,8 @@ Kolejność jest orientacyjna, każdy etap jest oddawany małymi krokami: funkcj
 - Zakładka **Wiedza** (v6): niezbędniki, poradniki, artykuły, kursy; markdown z blokami, rysunki SVG, widgety w sandboxie,
   panel redakcji, przepływ zatwierdzania (redaktor → admin), archiwum dawnego niezbędnika. Zakładka **Narzędzia**
   (szkielet z banerem „W rozwoju”).
+- Wiedza v7: obrazy w treściach, biblioteka szablonów widgetów, zakładka „Instrukcja” w panelu redakcji, poprawki merytoryczne
+  próbek (z bezpieczną aktualizacją istniejącej bazy), naprawa układu bloku klucz–wartość.
 
 ## Etap 2: treści i narzędzia
 - Migracja pozostałych sekcji archiwum do Wiedzy wraz z przeglądem merytorycznym i stylistycznym (kursy: pamięć i RTOS,

@@ -251,3 +251,70 @@ def test_list_filters_and_sorting(users):
 def test_search_is_safe_against_wildcards(users):
     r = client.get("/api/knowledge/items?q=%25%27%3B--")
     assert r.status_code == 200 and isinstance(r.json(), list)
+
+
+# ───────────────────────── v7: obrazy w treściach ─────────────────────────
+def _png_bytes():
+    import struct
+    import zlib
+    w = h = 8
+    raw = b"".join(b"\x00" + bytes([40, 120, 200]) * w for _ in range(h))
+
+    def ch(t, d):
+        return struct.pack(">I", len(d)) + t + d + struct.pack(">I", zlib.crc32(t + d) & 0xFFFFFFFF)
+    return b"\x89PNG\r\n\x1a\n" + ch(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 2, 0, 0, 0)) + ch(b"IDAT", zlib.compress(raw)) + ch(b"IEND", b"")
+
+
+def _upload(aid, who):
+    return client.post("/api/media", headers=who["h"], data={"owner_type": "article", "owner_id": str(aid), "role": "gallery", "caption": "t"},
+                       files={"file": ("a.png", _png_bytes(), "image/png")})
+
+
+def test_article_images_permissions_and_cleanup(users):
+    aid = client.post("/api/knowledge/editor/items", headers=users["mod"]["h"], json=art(TAG + " obrazy")).json()["id"]
+    assert _upload(aid, users["user"]).status_code in (401, 403)
+    assert _upload(aid, users["mod2"]).status_code == 403            # inny redaktor – nie
+    r = _upload(aid, users["mod"])                                   # autor-redaktor – tak
+    assert r.status_code == 201, r.text
+    assert _upload(aid, users["admin"]).status_code == 201           # admin – tak
+    listed = client.get(f"/api/media?owner_type=article&owner_id={aid}").json()
+    assert len(listed) == 2 and all(i["url"].startswith("/static/media/") for i in listed)
+    paths = [os.path.join(main.media_service.STATIC_ROOT, i["path"]) for i in listed]
+    assert all(os.path.exists(p) for p in paths)
+    assert client.delete(f"/api/knowledge/editor/items/{aid}", headers=users["mod"]["h"]).status_code in (200, 204)
+    assert client.get(f"/api/media?owner_type=article&owner_id={aid}").json() == []
+    assert not any(os.path.exists(p) for p in paths)                 # pliki usunięte razem z treścią
+
+
+def test_article_media_nonexistent_owner(users):
+    assert _upload(99999999, users["admin"]).status_code == 404
+
+
+# ───────────────────────── v7: aktualizacja próbek ─────────────────────────
+def test_upgrade_pilot_only_untouched_rows(monkeypatch):
+    import knowledge_pilot
+    import knowledge_service as ks
+    slug = "t-upg-" + uuid.uuid4().hex[:6]
+    fake = {"slug": slug, "kind": "article", "title": "Nowy", "summary": "s", "body": BODY + " nowa wersja", "level": "basic", "tags": ["a"], "widgets": {}}
+    old = ("Stary", "s", BODY, {})
+    monkeypatch.setattr(knowledge_pilot, "ARTICLES", [fake])
+    monkeypatch.setattr(knowledge_pilot, "OLD_HASHES", {slug: [ks.content_hash(*old)]})
+    db = SessionLocal()
+    try:
+        row = models.KnowledgeArticle(slug=slug, kind="article", title=old[0], summary=old[1], body=old[2], level="basic", tags=[], widgets={}, published=True, author_id=None)
+        db.add(row)
+        db.commit()
+        assert "zaktualizowano 1" in ks.upgrade_pilot(db)
+        db.refresh(row)
+        assert row.title == "Nowy" and row.body.endswith("nowa wersja")
+        # ręcznie edytowany wiersz zostaje nietknięty
+        row.body = "zmieniona przez człowieka " + BODY
+        db.commit()
+        monkeypatch.setattr(knowledge_pilot, "OLD_HASHES", {slug: [ks.content_hash(*old)]})
+        assert "zaktualizowano 0" in ks.upgrade_pilot(db)
+        db.refresh(row)
+        assert row.body.startswith("zmieniona przez człowieka")
+    finally:
+        db.query(models.KnowledgeArticle).filter(models.KnowledgeArticle.slug == slug).delete()
+        db.commit()
+        db.close()

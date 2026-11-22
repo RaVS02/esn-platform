@@ -57,6 +57,7 @@ CFG = {
         "project": _int("MEDIA_MAX_PER_PROJECT", 20),
         "component": _int("MEDIA_MAX_PER_COMPONENT", 20),
         "platform": _int("MEDIA_MAX_PLATFORM", 200),
+        "article": _int("MEDIA_MAX_PER_ARTICLE", 30),
     },
 }
 # limit żądania = największy dopuszczalny plik (zdjęcie albo zasób) + narzut multipart
@@ -66,6 +67,7 @@ ROLES = {
     "project": ["main", "schematic", "gallery"],
     "component": ["main", "gallery", "pinout"],
     "platform": ["main", "gallery"],
+    "article": ["gallery"],          # obrazy wstawiane do treści Wiedzy (patrz knowledge_service.py)
 }
 ROLE_LABELS = {"main": "Główne", "gallery": "Galeria", "schematic": "Schemat", "pinout": "Pinout"}
 
@@ -327,6 +329,12 @@ def owner_exists_and_can_edit(db: Session, user, owner_type: str, owner_id: int)
         if not obj:
             raise HTTPException(status_code=404, detail="Komponent nie istnieje")
         if not is_staff(user):
+            raise HTTPException(status_code=403, detail="Brak uprawnień")
+    elif owner_type == "article":
+        obj = db.query(models.KnowledgeArticle).filter(models.KnowledgeArticle.id == owner_id).first()
+        if not obj:
+            raise HTTPException(status_code=404, detail="Treść nie istnieje")
+        if not (user.role == "admin" or (user.role == "moderator" and obj.author_id == user.id)):
             raise HTTPException(status_code=403, detail="Brak uprawnień")
     else:  # platform
         if user.role != "admin" or owner_id != 0:

@@ -86,6 +86,24 @@ Widget działa w **izolowanej ramce** `<iframe sandbox="allow-scripts" srcdoc=�
 Widget ma ciemne tło strony wewnątrz ramki; kolory podaj wprost (np. `#0e1117`, `#56e1fd`). Przykład: widget ADC w artykule
 „ADC — przetworniki analogowo-cyfrowe i rozdzielczość”.
 
+### Obrazy
+W edytorze (po pierwszym zapisie treści) sekcja **Obrazy**: wybierz plik JPEG/PNG/WebP/GIF, opcjonalnie wpisz podpis, kliknij
+„Wgraj obraz”, potem „Wstaw” (wstawia `![podpis](/static/media/…)`). Obraz sam w akapicie wyświetla się jako rysunek z podpisem.
+Obrazy korzystają z systemu mediów (`owner_type=article`): te same zasady (rozpoznanie typu po zawartości, czyszczenie EXIF,
+limity miejsca i wgrań na godzinę), limit `MEDIA_MAX_PER_ARTICLE` (domyślnie 30). Wgrywać może admin i redaktor-autor treści.
+Przy usunięciu treści kasowane są też jej obrazy. W treści działają **tylko** obrazy z `/static/media/…`; link do obrazu na cudzym
+serwerze jest zastępowany komunikatem (brak śledzenia czytelników).
+
+### Szablony widgetów
+Plik `app/static/knowledge-templates.js` zawiera gotowe widgety (pusty, dzielnik napięcia, animacja ramki UART, quiz, zakładki
+kodu, wypełnienie PWM). W edytorze wybierasz szablon, wpisujesz nazwę i klikasz „+ Dodaj widget” – blok `:::widget` wstawia się
+sam. Nowy szablon dodajesz jako kolejny wpis w tablicy (id, name, desc, height, code).
+
+### Instrukcja w panelu redakcji
+Zakładka „Instrukcja” (`#knowledge/redakcja/instrukcja`, dostępna dla redaktorów i admina) zawiera opis przepływu pracy,
+działające na żywo przykłady każdego bloku, zasady obrazów, SVG i widgetów (z podglądem wszystkich szablonów), przykładowy
+prompt do poproszenia Claude o nowy widget, listę kontrolną i FAQ. Treść jest w `app/static/knowledge-guide.js`.
+
 ## Limity
 
 Tytuł 150 znaków, opis 400, treść 200 KB, 8 tagów po 30 znaków. Walidacja jest po stronie serwera.
@@ -104,6 +122,10 @@ Przy pierwszym uruchomieniu, gdy baza wiedzy jest pusta, dodawane są 3 próbki 
 (niezbędnik, artykuł z widgetem i kurs z 3 lekcjami) – `app/knowledge_pilot.py`. Wyłączenie: `KNOWLEDGE_SEED=0` w `.env`.
 Próbki możesz po prostu usunąć w panelu admina. Uwagi merytoryczne: [WIEDZA-PILOTAZ.md](WIEDZA-PILOTAZ.md).
 
+**Aktualizacja próbek na istniejącej bazie (v7):** przy starcie próbki w wersji z v6 są podmieniane na poprawione, ale
+**tylko** te, które nie były edytowane (porównanie skrótu treści ze starą wersją, brak autora i brak wersji oczekującej).
+Edytowane ręcznie zostają nietknięte (log: „zaktualizowano N, pominięto M”). `KNOWLEDGE_SEED=0` wyłącza także to.
+
 ## Migracja treści z archiwum
 
 1. Wybierz sekcję w archiwum i zdecyduj o typie, poziomie i (dla lekcji) kursie.
@@ -113,7 +135,7 @@ Próbki możesz po prostu usunąć w panelu admina. Uwagi merytoryczne: [WIEDZA-
 
 ## Testy
 
-`app/tests/test_knowledge.py` (uprawnienia, przepływ zatwierdzania, walidacja, kursy). Uruchomienie z katalogu `app/`
+`app/tests/test_knowledge.py` (uprawnienia, przepływ zatwierdzania, walidacja, kursy, obrazy w treściach, aktualizacja próbek). Uruchomienie z katalogu `app/`
 przy działającej bazie PostgreSQL: `python -m pytest tests/test_knowledge.py -q`.
 
 ## Zapowiedziane (jeszcze nieużywane)

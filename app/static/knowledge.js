@@ -105,7 +105,17 @@
       else if (!/^(#|\/(?!\/))/.test(href)) a.removeAttribute("href");
     });
     [].forEach.call(root.querySelectorAll("[id]"), function (el) { el.removeAttribute("id"); });   // brak kolizji z id aplikacji (DOM clobbering)
-    [].forEach.call(root.querySelectorAll("img"), function (im) { im.setAttribute("loading", "lazy"); im.setAttribute("referrerpolicy", "no-referrer"); });
+    [].forEach.call(root.querySelectorAll("img"), function (im) {
+      // tylko obrazy wgrane na serwer (brak śledzenia przez zewnętrzne hosty i obrazów-pułapek)
+      if (!/^\/static\/media\/[\w\-./]+$/.test(im.getAttribute("src") || "") || /\.\./.test(im.getAttribute("src"))) { im.replaceWith(h("span", { "class": "kn-badimg", text: "[obraz: dozwolone tylko wgrane w panelu „Obrazy”]" })); return; }
+      im.setAttribute("loading", "lazy"); im.setAttribute("referrerpolicy", "no-referrer");
+      var p = im.parentNode;
+      if (p && p.tagName === "P" && p.childNodes.length === 1) {   // obraz sam w akapicie → rysunek z podpisem (alt)
+        var fig = h("figure", { "class": "kn-img" }, [im]);
+        if (im.alt) fig.appendChild(h("figcaption", { text: im.alt }));
+        p.replaceWith(fig);
+      }
+    });
     [].forEach.call(root.querySelectorAll("table"), function (t) {
       t.classList.add("comp-table");
       var w = h("div", { "class": "kn-table-wrap" }); t.parentNode.insertBefore(w, t); w.appendChild(t);
@@ -433,15 +443,44 @@
     return badge(it.status, cls);
   }
 
+  /* ── instrukcja redakcji: ten sam renderer co artykuły, więc przykłady są „na żywo” ── */
+  function renderGuide(el) {
+    el.textContent = "";
+    var G = global.ESNKnowledgeGuide, TPL = global.ESNKnowledgeTemplates || [];
+    if (!G) { el.appendChild(h("div", { "class": "kn-empty", text: "Brak pliku instrukcji (knowledge-guide.js)." })); return; }
+    var wrap = h("div", { "class": "kn-guide" });
+    var toc = h("nav", { "class": "kn-toc", "aria-label": "Spis treści instrukcji" });
+    G.sections.forEach(function (sec) {
+      var anchor = h("section", { "class": "kn-guide-sec" }, [h("h2", { "class": "kn-guide-h", text: sec.title })]);
+      toc.appendChild(h("button", { type: "button", "class": "kn-snip", text: sec.title, onclick: function () { anchor.scrollIntoView({ behavior: "smooth", block: "start" }); } }));
+      var body = h("div", { "class": "kn-body" });
+      if (sec.md) renderBody(body, sec.md, {});
+      if (sec.intro) body.appendChild(renderBody(h("div"), sec.intro, {}));
+      (sec.examples || []).forEach(function (ex) {
+        body.appendChild(h("div", { "class": "kn-example" }, [h("div", { "class": "kn-pv-label", text: ex.title }), codeBlock("md Kod do wklejenia", ex.src),
+          h("div", { "class": "kn-pv-label", text: "Wynik" }), renderBody(h("div", { "class": "kn-ex-out" }), ex.src, {})]));
+      });
+      if (sec.templates) TPL.forEach(function (t) {
+        var w = {}; w[t.id] = t.code;
+        body.appendChild(h("div", { "class": "kn-example" }, [h("div", { "class": "kn-pv-label", text: "Szablon „" + t.id + "”: " + t.name + " – " + t.desc }),
+          renderBody(h("div", { "class": "kn-ex-out" }), ":::widget " + t.id + " " + (t.height || 300) + "\n:::", w)]));
+      });
+      if (sec.outro) body.appendChild(renderBody(h("div"), sec.outro, {}));
+      anchor.appendChild(body); wrap.appendChild(anchor);
+    });
+    el.appendChild(toc); el.appendChild(wrap);
+  }
+
   function renderEditorHome(el, sub) {
     el.textContent = "";
-    var tab = sub[1] === "kolejka" ? "queue" : sub[1] === "kursy" ? "courses" : "items";
+    var tab = sub[1] === "kolejka" ? "queue" : sub[1] === "kursy" ? "courses" : sub[1] === "instrukcja" ? "guide" : "items";
     var wrap = h("div", { "class": "full-wrap kn-wrap" });
     el.appendChild(h("section", { "class": "hero kn-hero" }, [h("div", { "class": "hero-tag", text: "Redakcja" }), h("h1", {}, ["Panel ", h("em", { text: "redakcji" })]),
       h("p", { "class": "hero-sub", text: isAdmin() ? "Zatwierdzaj treści redaktorów, publikuj i zarządzaj kursami." : "Twórz treści i wysyłaj je do przeglądu administratora." })]));
     var tabs = h("div", { "class": "esn-tabs", role: "tablist" });
     var T = [["items", "Treści", "redakcja"]];
     if (isAdmin()) { T.push(["queue", "Do zatwierdzenia", "redakcja/kolejka"]); T.push(["courses", "Kursy", "redakcja/kursy"]); }
+    T.push(["guide", "Instrukcja", "redakcja/instrukcja"]);
     T.forEach(function (t) { tabs.appendChild(h("button", { type: "button", role: "tab", "aria-selected": String(t[0] === tab), text: t[1], onclick: function () { go(t[2]); } })); });
     var top = h("div", { "class": "kn-actions" }, [h("button", { type: "button", "class": "btn-action", text: "← Wiedza", onclick: function () { go(""); } }),
       h("button", { type: "button", "class": "btn-action primary", text: "+ Nowa treść", onclick: function () { go("redakcja/nowa"); } })]);
@@ -449,6 +488,7 @@
     wrap.appendChild(top); wrap.appendChild(tabs); wrap.appendChild(body); el.appendChild(wrap);
     loading(body);
     if (tab === "courses") return renderCoursesAdmin(body);
+    if (tab === "guide") return renderGuide(body);
     (tab === "queue" ? api.eQueue() : api.eList()).then(function (rows) {
       body.textContent = "";
       if (!rows.length) { body.appendChild(h("div", { "class": "kn-empty", text: tab === "queue" ? "Nic nie czeka na zatwierdzenie." : "Nie masz jeszcze żadnych treści. Kliknij „+ Nowa treść”." })); return; }
@@ -556,14 +596,51 @@
           wbox.appendChild(h("div", { "class": "kn-widget-ed" }, [h("div", { "class": "kn-inline" }, [h("strong", { "class": "kn-wname", text: name }), h("span", { "class": "kn-meta", text: "użycie: :::widget " + name + " 320" }),
             h("button", { type: "button", "class": "btn-action", text: "Usuń widget", onclick: function () { delete widgets[name]; mark(); drawWidgets(); drawPreview(); } })]), code]));
         });
+        var TPL = global.ESNKnowledgeTemplates || [];
+        var tsel = h("select", { "class": "sort-select", "aria-label": "Szablon widgetu" }, TPL.map(function (t) { return h("option", { value: t.id, text: t.name + " – " + t.desc }); }));
         var nameIn = h("input", { "class": "text-input kn-wnew", placeholder: "nazwa (a–z, 0–9, -, _)", maxlength: 30, "aria-label": "Nazwa nowego widgetu" });
         wbox.appendChild(h("div", { "class": "kn-inline" }, [nameIn, h("button", { type: "button", "class": "btn-action", text: "+ Dodaj widget", onclick: function () {
           var n = nameIn.value.trim().toLowerCase();
           if (!/^[a-z0-9][a-z0-9_-]{0,29}$/.test(n)) return toast("Nazwa widgetu: a–z, 0–9, - lub _, do 30 znaków", "error");
           if (widgets[n] != null) return toast("Widget o tej nazwie już istnieje", "error");
           if (Object.keys(widgets).length >= 8) return toast("Maksymalnie 8 widgetów", "error");
-          widgets[n] = "<!-- Wklej tu HTML + CSS + JS widgetu (bez zewnętrznych zasobów) -->\n<div id=\"app\">Widget</div>"; mark(); drawWidgets();
+          var t = TPL.filter(function (x) { return x.id === tsel.value; })[0];
+          widgets[n] = t ? t.code : "<!-- Wklej tu HTML + CSS + JS widgetu (bez zewnętrznych zasobów) -->\n<div id=\"app\">Widget</div>";
+          mark(); drawWidgets(); drawPreview();
+          if (t && !new RegExp(":::widget\\s+" + n + "\\b").test(ta.value)) insertText(":::widget " + n + " " + (t.height || 320) + "\n:::");
         } })]));
+        if (TPL.length) wbox.appendChild(h("div", { "class": "kn-inline" }, [h("span", { "class": "kn-meta", text: "Szablon:" }), tsel]));
+      }
+
+      /* obrazy (wgrane na serwer, dołączone do tej treści) */
+      var ibox = h("div", { "class": "kn-images" });
+      function insertText(t) {
+        var st = ta.selectionStart, en = ta.selectionEnd, pre = ta.value.slice(0, st), need = pre && !/\n\n$/.test(pre) ? (/\n$/.test(pre) ? "\n" : "\n\n") : "";
+        ta.value = pre + need + t + "\n\n" + ta.value.slice(en); ta.focus(); ta.dispatchEvent(new Event("input"));
+      }
+      function drawImages() {
+        ibox.textContent = "";
+        if (!rec) { ibox.appendChild(h("div", { "class": "kn-meta", text: "Zapisz treść (przycisk „Zapisz”), aby móc dodawać obrazy." })); return; }
+        var list = h("div", { "class": "kn-img-grid" });
+        var file = h("input", { type: "file", accept: "image/jpeg,image/png,image/webp,image/gif", "aria-label": "Wybierz obraz" });
+        var cap = h("input", { "class": "text-input", placeholder: "Podpis / tekst alternatywny", maxlength: 200, "aria-label": "Podpis obrazu" });
+        var up = h("button", { type: "button", "class": "btn-action", text: "Wgraj obraz", onclick: function () {
+          if (!file.files[0]) return toast("Wybierz plik obrazu", "error");
+          var fd = new FormData(); fd.append("owner_type", "article"); fd.append("owner_id", String(rec.id)); fd.append("role", "gallery"); fd.append("caption", cap.value); fd.append("file", file.files[0]);
+          up.disabled = true;
+          jfetch("/api/media", { method: "POST", headers: authH(), body: fd }).then(function () { toast("Obraz wgrany", "success"); drawImages(); }).catch(function (e) { toast(e.message, "error"); }).then(function () { up.disabled = false; });
+        } });
+        ibox.appendChild(h("div", { "class": "kn-inline" }, [file, cap, up]));
+        ibox.appendChild(list);
+        jfetch("/api/media?owner_type=article&owner_id=" + rec.id).then(function (items) {
+          if (!items.length) list.appendChild(h("div", { "class": "kn-meta", text: "Brak obrazów. JPEG, PNG, WebP lub GIF (SVG wstawiaj jako blok :::figure)." }));
+          items.forEach(function (m) {
+            list.appendChild(h("div", { "class": "kn-img-item" }, [h("img", { src: m.url, alt: m.caption || "", loading: "lazy" }), h("div", { "class": "kn-meta", text: (m.caption || m.name || "obraz") + " · " + m.width + "×" + m.height }),
+              h("div", { "class": "kn-inline" }, [
+                h("button", { type: "button", "class": "btn-action", text: "Wstaw", onclick: function () { insertText("![" + (m.caption || "opis obrazu").replace(/[\[\]\n]/g, " ") + "](" + m.url + ")"); } }),
+                h("button", { type: "button", "class": "btn-action", text: "Usuń", onclick: function () { askConfirm("Usunąć obraz? Jeśli jest wstawiony w treści, przestanie się wyświetlać.").then(function (ok) { if (ok) jfetch("/api/media/" + m.id, { method: "DELETE", headers: authH() }).then(drawImages).catch(function (e) { toast(e.message, "error"); }); }); } })])]));
+          });
+        }).catch(function (e) { list.appendChild(h("div", { "class": "kn-meta", text: e.message })); });
       }
 
       function payload() {
@@ -611,6 +688,7 @@
       fieldset.appendChild(h("label", { "class": "kn-fld" }, [h("span", { text: "Tagi" }), tags]));
       fieldset.appendChild(h("div", { "class": "kn-fld" }, [h("span", { text: "Treść (markdown z blokami)" }), tbar,
         h("div", { "class": "kn-split" }, [ta, h("div", {}, [h("div", { "class": "kn-pv-label", text: "Podgląd na żywo" }), preview])])]));
+      fieldset.appendChild(h("div", { "class": "kn-fld" }, [h("span", { text: "Obrazy (zdjęcia, zrzuty ekranu, schematy rastrowe)" }), ibox]));
       fieldset.appendChild(h("div", { "class": "kn-fld" }, [h("span", { text: "Widgety (interaktywne animacje – działają w izolowanej ramce, bez dostępu do sieci i strony)" }), wbox]));
       wrap.appendChild(fieldset);
       wrap.appendChild(acts);
@@ -620,7 +698,7 @@
         rec.history.forEach(function (x) { hist.appendChild(h("div", { "class": "kn-hrow", text: fmtDate(x.at) + " · " + (x.user || "?") + " · " + (LBL[x.action] || x.action) + (x.note ? " – " + x.note : "") })); });
         wrap.appendChild(hist);
       }
-      drawWidgets(); drawPreview();
+      drawWidgets(); drawImages(); drawPreview();
     }).catch(function (e) { errBox(el, e); });
   }
 

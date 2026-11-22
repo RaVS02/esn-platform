@@ -25,6 +25,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
+import media_service
 import models
 
 KINDS = {"essential": "Niezbędnik", "guide": "Poradnik", "article": "Artykuł", "lesson": "Lekcja kursu"}
@@ -207,6 +208,35 @@ def item_card(a: models.KnowledgeArticle, course: Optional[models.KnowledgeCours
             "updated_at": a.updated_at.isoformat() if a.updated_at else None}
 
 
+def content_hash(title, summary, body, widgets) -> str:
+    import hashlib
+    import json
+    return hashlib.sha256(json.dumps([title, summary, body, widgets or {}], sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+
+
+def upgrade_pilot(db: Session) -> str:
+    """Podmienia próbki na poprawione wersje, ale tylko te, których nikt nie zmieniał (zgodność ze skrótem starej wersji)."""
+    from knowledge_pilot import ARTICLES, OLD_HASHES
+    done, skipped = 0, 0
+    for a in ARTICLES:
+        row = db.query(models.KnowledgeArticle).filter(models.KnowledgeArticle.slug == a["slug"]).first()
+        if not row or row.author_id is not None or row.draft is not None:
+            continue
+        cur = content_hash(row.title, row.summary or "", row.body or "", row.widgets or {})
+        new = content_hash(a["title"], a["summary"], a["body"], a.get("widgets", {}))
+        if cur == new:
+            continue
+        if cur in OLD_HASHES.get(a["slug"], []):
+            row.title, row.summary, row.body, row.widgets = a["title"], a["summary"], a["body"], a.get("widgets", {})
+            row.tags, row.level, row.reading_min = a.get("tags", []), a["level"], reading_minutes(a["body"])
+            row.updated_at = datetime.utcnow()
+            done += 1
+        else:
+            skipped += 1                                  # edytowana ręcznie, nie ruszamy
+    db.commit()
+    return f"zaktualizowano {done}, pominięto (edytowane) {skipped}"
+
+
 def seed_pilot(SessionLocal) -> str:
     """Wstawia przykładowe treści (pilotaż), gdy baza wiedzy jest pusta. Wyłączane zmienną KNOWLEDGE_SEED=0."""
     import os
@@ -215,7 +245,7 @@ def seed_pilot(SessionLocal) -> str:
     db = SessionLocal()
     try:
         if db.query(models.KnowledgeArticle.id).first() or db.query(models.KnowledgeCourse.id).first():
-            return "pominięto (baza wiedzy nie jest pusta)"
+            return "baza wiedzy nie jest pusta; próbki: " + upgrade_pilot(db)
         from knowledge_pilot import COURSES, ARTICLES
         courses = {}
         for c in COURSES:
@@ -532,6 +562,7 @@ def build_router(get_db, get_current_user) -> APIRouter:
         a = get_or_404(db, article_id)
         if not (is_admin(user) or (can_edit(user, a) and not a.published)):
             raise HTTPException(403, "Redaktor może usuwać tylko własne, nieopublikowane treści")
+        media_service.delete_owner(db, "article", a.id)       # obrazy treści: pliki i wiersze
         db.delete(a)
         db.commit()
         return {"message": "Usunięto"}

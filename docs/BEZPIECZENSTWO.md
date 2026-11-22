@@ -46,6 +46,9 @@ może się pomylić, a konto może zostać przejęte):
   Bez `allow-same-origin` ramka ma inną domenę: nie czyta `localStorage`, ciasteczek ani tokenu, nie wywoła API w imieniu
   użytkownika, nie nawiguje strony i nie otwiera okien. Wysokość przekazuje przez `postMessage`, a rodzic przyjmuje tylko
   wiadomość od własnej ramki i ogranicza ją do 80–1200 px,
+- obrazy w treści: w renderze dozwolone tylko `src` zaczynające się od `/static/media/` (reszta jest zastępowana komunikatem –
+  brak zewnętrznych pikseli śledzących); wgrywanie przez system mediów (typ po magic bytes, czyszczenie EXIF, limity), prawo
+  wgrywania mają admin oraz redaktor-autor danej treści, pliki znikają razem z treścią,
 - bloki kodu nigdy nie przechodzą przez `innerHTML` poza wynikiem `highlight.js` (który escapuje),
 - serwer waliduje typ, poziom, długości, liczbę i nazwy widgetów, a role sprawdza przy każdym wywołaniu.
 Nie wolno poluzowywać flag `sandbox` ani dodawać `allow-same-origin` do widgetów.
