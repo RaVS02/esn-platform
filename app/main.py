@@ -38,6 +38,7 @@ except Exception as _e:
     print("[media] UWAGA: migracja zdjęć nie powiodła się:", _e)
 try:
     print("[wiedza] przykładowe treści:", knowledge_service.seed_pilot(SessionLocal))
+    print("[wiedza] partie z archiwum:", knowledge_service.import_batches(SessionLocal))
 except Exception as _e:
     print("[wiedza] UWAGA: nie udało się dodać przykładowych treści:", _e)
 try:
@@ -607,14 +608,6 @@ def submit_contact_form(data: ContactFormInput, db: Session = Depends(get_db)):
 async def read_root(request: Request):
     return templates.TemplateResponse(request=request, name="index.html", context={"request": request})
 
-# ═══════════════════════════════════════════════════════════════════
-#  KATALOG KOMPONENTÓW – OfficialComponent CRUD
-#  GET  /api/catalog                – wszyscy (lista z filtrami)
-#  GET  /api/catalog/{id}           – szczegóły
-#  POST /api/catalog                – admin/moderator
-#  PUT  /api/catalog/{id}           – admin/moderator
-#  DELETE /api/catalog/{id}         – admin
-# ═══════════════════════════════════════════════════════════════════
 
 def require_admin_or_mod(current_user: models.User = Depends(get_current_user)):
     if current_user.role not in ("admin", "moderator"):
@@ -625,6 +618,22 @@ def require_admin(current_user: models.User = Depends(get_current_user)):
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Wymagane uprawnienia admina")
     return current_user
+
+@app.get("/api/archiwum", response_class=HTMLResponse, tags=["Archiwum"])
+def archive_niezbednik(current_user: models.User = Depends(require_admin)):
+    """Archiwalny Niezbędnik v1 – fragment HTML dostępny wyłącznie dla zalogowanych adminów (nie jest w publicznej stronie)."""
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "archive", "niezbednik.html")
+    with open(path, encoding="utf-8") as fh:
+        return HTMLResponse(fh.read(), headers={"Cache-Control": "no-store"})
+
+# ═══════════════════════════════════════════════════════════════════
+#  KATALOG KOMPONENTÓW – OfficialComponent CRUD
+#  GET  /api/catalog                – wszyscy (lista z filtrami)
+#  GET  /api/catalog/{id}           – szczegóły
+#  POST /api/catalog                – admin/moderator
+#  PUT  /api/catalog/{id}           – admin/moderator
+#  DELETE /api/catalog/{id}         – admin
+# ═══════════════════════════════════════════════════════════════════
 
 
 # ═══════════════════════════════════════════════════════════════════

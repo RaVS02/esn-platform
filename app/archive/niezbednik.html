@@ -1,0 +1,1945 @@
+  <section class="hero" style="padding-bottom: 40px;">
+    <div class="grid-bg"></div>
+    <div class="hero-tag">Archiwum · Niezbędnik v1</div>
+    <h1>Niezbędnik<br>Systemów <em>Wbudowanych</em></h1>
+    <p class="hero-sub">Kompletny przewodnik po komunikacji szeregowej, synchronizacji czasu, strukturach danych i zaawansowanych technikach buforowania dla mikrokontrolerów.</p>
+    <p class="hero-sub" style="margin-top:-24px;font-size:13px;color:var(--text3)">To dotychczasowa wersja zachowana jako archiwum. Treści są stopniowo przenoszone do zakładki Wiedza.</p>
+    <button type="button" class="btn-action primary" onclick="app.navigate('knowledge')">← Przejdź do Wiedzy</button>
+  </section>
+
+  <div class="page-wrap">
+    <aside class="toc">
+      <div class="toc-group">I. Podstawy Hardware'u</div>
+      <a class="toc-item" href="#s0"><span class="toc-num">00</span>MCU vs Mikroprocesor</a>
+      <a class="toc-item" href="#s7"><span class="toc-num">01</span>Częstotliwość Taktowania</a>
+      <a class="toc-item" href="#s17"><span class="toc-num">02</span>Piny i Logika Napięć</a>
+      <a class="toc-item" href="#s-map"><span class="toc-num">03</span>Mapowanie i Przetwarzanie</a>
+      <a class="toc-item" href="#s18"><span class="toc-num">04</span>Zasilanie i Masa (GND)</a>
+      <a class="toc-item" href="#s19"><span class="toc-num">05</span>Izolacja i Kondycjonowanie</a>
+    
+      
+      <div class="toc-group">II. Rdzeń i Przetwarzanie</div>
+      <a class="toc-item" href="#s3"><span class="toc-num">01</span>Typy Danych w C/C++</a>
+      <a class="toc-item" href="#s6"><span class="toc-num">02</span>Rozdzielczość ADC</a>
+      <a class="toc-item" href="#s8"><span class="toc-num">03</span>Przerwania Sprzętowe (ISR)</a>
+      <a class="toc-item" href="#s2"><span class="toc-num">04</span>Zarządzanie czasem (millis)</a>
+
+      <div class="toc-group">III. Pamięć i Systemy (RTOS)</div>
+      <a class="toc-item" href="#s9"><span class="toc-num">01</span>Struktury: FIFO / LIFO</a>
+      <a class="toc-item" href="#s11"><span class="toc-num">02</span>Bufor Ping-Pong i DMA</a>
+      <a class="toc-item" href="#s10"><span class="toc-num">03</span>Wielordzeniowość (ESP32)</a>
+      <a class="toc-item" href="#s13"><span class="toc-num">04</span>Watchdog Timer (WDT)</a>
+
+      <div class="toc-group">IV. Komunikacja i Sieci</div>
+      <a class="toc-item" href="#s15"><span class="toc-num">01</span>Protokoły (I2C, SPI)</a>
+      <a class="toc-item" href="#s1"><span class="toc-num">02</span>Serial COM (Binarny)</a>
+      <a class="toc-item" href="#s4"><span class="toc-num">03</span>Budowa Ramki (struct)</a>
+      <a class="toc-item" href="#s5"><span class="toc-num">04</span>Matematyka Baud Rate</a>
+      <a class="toc-item" href="#s12"><span class="toc-num">05</span>Pakietowanie i CRC</a>
+      <a class="toc-item" href="#s14"><span class="toc-num">06</span>Kontrola Przepływu (UDP)</a>
+      <a class="toc-item" href="#s16"><span class="toc-num">07</span>Łączność Bezprzewodowa</a>
+
+      <div class="toc-group">Narzędzia</div>
+      <a class="toc-item" href="#s-ui"><span class="toc-num">UI</span>Komponenty UI</a>
+    </aside>
+
+    <main class="content">
+    <div class="divider" style="margin: 80px 0 40px;">
+    <div class="divider-line"></div>
+    <div class="divider-text" style="font-size: 14px; color: var(--accent);">I. Podstawy Hardware</div>
+    <div class="divider-line"></div>
+    </div>
+    <!------------------------- I BLOK----------------------------->
+    <!-- ═══════════════ CPU i Platformy ═══════════════ -->
+    <section class="section" id="s0">
+      <div class="section-header">
+        <span class="section-num">00</span>
+        <h2>Mikrokontroler (MCU) vs Mikroprocesor (CPU)</h2>
+      </div>
+      <div class="section-body">
+        
+        <div class="card">
+          <div class="card-title">Czym jest Mikrokontroler?</div>
+          <p>Mikrokontroler (np. ESP32, ATmega328P) to tzw. <strong>System-on-Chip (SoC)</strong> W jednym małym układzie scalonym zintegrowano procesor, pamięć RAM, pamięć Flash (dysk) oraz peryferia komunikacyjne. Jest zaprojektowany do wykonywania jednego konkretnego zadania w kółko, zużywając przy tym śladowe ilości energii.</p>
+        </div>
+
+        <div class="kv-block">
+          <div class="kv-row">
+            <span class="kv-key">Mikroprocesor (CPU w PC)</span>
+            <span class="kv-val">Wymaga zewnętrznej RAM, dysku i karty graficznej. Gigantyczna moc, ogromny pobór prądu.</span>
+          </div>
+          <div class="kv-row">
+            <span class="kv-key">Mikrokontroler (MCU)</span>
+            <span class="kv-val kv-green">Wszystko "w jednym". Może działać miesiącami na baterii. Steruje fizycznymi pinami bezpośrednio.</span>
+          </div>
+        </div>
+
+        <div class="callout callout-note">
+          <h3>Kiedy wybrać mikrokontroler?</h3>
+          Używamy go tam, gdzie liczy się <span class="text-accent">sterowanie sprzętem w czasie rzeczywistym</span>. MCU nie posiada systemu operacyjnego typu Windows/Linux (chyba że RTOS), więc kod wykonuje się z przewidywalną prędkością, co jest kluczowe np. przy precyzyjnym próbkowaniu EKG 500 razy na sekundę.
+        </div>
+      </div>
+    </section>
+    <!-- ═══════════════ Częstotliwość Taktowania ═══════════════ -->
+    <section class="section" id="s7">
+        <div class="section-header">
+          <span class="section-num">01</span>
+          <h2>Częstotliwość Taktowania — Zegar Mikroprocesora</h2>
+        </div>
+        <div class="section-body">
+          <div class="short-card">
+            <h3>Szybkie podsumowanie</h3>
+            <ul>
+              <li>Arduino R3: 16 MHz, architektura 8-bit → dławi się przy filtrach DSP.</li>
+              <li>ESP32: 240 MHz, 32-bit, 2 rdzenie → edge computing bezpośrednio na płytce.</li>
+              <li>1 cykl zegara ≈ 1 najprostsza instrukcja maszynowa.</li>
+            </ul>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Czym jest taktowanie (bicie serca CPU)?</div>
+            <p>Zegar mikroprocesora działa jak metronom nadający tempo pracy całego układu. Każde "tyknięcie" (czyli cykl zegara) pozwala procesorowi na wykonanie prostej instrukcji maszynowej – takiej jak dodanie dwóch liczb czy pobranie wartości z pamięci. Częstotliwość podawana w megahercach (MHz) oznacza miliony takich cykli na sekundę.</p>
+            <p>Na przykład <strong>16 MHz</strong> w Arduino oznacza 16 milionów operacji w ciągu jednej sekundy. Choć brzmi to imponująco, to przy zaawansowanych zadaniach (np. matematyczne filtrowanie zaszumionego sygnału EKG, obsługa protokołów szyfrowania dla sieci Wi-Fi) 8-bitowy procesor szybko łapie "zadyszkę". Wtedy do gry wchodzą układy takie jak ESP32, taktowane zegarem <strong>240 MHz</strong>. Należy jednak pamiętać o ważnym kompromisie: <strong>wyższa częstotliwość to znacznie większy pobór prądu</strong>, co ma kluczowe znaczenie podczas projektowania urządzeń zasilanych z baterii.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Porównanie platform</div>
+            <table class="comp-table">
+            <thead><tr><th>Cecha</th><th>Arduino R3 (ATmega328P)</th><th>ESP32</th></tr></thead>
+            <tbody>
+              <tr><td>Zegar</td><td>16 MHz</td><td class="tag-g">240 MHz</td></tr>
+              <tr><td>Architektura</td><td>8-bit RISC (AVR)</td><td class="tag-g">32-bit Xtensa LX6</td></tr>
+              <tr><td>RAM</td><td>2 KB SRAM</td><td class="tag-g">520 KB SRAM</td></tr>
+              <tr><td>Rdzenie</td><td>1</td><td class="tag-g">2 (dual-core)</td></tr>
+              <tr><td>Wi-Fi / BT</td><td class="tag-r">Brak</td><td class="tag-g">Wi-Fi + BLE</td></tr>
+              <tr><td>ADC</td><td>10-bit, 6 kanałów</td><td class="tag-g">12-bit, 18 kanałów</td></tr>
+              <tr><td>DMA</td><td class="tag-r">Brak</td><td class="tag-g">Tak (I2S, SPI, UART)</td></tr>
+              <tr><td>FreeRTOS</td><td class="tag-o">Wymaga portu</td><td class="tag-g">Wbudowany domyślnie</td></tr>
+              <tr><td>Cena (szac.)</td><td>~5–10 USD</td><td>~4–8 USD</td></tr>
+            </tbody>
+          </table>
+          </div>
+        </div>
+      </section>
+    <!-- ═══════════════ Piny i Logika Napięć ═══════════════ -->
+    <section class="section" id="s17">
+      <div class="section-header">
+        <span class="section-num">02</span>
+        <h2>Typy Pinów i Logika Napięć (Pinout)</h2>
+      </div>
+      <div class="section-body">
+        
+        <div class="short-card">
+          <h3>Szybkie podsumowanie</h3>
+          <ul>
+            <li><strong>GPIO:</strong> Piny ogólnego przeznaczenia (wejścia/wyjścia cyfrowe).</li>
+            <li><strong>ADC / DAC:</strong> Piny analogowe (czytanie / generowanie płynnych napięć).</li>
+            <li><strong>Logika 3.3V vs 5V:</strong> ESP32 działa na 3.3V. Podanie 5V na pin GPIO natychmiast go spali!</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Zrozumienie Pinoutu (Mapy Płytki)</div>
+          <p>Mikrokontrolery komunikują się ze światem przez fizyczne wyprowadzenia. Na schematach (pinoutach) są one kodowane kolorami. Jeden fizyczny pin często pełni kilka funkcji, które wybieramy w kodzie oprogramowania (tzw. multipleksowanie).</p>
+          
+          <div class="kv-block" style="margin-top: 14px;">
+            <div class="kv-row">
+              <span class="kv-key"><span class="badge badge-accent">Digital (GPIO)</span></span>
+              <span class="kv-val">Odbiera lub wysyła stany logiczne (0 lub 1 / LOW lub HIGH).</span>
+            </div>
+            <div class="kv-row">
+              <span class="kv-key"><span class="badge badge-green">Analog (ADC)</span></span>
+              <span class="kv-val">Czyta płynne napięcie (np. z potencjometru). ESP32 ma ADC 12-bitowe.</span>
+            </div>
+            <div class="kv-row">
+              <span class="kv-key"><span class="badge badge-orange">PWM</span></span>
+              <span class="kv-val">Udaje sygnał analogowy poprzez bardzo szybkie miganie pinem cyfrowym (sterowanie jasnością LED, silnikami).</span>
+            </div>
+            <div class="kv-row">
+              <span class="kv-key"><span class="badge badge-purple">Komunikacja</span></span>
+              <span class="kv-val">Sprzętowe piny dla UART (TX/RX), I2C (SDA/SCL) oraz SPI (MOSI/MISO/SCK).</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-danger">
+          <h3>Krytyczne: Poziomy Logiczne (3.3V vs 5V)</h3>
+          Starsze systemy (jak Arduino UNO) operują na logice <span class="text-red">5V</span>. Nowoczesne układy (ESP32, STM32, Raspberry Pi) operują na <span class="text-red">3.3V</span>. Jeśli podłączysz czujnik 5V bezpośrednio do pinu RX w ESP32, napięcie "przebije" zabezpieczenia i <span class="text-red">spali cały mikrokontroler</span>. Zawsze używaj <span class="text-red">dwukierunkowych konwerterów poziomów logicznych</span> (Level Shifter)!
+        </div>
+
+      </div>
+    </section>
+    <!-- ═══════════════ Mapowanie i Przetwarzanie ═══════════════ -->
+    <section class="section" id="s-map">
+      <div class="section-header">
+        <span class="section-num">03</span>
+        <h2>Czytanie Pinów i Mapowanie Wartości</h2>
+      </div>
+      <div class="section-body">
+
+        <div class="card">
+          <div class="card-title">Od bitów do rzeczywistości</div>
+          <p>Kiedy wywołujesz <code>analogRead()</code>, mikrokontroler nie zwraca napięcia w woltach. Zwraca surową liczbę zależną od rozdzielczości ADC. Na ESP32 (12-bit) jest to zakres od <strong>0 do 4095</strong>. Twoim zadaniem jest zamienić tę liczbę na zrozumiałą wartość fizyczną.</p>
+        </div>
+
+        <div class="callout callout-ok">
+          <h3>Przykład 1: Cyfrowy Woltomierz</h3>
+          Jeśli mierzysz napięcie baterii na pinie ADC ESP32 (zakres 0-3.3V,przetwornik 12bit):
+          <ul class="card-list">
+            <li>Odczyt <span class="text-green">0</span> = 0.0V</li>
+            <li>Odczyt <span class="text-green">2048</span> = 1.65V (połowa zakresu)</li>
+            <li>Odczyt <span class="text-green">4095</span> = 3.3V</li>
+          </ul>
+          <strong>Wzór:</strong> <code>V = (read / 4095.0) * 3.3;</code>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Zastosowanie w EKG (Amplitudy)</div>
+          <p>W projektach medycznych, takich jak Twój akwizytor EKG, sygnał po przejściu przez wzmacniacz (np. ADS1293) musi zostać przeskalowany na miliwolty (mV). Tutaj mapowanie jest bardziej złożone, bo musisz uwzględnić <strong>wzmocnienie (Gain)</strong> układu oraz napięcie referencyjne.</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">C++</span><span class="code-label">Skalowanie EKG</span></div>
+            <pre><span class="ty">float</span> <span class="var">rawToMilliVolts</span>(<span class="ty">int32_t</span> <span class="var">raw</span>) {
+  <span class="cm">// Dla 24-bit ADC i Vref=2.4V:</span>
+  <span class="kw">return</span> (<span class="var">raw</span> <span class="op">*</span> <span class="num">2400.0</span>) <span class="op">/</span> <span class="num">8388607.0</span>; 
+}</pre>
+          </div>
+        </div>
+
+        <div class="callout callout-warn">
+          <h3>Sterowanie urządzeniami (PWM)</h3>
+          Mapowanie działa w dwie strony. Jeśli chcesz sterować jasnością LED lub prędkością silnika za pomocą potencjometru:
+          <ul class="card-list">
+            <li>Wejście (ADC): 0 - 4095</li>
+            <li>Wyjście (PWM): 0 - 255 (standard 8-bit)</li>
+          </ul>
+          W Arduino używamy do tego funkcji <code>map(val, 0, 4095, 0, 255)</code>. Pamiętaj, że ta funkcja operuje na liczbach całkowitych i <span class="text-orange">obcina ułamki</span>!
+        </div>
+
+        <div class="card">
+          <div class="card-title">Przykład: Sterownik Silnika DC</div>
+          <p>Używając mostka H, sterujesz silnikiem poprzez wypełnienie sygnału PWM. 0% oznacza stop, 100% pełną moc. Mapowanie pozwala na płynne przełożenie ruchu gałki potencjometru na obroty silnika.</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">C++</span><span class="code-label">Analog In -> PWM Out</span></div>
+            <pre><span class="ty">int</span> <span class="var">potValue</span> <span class="op">=</span> <span class="fn">analogRead</span>(<span class="var">POT_PIN</span>);
+<span class="ty">int</span> <span class="var">motorSpeed</span> <span class="op">=</span> <span class="fn">map</span>(<span class="var">potValue</span>, <span class="num">0</span>, <span class="num">4095</span>, <span class="num">0</span>, <span class="num">255</span>);
+<span class="fn">analogWrite</span>(<span class="var">MOTOR_PIN</span>, <span class="var">motorSpeed</span>);</pre>
+          </div>
+        </div>
+
+      </div>
+    </section>
+    <!-- ═══════════════ Zasilanie i Masa (GND) ═══════════════ -->
+    <section class="section" id="s18">
+      <div class="section-header">
+        <span class="section-num">04</span>
+        <h2>Zasilanie, Dystrybucja i Wspólna Masa</h2>
+      </div>
+      <div class="section-body">
+
+        <div class="card">
+          <div class="card-title">Źródła Zasilania Płytki</div>
+          <p>Rozwój projektu często zaczyna się od kabla USB, ale docelowo urządzenie ląduje na baterii lub zewnętrznym zasilaczu. Musisz wiedzieć, gdzie wpiąć kable.</p>
+          
+          <ul class="card-list">
+            <li><strong>Port USB:</strong> Dostarcza stabilne 5V z komputera (limit prądu zazwyczaj ~500mA).</li>
+            <li><strong>Pin VIN (lub 5V):</strong> Wejście na zewnętrzny zasilacz (np. pakiet baterii Li-Ion). Napięcie z tego pinu idzie przez wbudowany w płytkę stabilizator LDO, który zbija je do bezpiecznych 3.3V.</li>
+            <li><strong>Pin 3V3:</strong> To pin <em>wyjściowy</em> wewnętrznego stabilizatora. Możesz nim zasilać małe czujniki (np. moduł EKG). <strong>Nigdy</strong> nie podłączaj tu zewnętrznego zasilania wyższego niż 3.3V!</li>
+          </ul>
+        </div>
+
+        <div class="callout callout-warn">
+          <h3>Nie zasilaj silników z płytki!</h3>
+          Wbudowany stabilizator LDO w ESP32 ma bardzo małą wydajność (często oddaje max 500-800mA). Układ Wi-Fi w momentach transmisji "pożera" aż do 600mA (tzw. piki). Jeśli do pinu 3V3 podepniesz moduł o dużym poborze prądu (przekaźnik, serwomechanizm, silnik), napięcie spadnie (Brownout) i układ będzie się ciągle restartował. <span class="text-orange">Zewnętrzne moduły prądowe zawsze zasilaj z osobnego źródła (np. przetwornicy DC-DC).</span>
+        </div>
+
+        <div class="card">
+          <div class="card-title">LDO vs Przetwornica Impulsowa (Buck)</div>
+          <table class="comp-table">
+            <thead><tr><th>Typ</th><th>Zasada działania</th><th>Plusy</th><th>Minusy</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><strong>LDO (Liniowy)</strong></td>
+                <td>Zamienia nadmiar napięcia (np. z 5V na 3.3V) w czyste ciepło.</td>
+                <td><span class="tag-g">Idealnie czyste napięcie</span> (wymagane w audio i EKG). Tanie.</td>
+                <td><span class="tag-r">Bardzo niska sprawność</span>. Grzeje się.</td>
+              </tr>
+              <tr>
+                <td><strong>Buck / Step-Down (Impulsowa)</strong></td>
+                <td>Bardzo szybko "szatkuje" prąd (PWM) i filtruje przez cewkę/kondensator.</td>
+                <td><span class="tag-g">Sprawność do 95%</span>. Idealne na baterie (np. 12V → 5V).</td>
+                <td><span class="tag-r">Szumy przełączania</span> (zakłóca sygnały analogowe i radiowe).</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout callout-danger">
+          <h3>Złota Zasada: Wspólna Masa (Common Ground)</h3>
+          Jeśli zasilasz mikrokontroler z USB komputera, a silniki z osobnego zasilacza 12V, <span class="text-red">musisz fizycznie połączyć ich piny GND (Masa) kablem!</span> Bez wspólnego punktu odniesienia (0V), sygnały cyfrowe wysyłane z procesora do sterownika silnika nie będą miały sensu fizycznego, co doprowadzi do błędów lub spalenia komponentów.
+        </div>
+
+      </div>
+    </section>
+    <!-- ═══════════════ Izolacja i Kondycjonowanie  ═══════════════ -->
+    <section class="section" id="s19">
+      <div class="section-header">
+        <span class="section-num">05</span>
+        <h2>Izolacja Galwaniczna i Kondycjonowanie Sygnału</h2>
+      </div>
+      <div class="section-body">
+
+        <div class="card">
+          <div class="card-title">Bezpieczeństwo Pacjenta (Izolacja Galwaniczna)</div>
+          <p>W projektach takich jak monitory EKG, elektrody są bezpośrednio podłączone do ciała człowieka. Jeśli mikrokontroler jest zasilany (lub choćby podłączony kablem USB) do komputera wpiętego do gniazdka 230V, istnieje ryzyko przebicia napięcia sieciowego na ciało pacjenta (porażenie prądem). Ochrona zasilacza PC to za mało w standardach medycznych.</p>
+          <ul class="card-list">
+            <li><strong>Izolacja zasilania:</strong> Używamy specjalnych transformatorów medycznych lub baterii (brak fizycznego połączenia z siecią).</li>
+            <li><strong>Izolacja danych (Optoizolatory):</strong> Sygnały cyfrowe (np. UART) z płytki EKG są zamieniane na światło za pomocą diody LED, a następnie odczytywane przez fototranzystor po drugiej stronie bariery. Obwody <strong>nie stykają się galwanicznie (nie mają wspólnej masy)</strong>.</li>
+          </ul>
+        </div>
+
+        <div class="callout callout-ok">
+          <h3>Kondensatory Odsprzęgające (Decoupling)</h3>
+          Cyfrowe układy scalone przy przełączaniu stanów generują "szpilki" zakłóceń na linii zasilania. Zawsze stawiaj mały kondensator ceramiczny (zazwyczaj <span class="text-green">100nF</span>) fizycznie jak najbliżej pinów VCC i GND każdego układu scalonego (np. ADS1293). Działa on jak miniaturowy filtr zwarciowy dla wysokich częstotliwości, czyszcząc zasilanie z cyfrowego szumu.
+        </div>
+
+        <div class="card">
+          <div class="card-title">Kondycjonowanie sygnału analogowego</div>
+          <p>Sygnał z serca ma amplitudę rzędu ułamków milivolta. Kable podłączone do ciała działają jak wielkie anteny zbierające szum elektromagnetyczny (szczególnie buczenie 50 Hz z sieci w ścianach).</p>
+          
+          <div class="kv-block" style="margin-top: 14px;">
+            <div class="kv-row">
+              <span class="kv-key">Wzmacniacz Różnicowy</span>
+              <span class="kv-val">Wzmacnia tylko RÓŻNICĘ między elektrodami. Szum z sieci (który indukuje się tak samo na obu kablach) jest matematycznie odejmowany (CMRR).</span>
+            </div>
+            <div class="kv-row">
+              <span class="kv-key">Filtr Górnoprzepustowy</span>
+              <span class="kv-val kv-orange">Usuwa wolne "pływanie" wykresu (np. gdy pacjent oddycha lub się poruszy). Odcięcie często ustala się na ~0.5 Hz.</span>
+            </div>
+            <div class="kv-row">
+              <span class="kv-key">Filtr Dolnoprzepustowy (Anti-aliasing)</span>
+              <span class="kv-val kv-accent">Tłumi wysokie częstotliwości radiowe przed wejściem na przetwornik ADC, aby uniknąć artefaktów próbkowania.</span>
+            </div>
+          </div>
+        </div>
+        <div class="callout callout-danger" style="margin-top: 16px;">
+          <h3>Krytyczne: Ochrona przed Defibrylacją</h3>
+          Podczas reanimacji, defibrylator uderza w ciało pacjenta impulsem o napięciu dochodzącym do <span class="text-red">5000V</span>. Jeśli elektrody EKG są podłączone, ładunek ten wędruje kablami prosto do układu pomiarowego. Aby <span class="mark-bg-red">nie spalić elektroniki</span>, na samym wejściu (przed wzmacniaczem ADS1293) stosuje się wielostopniową kaskadę zabezpieczeń:
+          <ul class="card-list" style="margin-top: 8px;">
+            <li><strong>Rezystory wysokonapięciowe:</strong> (tzw. <em>defib resistors</em>) o dużej mocy, które jako pierwsze przyjmują uderzenie i drastycznie ograniczają prąd.</li>
+            <li><strong>Odgromniki (GDT / Neonówki):</strong> Gdy napięcie przekroczy np. 90V, gaz w rurce jonizuje się, tworząc zwarcie do masy (GND) i odprowadzając 99% niszczycielskiej energii impulsowej.</li>
+            <li><strong>Diody TVS (Transient Voltage Suppressors):</strong> Superszybkie diody Transil, które "obcinają" resztki napięcia, które przeszły przez odgromnik, zbijając je do bezpiecznego poziomu (np. 3.3V) akceptowalnego przez krzem.</li>
+          </ul>
+        </div>
+
+      </div>
+    </section>
+
+<!------------------------- II BLOK----------------------------->
+    <div class="divider" style="margin: 80px 0 40px;">
+    <div class="divider-line"></div>
+    <div class="divider-text" style="font-size: 14px; color: var(--accent);">II. Rdzeń i Przetwarzanie</div>
+    <div class="divider-line"></div>
+    </div>
+
+    <!-- ═══════════════ Typy Danych ═══════════════ -->
+    <section class="section" id="s3">
+      <div class="section-header">
+        <span class="section-num">01</span>
+        <h2>Typy Danych i Architektura — Pułapki</h2>
+      </div>
+      <div class="section-body">
+        <div class="short-card">
+          <h3>Szybkie podsumowanie</h3>
+          <ul>
+            <li><code>int</code> to 16-bit na Arduino R3, ale 32-bit na ESP32/R4 — nigdy nie zakładaj rozmiaru!</li>
+            <li>Zawsze używaj typów z <code>&lt;stdint.h&gt;</code>: <code>uint8_t</code>, <code>int16_t</code>, <code>uint32_t</code>.</li>
+            <li>Dane 24-bitowe (ADC medyczne) pakujemy w <code>uint32_t</code> — jeden bajt jest pusty (=0).</li>
+          </ul>
+        </div>
+
+        <div class="callout callout-danger">
+          <h3>Pułapka 8-bit vs 32-bit</h3>
+          Piszesz <code>int x = analogRead(A0);</code> i działa na Arduino R3. Wrzucasz ten sam kod na ESP32 — zmienna ma teraz inny rozmiar w pamięci i pakiet binarny się "rozjedzie" po drugiej stronie. Zawsze używaj typów o stałym rozmiarze!
+        </div>
+
+        <div class="card">
+          <div class="card-title">Rozmiary typów stdint.h</div>
+          <table class="comp-table" style="margin-top:0">
+            <thead><tr><th>Typ</th><th>Rozmiar</th><th>Zakres</th><th>Użycie</th></tr></thead>
+            <tbody>
+              <tr><td><code>uint8_t</code></td><td>1 bajt</td><td>0–255</td><td>Bajt, sekwencja, flagi</td></tr>
+              <tr><td><code>int8_t</code></td><td>1 bajt</td><td>-128–127</td><td>Mała wartość ze znakiem</td></tr>
+              <tr><td><code>uint16_t</code></td><td>2 bajty</td><td>0–65535</td><td>ADC 10/12-bit, czas ms</td></tr>
+              <tr><td><code>int16_t</code></td><td>2 bajty</td><td>±32767</td><td>EKG, akcelerometr</td></tr>
+              <tr class="hl"><td><code>uint32_t</code></td><td>4 bajty</td><td>0–4 mld</td><td>Timestamp, ADC 24-bit</td></tr>
+              <tr><td><code>int32_t</code></td><td>4 bajty</td><td>±2.1 mld</td><td>Długie liczby ze znakiem</td></tr>
+              <tr><td><code>float</code></td><td>4 bajty</td><td>~±3.4×10³⁸</td><td>Fizyczne wartości, unikaj w ISR</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">C++ / Arduino</span>
+            <span class="code-label">Prawidłowe użycie typów stałego rozmiaru</span>
+            <button class="copy-btn" onclick="copyCode(this)">kopiuj</button>
+          </div>
+          <pre><span class="pp">#include</span> <span class="str">&lt;stdint.h&gt;</span>   <span class="cm">// ZAWSZE dołączaj</span>
+
+<span class="cm">// ❌ ZŁE — różny rozmiar na różnych platformach</span>
+<span class="kw">int</span>  <span class="var">val</span>    <span class="op">=</span> <span class="fn">analogRead</span>(<span class="var">A0</span>);
+<span class="kw">long</span> <span class="var">tstamp</span> <span class="op">=</span> <span class="fn">millis</span>();
+
+<span class="cm">// ✅ DOBRZE — stały rozmiar na każdej platformie</span>
+<span class="ty">uint16_t</span> <span class="var">val</span>    <span class="op">=</span> (<span class="ty">uint16_t</span>)<span class="fn">analogRead</span>(<span class="var">A0</span>);
+<span class="ty">uint32_t</span> <span class="var">tstamp</span> <span class="op">=</span> <span class="fn">millis</span>();
+
+<span class="cm">// Dane 24-bitowe z modułu ADS1293 (EKG)</span>
+<span class="ty">uint32_t</span> <span class="var">ecg24</span> <span class="op">=</span> <span class="num">0</span>;
+<span class="var">ecg24</span>  <span class="op">=</span> (<span class="ty">uint32_t</span>)<span class="var">buf</span>[<span class="num">0</span>] <span class="op">&lt;&lt;</span> <span class="num">16</span>;  <span class="cm">// MSB</span>
+<span class="var">ecg24</span> <span class="op">|=</span> (<span class="ty">uint32_t</span>)<span class="var">buf</span>[<span class="num">1</span>] <span class="op">&lt;&lt;</span>  <span class="num">8</span>;  <span class="cm">// mid</span>
+<span class="var">ecg24</span> <span class="op">|=</span> (<span class="ty">uint32_t</span>)<span class="var">buf</span>[<span class="num">2</span>];         <span class="cm">// LSB</span>
+<span class="cm">// bajt [3] = 0x00 — "pusty" wypełniacz</span></pre>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Jak działa składanie bitów?</div>
+          <p>Mikrokontroler odbiera z czujnika "kawałki" danych – pojedyncze bajty (8-bit). Musimy z powrotem zlepić je w jedną dużą zmienną 32-bitową. Wyobraź sobie szufladę na 32 bity:</p>
+          <ul class="card-list">
+            <li><code>(uint32_t)buf[0] &lt;&lt; 16</code> – Bierzemy najstarszy bajt (MSB), mówimy kompilatorowi: <i>"traktuj go jak dużą szufladę 32-bit"</i>, a potem przesuwamy go o 16 miejsc w lewo.</li>
+            <li><code>|= ... &lt;&lt; 8</code> – Bierzemy środkowy bajt, przesuwamy o 8 miejsc w lewo i za pomocą operatora <code>|</code> (logiczne LUB / OR) "doklejamy" go do zmiennej.</li>
+            <li>Rzutowanie <code>(uint32_t)</code> przed przesunięciem jest <strong>absolutnie krytyczne</strong>. Próba przesunięcia 8-bitowej zmiennej o 16 miejsc w lewo bez rzutowania spowoduje zgubienie danych na architekturach 8/16-bitowych!</li>
+          </ul>
+        </div>
+
+        <div class="callout callout-warn">
+          <h3>Uwaga na wartości ujemne!</h3>
+          Zmienne takie jak odczyty EKG mogą być ujemne. Systemy binarne zapisują liczby ujemne w kodzie U2, gdzie pierwszy bit od lewej to bit znaku (1 = minus). Jeśli złożysz ujemną liczbę 24-bitową w zmiennej 32-bitowej, kompilator potraktuje ją jako ogromną liczbę dodatnią (bo 32. bit to zero). Musimy wykonać tzw. <span class="text-orange">Rozszerzenie znaku (Sign Extension)</span>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">C++ / Arduino</span>
+            <span class="code-label">Dane 24-bitowe ze znakiem (Sign Extension)</span>
+            <button class="copy-btn" onclick="copyCode(this)">kopiuj</button>
+          </div>
+          <pre><span class="cm">// 1. Do odczytów EKG używamy ZNAKOWEJ zmiennej (int32_t)</span>
+<span class="ty">int32_t</span> <span class="var">ecg_signed</span> <span class="op">=</span> <span class="num">0</span>;
+
+<span class="cm">// 2. Sklejamy bity (zawsze na typie bez znaku, by uniknąć błędów przesunięć!)</span>
+<span class="ty">uint32_t</span> <span class="var">raw</span>  <span class="op">=</span> (<span class="ty">uint32_t</span>)<span class="var">buf</span>[<span class="num">0</span>] <span class="op">&lt;&lt;</span> <span class="num">16</span>;
+<span class="var">raw</span> <span class="op">|=</span> (<span class="ty">uint32_t</span>)<span class="var">buf</span>[<span class="num">1</span>] <span class="op">&lt;&lt;</span>  <span class="num">8</span>;
+<span class="var">raw</span> <span class="op">|=</span> (<span class="ty">uint32_t</span>)<span class="var">buf</span>[<span class="num">2</span>];
+
+<span class="cm">// 3. Rozszerzenie znaku (Sign Extension)</span>
+<span class="cm">// Maska 0x00800000 sprawdza stan 24-tego bitu (bitu znaku).</span>
+<span class="kw">if</span> (<span class="var">raw</span> <span class="op">&amp;</span> <span class="num">0x00800000</span>) {
+    <span class="cm">// Jeśli liczba jest ujemna, wypełniamy górne 8 bitów jedynkami.</span>
+    <span class="var">raw</span> <span class="op">|=</span> <span class="num">0xFF000000</span>; 
+}
+
+<span class="cm">// Dopiero teraz rzutujemy na typ ze znakiem</span>
+<span class="var">ecg_signed</span> <span class="op">=</span> (<span class="ty">int32_t</span>)<span class="var">raw</span>;</pre>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+          <div class="card-title">Wielokanałowość (np. 3 kanały)</div>
+          <p>Czujniki medyczne, takie jak ADS1293, to układy wielokanałowe. Zamiast pobierać 3 bajty dla jednego kanału, układ często wysyła po magistrali cały "pociąg" danych (np. 9 bajtów = 3 kanały). Aby kod był czysty, warto odczytać cały bufor do jednej tablicy i rozpakować go używając pętli <code>for</code> i prostego offsetu.</p>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">C++ / Arduino</span>
+            <span class="code-label">Rozpakowanie pakietu wielokanałowego</span>
+            <button class="copy-btn" onclick="copyCode(this)">kopiuj</button>
+          </div>
+          <pre><span class="cm">// Bufor 9 bajtów odebranych przez SPI/I2C dla 3 kanałów</span>
+<span class="ty">uint8_t</span> <span class="var">buf</span>[<span class="num">9</span>] <span class="op">=</span> {<span class="cm">/* odczytane dane */</span>};
+<span class="ty">int32_t</span> <span class="var">channels</span>[<span class="num">3</span>]; <span class="cm">// Tablica na wyniki</span>
+
+<span class="kw">for</span> (<span class="kw">int</span> <span class="var">i</span> <span class="op">=</span> <span class="num">0</span>; <span class="var">i</span> <span class="op">&lt;</span> <span class="num">3</span>; <span class="var">i</span><span class="op">++</span>) {
+    <span class="cm">// Obliczamy przesunięcie (co 3 bajty nowy kanał)</span>
+    <span class="kw">int</span> <span class="var">offset</span> <span class="op">=</span> <span class="var">i</span> <span class="op">*</span> <span class="num">3</span>;
+    
+    <span class="cm">// Sklejanie (w jednej linii dla zwięzłości)</span>
+    <span class="ty">uint32_t</span> <span class="var">raw</span> <span class="op">=</span> ((<span class="ty">uint32_t</span>)<span class="var">buf</span>[<span class="var">offset</span>] <span class="op">&lt;&lt;</span> <span class="num">16</span>) <span class="op">|</span>
+                   ((<span class="ty">uint32_t</span>)<span class="var">buf</span>[<span class="var">offset</span><span class="op">+</span><span class="num">1</span>] <span class="op">&lt;&lt;</span> <span class="num">8</span>) <span class="op">|</span>
+                   (<span class="ty">uint32_t</span>)<span class="var">buf</span>[<span class="var">offset</span><span class="op">+</span><span class="num">2</span>];
+                   
+    <span class="cm">// Rozszerzenie znaku (Sign Extension) dla 24-bitów</span>
+    <span class="kw">if</span> (<span class="var">raw</span> <span class="op">&amp;</span> <span class="num">0x00800000</span>) {
+        <span class="var">raw</span> <span class="op">|=</span> <span class="num">0xFF000000</span>;
+    }
+    
+    <span class="cm">// Zapisz wynikowy kanał do tablicy</span>
+    <span class="var">channels</span>[<span class="var">i</span>] <span class="op">=</span> (<span class="ty">int32_t</span>)<span class="var">raw</span>;
+}</pre>
+        </div>
+
+      </div>
+    </section>
+    <!-- ═══════════════ Przetworniki AD ═══════════════ -->
+    <section class="section" id="s6">
+        <div class="section-header">
+          <span class="section-num">02</span>
+          <h2>ADC — Przetworniki Analogowo-Cyfrowe i Rozdzielczość</h2>
+        </div>
+        <div class="section-body">
+          <div class="short-card">
+            <h3>Szybkie podsumowanie</h3>
+            <ul>
+              <li>ADC zamienia napięcie → liczbę. Bitowość = ile "schodków" w zakresie 0–Vref.</li>
+              <li>10-bit (Arduino): 1024 wartości. 12-bit (ESP32): 4096. 24-bit (medyczne): 16M.</li>
+              <li>Dane 24-bit → pakuj w <code>uint32_t</code> (bajt MSB zawsze = 0).</li>
+            </ul>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Czym jest przetwornik ADC i rozdzielczość?</div>
+            <p>Mikrokontrolery to urządzenia w pełni cyfrowe – operują wyłącznie na zerach i jedynkach. Świat fizyczny jest jednak analogowy i płynny. Napięcie na czujniku EKG zmienia się w sposób ciągły. Przetwornik Analogowo-Cyfrowy (ADC) to układ, który działa jak tłumacz: mierzy to płynne napięcie w danej chwili i przypisuje mu konkretną, dyskretną liczbę całkowitą.</p>
+            <p>Kluczowym parametrem ADC jest jego <strong>rozdzielczość</strong> podawana w bitach. Określa ona, na ile "schodków" przetwornik potrafi podzielić mierzony zakres napięcia (np. od 0 do 3.3V). Im więcej bitów, tym schodki są drobniejsze, a pomiar wierniejszy. Przykładowo, 10-bitowy przetwornik w Arduino dzieli sygnał zaledwie na 1024 schodki, gubiąc drobne detale. Z kolei dedykowane medyczne układy 24-bitowe potrafią rozpoznać mikroskopijne zmiany rzędu mikrowoltów, co jest niezbędne, aby wyłapać subtelne załamki sygnału kardiologicznego.</p>
+          </div>
+
+          <div class="diagram-wrap">
+            <div class="diagram-title">Rozdzielczość ADC — porównanie bitowości</div>
+            <svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg" width="100%">
+              <defs>
+                <linearGradient id="grad10" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="var(--red)" stop-opacity="0.8"/>
+                  <stop offset="100%" stop-color="var(--red)" stop-opacity="0.1"/>
+                </linearGradient>
+                <linearGradient id="grad12" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="var(--orange)" stop-opacity="0.8"/>
+                  <stop offset="100%" stop-color="var(--orange)" stop-opacity="0.1"/>
+                </linearGradient>
+                <linearGradient id="grad24" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="var(--green)" stop-opacity="0.8"/>
+                  <stop offset="100%" stop-color="var(--green)" stop-opacity="0.1"/>
+                </linearGradient>
+              </defs>
+
+              <rect x="20" y="30" width="180" height="130" rx="6" fill="var(--card)" stroke="var(--border)"/>
+              <text x="110" y="22" text-anchor="middle" font-family="var(--mono)" font-size="11" fill="var(--text2)">Arduino R3</text>
+              <rect x="35" y="40" width="30" height="110" rx="2" fill="var(--border)"/>
+              <rect x="35" y="100" width="30" height="50" rx="2" fill="url(#grad10)" stroke="none"/>
+              <text x="115" y="75" text-anchor="middle" font-family="var(--mono)" font-size="22" fill="var(--red)" font-weight="700">10-bit</text>
+              <text x="115" y="100" text-anchor="middle" font-family="var(--mono)" font-size="11" fill="var(--text2)">1 024 kroków</text>
+              <text x="115" y="118" text-anchor="middle" font-family="var(--mono)" font-size="11" fill="var(--text2)">~4.9 mV / krok</text>
+              <text x="115" y="148" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="var(--text3)">hobbystyczny</text>
+
+              <rect x="260" y="30" width="180" height="130" rx="6" fill="var(--card)" stroke="var(--border)"/>
+              <text x="350" y="22" text-anchor="middle" font-family="var(--mono)" font-size="11" fill="var(--text2)">ESP32</text>
+              <rect x="275" y="40" width="30" height="110" rx="2" fill="var(--border)"/>
+              <rect x="275" y="70" width="30" height="80" rx="2" fill="url(#grad12)" stroke="none"/>
+              <text x="355" y="75" text-anchor="middle" font-family="var(--mono)" font-size="22" fill="var(--orange)" font-weight="700">12-bit</text>
+              <text x="355" y="100" text-anchor="middle" font-family="var(--mono)" font-size="11" fill="var(--text2)">4 096 kroków</text>
+              <text x="355" y="118" text-anchor="middle" font-family="var(--mono)" font-size="11" fill="var(--text2)">~0.8 mV / krok</text>
+              <text x="355" y="148" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="var(--text3)">automatyka</text>
+
+              <rect x="500" y="30" width="180" height="130" rx="6" fill="rgba(0,255,136,0.05)" stroke="rgba(0,255,136,0.2)"/>
+              <text x="590" y="22" text-anchor="middle" font-family="var(--mono)" font-size="11" fill="var(--green)">ADS1293 / medyczne</text>
+              <rect x="515" y="40" width="30" height="110" rx="2" fill="var(--border)"/>
+              <rect x="515" y="40" width="30" height="110" rx="2" fill="url(#grad24)" stroke="none"/>
+              <text x="595" y="75" text-anchor="middle" font-family="var(--mono)" font-size="22" fill="var(--green)" font-weight="700">24-bit</text>
+              <text x="605" y="100" text-anchor="middle" font-family="var(--mono)" font-size="11" fill="var(--text2)">16 777 216 kroków</text>
+              <text x="595" y="118" text-anchor="middle" font-family="var(--mono)" font-size="11" fill="var(--text2)">&lt;0.3 µV / krok</text>
+              <text x="600" y="148" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="var(--green)">→ pakuj w uint32</text>
+
+              <text x="350" y="185" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="var(--text3)">Rozdzielczość rośnie wykładniczo: każdy bit to ×2 więcej kroków</text>
+            </svg>
+          </div>
+        </div>
+      </section>
+    <!-- ═══════════════ Przerwania ═══════════════ -->
+    <section class="section" id="s8">
+        <div class="section-header">
+          <span class="section-num">03</span>
+          <h2>Przerwania Sprzętowe (Hardware Interrupts / ISR)</h2>
+        </div>
+        <div class="section-body">
+          <div class="card">
+            <p>ISR (Interrupt Service Routine) – to funkcja wywoływana bezpośrednio przez układ sprzętowy (np. licznik Timera obracający się w tle), niezależnie od głównej pętli programu `loop()`. Gwarantuje to niemal <strong>zerowy jitter czasowy</strong> — idealne rozwiązanie do pobierania próbek z precyzyjną, stałą częstotliwością.</p>
+          </div>
+          
+          <div class="callout callout-danger">
+            <strong>Żelazne zasady ISR</strong>
+            Wewnątrz ISR używaj tylko najszybszych instrukcji! Absolutnie zabronione jest używanie <code>delay()</code>, <code>Serial.print()</code> czy złożonej matematyki zmiennoprzecinkowej. Zmienne modyfikowane w ISR a czytane w loop muszą posiadać słowo kluczowe <code>volatile</code>.
+          </div>
+          
+          <div class="diagram-wrap">
+          <div class="diagram-title">Przepływ sterowania — polling vs ISR</div>
+          <svg viewBox="0 0 720 220" xmlns="http://www.w3.org/2000/svg" width="100%">
+            <text x="170" y="18" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#ff4466" font-weight="600">POLLING (loop)</text>
+            <rect x="20" y="28" width="300" height="36" rx="5" fill="#141920" stroke="#243040"/>
+            <text x="170" y="51" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#8a9ab5">loop(): kod użytkowy A, B, C...</text>
+            <rect x="20" y="72" width="300" height="36" rx="5" fill="rgba(255,68,102,0.1)" stroke="rgba(255,68,102,0.3)"/>
+            <text x="170" y="95" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#ff4466">if (micros() - prev &gt;= 2000) { ADC read }</text>
+            <rect x="20" y="116" width="300" height="36" rx="5" fill="#141920" stroke="#243040"/>
+            <text x="170" y="139" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#8a9ab5">loop(): dalszy kod... (możliwe opóźnienie!)</text>
+            <text x="170" y="170" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#ff4466">⚠ Timing zależy od czasu wykonania pętli → jitter</text>
+
+            <text x="545" y="18" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#00ff88" font-weight="600">PRZERWANIE SPRZĘTOWE</text>
+            <rect x="395" y="28" width="300" height="36" rx="5" fill="rgba(0,212,255,0.07)" stroke="rgba(0,212,255,0.2)"/>
+            <text x="545" y="51" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#8a9ab5">loop(): normalny kod A, B, C...</text>
+
+            <line x1="545" y1="64" x2="545" y2="90" stroke="#00ff88" stroke-width="1.5" stroke-dasharray="4,3"/>
+            <polygon points="545,96 540,86 550,86" fill="#00ff88"/>
+            <text x="570" y="82" font-family="JetBrains Mono" font-size="9" fill="#00ff88">Timer HW</text>
+
+            <rect x="395" y="100" width="300" height="36" rx="5" fill="rgba(0,255,136,0.12)" stroke="rgba(0,255,136,0.4)"/>
+            <text x="545" y="123" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#00ff88">ISR(): ADC read → bufor (µs) ← sprzęt woła</text>
+
+            <line x1="545" y1="136" x2="545" y2="158" stroke="#00ff88" stroke-width="1.5" stroke-dasharray="4,3"/>
+            <polygon points="545,164 540,154 550,154" fill="#00d4ff"/>
+
+            <rect x="395" y="168" width="300" height="36" rx="5" fill="rgba(0,212,255,0.07)" stroke="rgba(0,212,255,0.2)"/>
+            <text x="545" y="191" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#8a9ab5">loop(): powrót dokładnie tu gdzie był</text>
+            <text x="545" y="215" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#00ff88">✓ Jitter ≈ 0, absolutna precyzja czasowa</text>
+          </svg>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">C++ / Arduino</span>
+            <span class="code-label">ISR z timerem sprzętowym (Timer1)</span>
+            <button class="copy-btn" onclick="copyCode(this)">kopiuj</button>
+          </div>
+          <pre><span class="pp">#include</span> <span class="str">&lt;TimerOne.h&gt;</span>
+
+<span class="kw">volatile</span> <span class="ty">int16_t</span>  <span class="var">sampleBuf</span>;    <span class="cm">// volatile! dostęp z ISR i loop</span>
+<span class="kw">volatile</span> <span class="ty">bool</span>     <span class="var">dataReady</span> <span class="op">=</span> <span class="kw">false</span>;
+
+<span class="cm">// Wywoływana co 2ms (500 Hz) przez sprzęt</span>
+<span class="kw">void</span> <span class="fn">sampleISR</span>() {
+  <span class="var">sampleBuf</span> <span class="op">=</span> (<span class="ty">int16_t</span>)<span class="fn">analogRead</span>(<span class="var">A0</span>);
+  <span class="var">dataReady</span>  <span class="op">=</span> <span class="kw">true</span>;
+}
+
+<span class="kw">void</span> <span class="fn">setup</span>() {
+  <span class="var">Serial</span>.<span class="fn">begin</span>(<span class="num">115200</span>);
+  <span class="var">Timer1</span>.<span class="fn">initialize</span>(<span class="num">2000</span>);    <span class="cm">// 2000 µs = 500 Hz</span>
+  <span class="var">Timer1</span>.<span class="fn">attachInterrupt</span>(<span class="var">sampleISR</span>);
+}
+
+<span class="kw">void</span> <span class="fn">loop</span>() {
+  <span class="kw">if</span> (<span class="var">dataReady</span>) {
+    <span class="var">dataReady</span> <span class="op">=</span> <span class="kw">false</span>;
+    <span class="fn">sendBinarySample</span>(<span class="var">sampleBuf</span>);  <span class="cm">// wysyłamy poza ISR</span>
+  }
+  <span class="cm">// inne zadania – CPU wolny między próbkami</span>
+}</pre>
+        </div>
+        </div>
+      </section>
+    <!-- ═══════════════ Synxhronizacja Czasu ═══════════════ -->
+    <section class="section" id="s2">
+      <div class="section-header">
+        <span class="section-num">04</span>
+        <h2>Synchronizacja Czasu i Blokowanie Pamięci</h2>
+      </div>
+      <div class="section-body">
+        <div class="short-card">
+          <h3>Szybkie podsumowanie</h3>
+          <ul>
+            <li>Nigdy <code>delay()</code> w produkcji — paraliżuje CPU.</li>
+            <li>Używaj <code>millis()</code> / <code>micros()</code> + wzorzec "Blink Without Delay".</li>
+            <li>Złota zasada RTOS: <code>prev += interval</code> zamiast <code>prev = now</code> → brak dryfu.</li>
+            <li>Arduino R3: <code>micros()</code> z krokiem 4 µs.</li>
+          </ul>
+        </div>
+
+        <div class="warn-box">
+          <strong>⚠ delay() to wróg!</strong> Funkcja <code>delay(10)</code> całkowicie blokuje CPU na 10 ms. W tym czasie mikrokontroler nie może obsłużyć żadnego czujnika, przerwania, ani komunikacji. W projekcie produkcyjnym <code>delay()</code> pojawia się wyłącznie w kodzie inicjalizacyjnym (<code>setup()</code>).
+        </div>
+        
+        <div class="card">
+            <div class="card-title">Różnica miedzy millis() a micros()</div>
+            <p style="margin-bottom: 12px;">Wybór między <code>millis()</code> a <code>micros()</code> zależy od wymaganej precyzji pomiaru oraz czasu trwania operacji. Obie funkcje pozwalają na wielowątkowość (non-blocking), zastępując funkcję delay.</p>
+            
+            <div class="kv-block">
+              <div class="kv-row"><span class="kv-key">Jednostka</span><span class="kv-val">Millis: 1ms | Micros: 1µs</span></div>
+              <div class="kv-row"><span class="kv-key">Rozdzielczość (AVR)</span><span class="kv-val">Millis: 1ms | Micros: 4µs</span></div>
+              <div class="kv-row"><span class="kv-key">Przepełnienie</span><span class="kv-val kv-orange">Millis: ~50 dni | Micros: ~70 min</span></div>
+              <div class="kv-row"><span class="kv-key">Zastosowanie</span><span class="kv-val kv-accent">Millis: Interwały | Micros: Szybkie sygnały</span></div>
+            </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-title">Metoda "Blink Without Delay" — millis()</div>
+          <p>Zamiast blokować procesor, zapamiętujemy znacznik czasu ostatniego wykonania i w każdym obiegu <code>loop()</code> sprawdzamy, czy minął wymagany interwał:</p>
+          <p><code>if (millis() - prevTime &gt;= INTERVAL) { ... }</code></p>
+          <p>Rozwiązanie:<code>prevTime += now</code> —przepisujemy wartosc <code>now</code>.Błąd może kumulować się </p>
+          <p>Procesor w "wolnym czasie" może obsługiwać inne zadania, wejścia, komunikację.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Korekta Dryfu Czasowego (Złota Zasada RTOS)</div>
+          <p>Jeśli aktualizujemy <code>prevTime = millis()</code>, każdy obieg pętli dodaje drobne opóźnienia kodu do interwału, co po setkach iteracji kumuluje się w znaczący błąd (dryfuje w czasie).</p>
+          <p>Rozwiązanie: <code>prevTime += INTERVAL</code> — inkrementujemy matematycznie, nie przepisujemy. Błąd nie kumuluje się, bo interwał jest absolutny.</p>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">C++ / Arduino</span>
+            <span class="code-label">Timer bez blokowania + korekta dryfu</span>
+            <button class="copy-btn" onclick="copyCode(this)">kopiuj</button>
+          </div>
+          <pre><span class="kw">const</span> <span class="ty">uint32_t</span> <span class="var">INTERVAL_MS</span> <span class="op">=</span> <span class="num">2</span>;      <span class="cm">// 500 Hz</span>
+<span class="ty">uint32_t</span> <span class="var">prevTime</span> <span class="op">=</span> <span class="num">0</span>;
+
+<span class="kw">void</span> <span class="fn">loop</span>() {
+  <span class="ty">uint32_t</span> <span class="var">now</span> <span class="op">=</span> <span class="fn">millis</span>();
+
+  <span class="kw">if</span> (<span class="var">now</span> <span class="op">-</span> <span class="var">prevTime</span> <span class="op">&gt;=</span> <span class="var">INTERVAL_MS</span>) {
+    <span class="var">prevTime</span> <span class="op">+=</span> <span class="var">INTERVAL_MS</span>;  <span class="cm">// ← złota zasada, nie = now!</span>
+
+    <span class="ty">uint16_t</span> <span class="var">sample</span> <span class="op">=</span> <span class="fn">analogRead</span>(<span class="var">A0</span>);
+    <span class="fn">sendBinarySample</span>(<span class="var">sample</span>);
+  }
+
+  <span class="cm">// Tu możemy robić inne rzeczy bez blokowania:</span>
+  <span class="fn">checkButtons</span>();
+  <span class="fn">handleSerial</span>();
+}</pre>
+        </div>
+
+        <div class="diagram-wrap">
+          <div class="diagram-title">Oś czasu — delay() vs millis() przy 500 Hz</div>
+          <svg viewBox="0 0 720 160" xmlns="http://www.w3.org/2000/svg" width="100%">
+            <text x="10" y="28" font-family="JetBrains Mono" font-size="10" fill="#ff4466" font-weight="600">delay()</text>
+            <rect x="80" y="14" width="60" height="24" rx="3" fill="rgba(0,255,136,0.15)" stroke="rgba(0,255,136,0.4)"/>
+            <text x="110" y="30" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#00ff88">kod</text>
+            <rect x="140" y="14" width="144" height="24" rx="3" fill="rgba(255,68,102,0.2)" stroke="rgba(255,68,102,0.5)"/>
+            <text x="212" y="30" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#ff4466">BLOKADA delay(2ms)</text>
+            <rect x="284" y="14" width="60" height="24" rx="3" fill="rgba(0,255,136,0.15)" stroke="rgba(0,255,136,0.4)"/>
+            <text x="314" y="30" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#00ff88">kod</text>
+            <rect x="344" y="14" width="144" height="24" rx="3" fill="rgba(255,68,102,0.2)" stroke="rgba(255,68,102,0.5)"/>
+            <text x="416" y="30" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#ff4466">BLOKADA delay(2ms)</text>
+            <rect x="488" y="14" width="60" height="24" rx="3" fill="rgba(0,255,136,0.15)" stroke="rgba(0,255,136,0.4)"/>
+            <text x="518" y="30" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#00ff88">kod</text>
+            <rect x="548" y="14" width="144" height="24" rx="3" fill="rgba(255,68,102,0.2)" stroke="rgba(255,68,102,0.5)"/>
+            <text x="620" y="30" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#ff4466">BLOKADA</text>
+
+            <text x="110" y="54" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#5a6a80">CPU wolny?</text>
+            <text x="212" y="54" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#ff4466">❌ ZABLOKOWANY</text>
+
+            <text x="10" y="96" font-family="JetBrains Mono" font-size="10" fill="#00ff88" font-weight="600">millis()</text>
+            <rect x="80" y="82" width="60" height="24" rx="3" fill="rgba(0,255,136,0.15)" stroke="rgba(0,255,136,0.4)"/>
+            <text x="110" y="98" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#00ff88">sample</text>
+            <rect x="140" y="82" width="144" height="24" rx="3" fill="rgba(0,212,255,0.08)" stroke="rgba(0,212,255,0.2)"/>
+            <text x="212" y="98" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#00d4ff">inne zadania(wolny CPU)</text>
+            <rect x="284" y="82" width="60" height="24" rx="3" fill="rgba(0,255,136,0.15)" stroke="rgba(0,255,136,0.4)"/>
+            <text x="314" y="98" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#00ff88">sample</text>
+            <rect x="344" y="82" width="144" height="24" rx="3" fill="rgba(0,212,255,0.08)" stroke="rgba(0,212,255,0.2)"/>
+            <text x="416" y="98" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#00d4ff">inne zadania</text>
+            <rect x="488" y="82" width="60" height="24" rx="3" fill="rgba(0,255,136,0.15)" stroke="rgba(0,255,136,0.4)"/>
+            <text x="518" y="98" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#00ff88">sample</text>
+            <rect x="548" y="82" width="144" height="24" rx="3" fill="rgba(0,212,255,0.08)" stroke="rgba(0,212,255,0.2)"/>
+            <text x="620" y="98" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#00d4ff">inne zadania</text>
+            
+            <text x="212" y="122" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#00ff88">✓ CPU zawsze dostępny</text>
+
+            <line x1="80" y1="148" x2="710" y2="148" stroke="#3a4a5a" stroke-width="1"/>
+            <text x="80" y="160" font-family="JetBrains Mono" font-size="9" fill="#5a6a80">0ms</text>
+            <text x="284" y="160" font-family="JetBrains Mono" font-size="9" fill="#5a6a80">2ms</text>
+            <text x="488" y="160" font-family="JetBrains Mono" font-size="9" fill="#5a6a80">4ms</text>
+            <text x="692" y="160" font-family="JetBrains Mono" font-size="9" fill="#5a6a80">6ms</text>
+          </svg>
+
+        </div>
+      </div>
+      
+    </section>
+<!------------------------- III. BLOK----------------------------->
+    <div class="divider" style="margin: 80px 0 40px;">
+    <div class="divider-line"></div>
+    <div class="divider-text" style="font-size: 14px; color: var(--accent);">III. Pamięc i Systemy</div>
+    <div class="divider-line"></div>
+    </div>
+
+    <!-- ═══════════════ Struktury i Bufory ═══════════════ -->
+    <section class="section" id="s9">
+      <style>
+        /* Animacja całej grupy (Zielony pasek danych + Wskaźniki H/T) */
+        @keyframes spinRingBuffer {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        .ring-anim-group {
+          transform-origin: 250px 100px; /* Środek bufora */
+          animation: spinRingBuffer 4s linear infinite;
+        }
+      </style>
+
+      <div class="section-header">
+        <span class="section-num">01</span>
+        <h2>Struktury Pamięci i Buforowanie</h2>
+      </div>
+      <div class="section-body">
+        <div class="card">
+          <p>Bufory to obszary pamięci RAM służące jako bezpieczna "poczekalnia" dla danych wymienianych między szybkim producentem (np. przerwaniem timera zgłaszającym pomiar) a wolniejszym konsumentem (np. wysyłką danych przez sieć Wi-Fi).</p>
+        </div>
+
+        <table class="comp-table">
+          <thead><tr><th>Typ Bufora</th><th>Zasada działania</th><th>Główne zastosowanie</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>LIFO (Stack)</strong></td>
+              <td>Ostatnie weszło, pierwsze wychodzi.</td>
+              <td>Stos wywołań funkcji w procesorze. Rzadko używane w akwizycji sygnałów.</td>
+            </tr>
+            <tr class="hl">
+              <td><strong>FIFO / Ring Buffer</strong></td>
+              <td>Pierwsze weszło, pierwsze wychodzi. Tablica kołowa nadpisuje najstarsze dane po osiągnięciu końca.</td>
+              <td>Kolejkowanie znaków z UART, gładki przesył próbek z czujników bez realokacji pamięci.</td>
+            </tr>
+            <tr>
+              <td><strong>Ping-Pong (Double Buffering)</strong></td>
+              <td>Dwa fizyczne bufory. Gdy A się ładuje przez sprzęt (DMA), procesor bezpiecznie wysyła B. Potem zamiana.</td>
+              <td>Zaawansowane audio (I2S), wyświetlacze graficzne, DMA. 100% gwarancji braku kolizji odczyt/zapis.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="diagram-wrap" style="margin-top: 16px;">
+          <div class="diagram-title">LIFO (Stack / Stos) — Ostatnie weszło, pierwsze wychodzi</div>
+          <svg viewBox="0 0 500 200" xmlns="http://www.w3.org/2000/svg" width="100%" style="max-width:500px; margin: 0 auto; display: block;">
+            <defs>
+              <marker id="arrowGreen" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L6,3 z" fill="var(--green)"/>
+              </marker>
+              <marker id="arrowOrange" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L6,3 z" fill="var(--orange)"/>
+              </marker>
+            </defs>
+
+            <path d="M 200 40 L 200 170 L 300 170 L 300 40" fill="none" stroke="var(--border2)" stroke-width="4" stroke-linecap="round"/>
+            
+            <rect x="210" y="130" width="80" height="30" rx="4" fill="var(--card2)" stroke="var(--border)"/>
+            <text x="250" y="150" text-anchor="middle" font-family="var(--mono)" font-size="12" fill="var(--text3)">Dane #1</text>
+            
+            <rect x="210" y="90" width="80" height="30" rx="4" fill="var(--card2)" stroke="var(--border)"/>
+            <text x="250" y="110" text-anchor="middle" font-family="var(--mono)" font-size="12" fill="var(--text3)">Dane #2</text>
+            
+            <rect x="210" y="50" width="80" height="30" rx="4" fill="rgba(86,225,253,0.1)" stroke="var(--accent)"/>
+            <text x="250" y="70" text-anchor="middle" font-family="var(--mono)" font-size="12" fill="var(--accent)">Dane #3</text>
+
+            <path d="M 140 30 Q 180 30 220 45" fill="none" stroke="var(--green)" stroke-width="2" marker-end="url(#arrowGreen)"/>
+            <text x="140" y="20" font-family="var(--mono)" font-size="11" fill="var(--green)" text-anchor="middle">PUSH (Zapis)</text>
+
+            <path d="M 280 45 Q 320 30 360 30" fill="none" stroke="var(--orange)" stroke-width="2" marker-end="url(#arrowOrange)"/>
+            <text x="360" y="20" font-family="var(--mono)" font-size="11" fill="var(--orange)" text-anchor="middle">POP (Odczyt)</text>
+            
+            <text x="400" y="100" font-family="var(--sans)" font-size="12" fill="var(--text2)">Dostęp tylko do</text>
+            <text x="400" y="120" font-family="var(--sans)" font-size="12" fill="var(--accent)" font-weight="bold">najwyższego elementu!</text>
+          </svg>
+        </div>
+
+        <div class="diagram-wrap" style="margin-top: 16px;">
+          <div class="diagram-title">Bufor kołowy (Ring Buffer) — Statyczna Pamięć RAM, Zmienne Wskaźniki</div>
+          <svg viewBox="0 0 500 200" xmlns="http://www.w3.org/2000/svg" width="100%" style="max-width:500px; margin: 0 auto; display: block;">
+            
+            <circle cx="250" cy="100" r="70" fill="none" stroke="var(--border)" stroke-width="28"/>
+            
+            <g class="ring-anim-group">
+              
+              <circle cx="250" cy="100" r="70" fill="none" stroke="var(--green)" stroke-width="28" 
+                      stroke-dasharray="137.4 302.4" opacity="0.6" transform="rotate(-90 250 100)"/>
+              
+              <circle cx="315" cy="127" r="9" fill="var(--bg)" stroke="var(--accent)" stroke-width="2"/>
+              <text x="315" y="130" text-anchor="middle" font-family="var(--mono)" font-size="9" fill="var(--accent)" font-weight="700">H</text>
+
+              <circle cx="250" cy="30" r="9" fill="var(--bg)" stroke="var(--orange)" stroke-width="2"/>
+              <text x="250" y="33" text-anchor="middle" font-family="var(--mono)" font-size="9" fill="var(--orange)" font-weight="700">T</text>
+            </g>
+
+            <circle cx="250" cy="100" r="70" fill="none" stroke="var(--bg)" stroke-width="30" 
+                    stroke-dasharray="3 24.488" transform="rotate(-11.25 250 100)"/>
+
+            <text x="250" y="96" text-anchor="middle" font-family="var(--mono)" font-size="11" fill="var(--text)" font-weight="600">RING</text>
+            <text x="250" y="110" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="var(--text2)">BUFFER</text>
+
+            <circle cx="10" cy="180" r="6" fill="var(--bg)" stroke="var(--accent)" stroke-width="2"/>
+            <text x="25" y="184" font-family="var(--mono)" font-size="10" fill="var(--text2)">H - Head (Zapis)</text>
+            
+            <circle cx="380" cy="180" r="6" fill="var(--bg)" stroke="var(--orange)" stroke-width="2"/>
+            <text x="395" y="184" font-family="var(--mono)" font-size="10" fill="var(--text2)">T - Tail (Odczyt)</text>
+          </svg>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">C++ / Arduino</span>
+            <span class="code-label">Implementacja Ring Buffer</span>
+            <button class="copy-btn" onclick="copyCode(this)">kopiuj</button>
+          </div>
+          <pre><span class="kw">const</span> <span class="ty">uint16_t</span> <span class="var">BUF_SIZE</span> <span class="op">=</span> <span class="num">256</span>;
+<span class="ty">int16_t</span>  <span class="var">ringBuf</span>[<span class="var">BUF_SIZE</span>];
+<span class="ty">uint16_t</span> <span class="var">head</span> <span class="op">=</span> <span class="num">0</span>, <span class="var">tail</span> <span class="op">=</span> <span class="num">0</span>;
+
+<span class="kw">void</span> <span class="fn">bufPush</span>(<span class="ty">int16_t</span> <span class="var">val</span>) {
+  <span class="var">ringBuf</span>[<span class="var">head</span>] <span class="op">=</span> <span class="var">val</span>;
+  <span class="var">head</span> <span class="op">=</span> (<span class="var">head</span> <span class="op">+</span> <span class="num">1</span>) <span class="op">%</span> <span class="var">BUF_SIZE</span>;
+}
+
+<span class="ty">int16_t</span> <span class="fn">bufPop</span>() {
+  <span class="ty">int16_t</span> <span class="var">v</span> <span class="op">=</span> <span class="var">ringBuf</span>[<span class="var">tail</span>];
+  <span class="var">tail</span> <span class="op">=</span> (<span class="var">tail</span> <span class="op">+</span> <span class="num">1</span>) <span class="op">%</span> <span class="var">BUF_SIZE</span>;
+  <span class="kw">return</span> <span class="var">v</span>;
+}</pre>
+        </div>
+      </div>
+    </section>
+    <!-- ═══════════════Bufor PingPong ═══════════════ -->
+    <section class="section" id="s11">
+        <div class="section-header">
+          <span class="section-num">02</span>
+          <h2>Zaawansowane Buforowanie — Ping-Pong i DMA</h2>
+        </div>
+        <div class="section-body">
+          <div class="card">
+            <p><strong>Bufor Ping-Pong (Double Buffering):</strong> Posiadamy dwie oddzielne tablice w pamięci. Gdy sprzęt (ADC/DMA) wypełnia tablicę A ("Ping"), procesor CPU ma czas na odczytanie i wysłanie pełnej tablicy B ("Pong"). Następnie tablice zamieniają się rolami (Swap). Gwarantuje to 100% bezpieczeństwo danych (brak kolizji odczytu i zapisu) bez blokowania sprzętu.</p>
+          </div>
+          
+          <div class="card">
+            <div class="card-title">Kolejność operacji sprzętowych</div>
+            <div class="steps" style="margin-top:16px">
+              <div class="step step-done"><div class="step-circle">1</div><span class="step-text">ADC Mierzy</span></div>
+              <div class="step-line step-line-done"></div>
+              <div class="step step-active"><div class="step-circle">2</div><span class="step-text">DMA ładuje do A</span></div>
+              <div class="step-line"></div>
+              <div class="step step-idle"><div class="step-circle">3</div><span class="step-text">Przerwanie (Full)</span></div>
+              <div class="step-line"></div>
+              <div class="step step-idle"><div class="step-circle">4</div><span class="step-text">CPU wysyła A</span></div>
+            </div>
+          </div>
+
+          <div class="diagram-wrap" style="margin-top: 16px;">
+            <div class="diagram-title">Cykl życia Bufora Ping-Pong (Automatyczny Swap ról)</div>
+            <svg viewBox="0 0 720 180" xmlns="http://www.w3.org/2000/svg" width="100%">
+              <g class="ping-state">
+                <rect x="100" y="30" width="200" height="60" rx="6" fill="rgba(0,255,136,0.1)" stroke="rgba(0,255,136,0.4)"/>
+                <text x="200" y="56" text-anchor="middle" font-family="var(--mono)" font-size="11" fill="var(--green)" font-weight="600">Bufor A</text>
+                <text x="200" y="76" text-anchor="middle" font-family="var(--mono)" font-size="9" fill="var(--text2)">Hardware/DMA zapisuje ➔</text>
+
+                <rect x="420" y="30" width="200" height="60" rx="6" fill="rgba(0,212,255,0.08)" stroke="rgba(0,212,255,0.25)"/>
+                <text x="520" y="56" text-anchor="middle" font-family="var(--mono)" font-size="11" fill="var(--accent)" font-weight="600">Bufor B (Gotowy)</text>
+                <text x="520" y="76" text-anchor="middle" font-family="var(--mono)" font-size="9" fill="var(--text2)">CPU odczytuje i wysyła ➔</text>
+              </g>
+
+              <g class="pong-state">
+                <rect x="100" y="30" width="200" height="60" rx="6" fill="rgba(0,212,255,0.08)" stroke="rgba(0,212,255,0.25)"/>
+                <text x="200" y="56" text-anchor="middle" font-family="var(--mono)" font-size="11" fill="var(--accent)" font-weight="600">Bufor A (Gotowy)</text>
+                <text x="200" y="76" text-anchor="middle" font-family="var(--mono)" font-size="9" fill="var(--text2)">CPU odczytuje i wysyła ➔</text>
+
+                <rect x="420" y="30" width="200" height="60" rx="6" fill="rgba(0,255,136,0.1)" stroke="rgba(0,255,136,0.4)"/>
+                <text x="520" y="56" text-anchor="middle" font-family="var(--mono)" font-size="11" fill="var(--green)" font-weight="600">Bufor B</text>
+                <text x="520" y="76" text-anchor="middle" font-family="var(--mono)" font-size="9" fill="var(--text2)">Hardware/DMA zapisuje ➔</text>
+              </g>
+
+              <rect x="310" y="120" width="100" height="30" rx="5" fill="rgba(157,111,255,0.15)" stroke="rgba(157,111,255,0.4)"/>
+              <text x="360" y="140" text-anchor="middle" font-family="var(--mono)" font-size="9" fill="var(--purple)">⟲ SWAP RÓL</text>
+              
+              <path d="M200,95 Q200,135 300,135" fill="none" stroke="var(--border2)" stroke-width="2" stroke-dasharray="4,4"/>
+              <path d="M520,95 Q520,135 420,135" fill="none" stroke="var(--border2)" stroke-width="2" stroke-dasharray="4,4"/>
+            </svg>
+          </div>
+
+          <div class="callout callout-info">
+            <strong>DMA (Direct Memory Access)</strong>
+            Sprzęt dostępny w ESP32, STM32. Konfigurujemy rejestr DMA wskazując źródło (pin ADC), cel (tablica w RAM) i liczbę próbek. DMA wypełnia bufor całkowicie samodzielnie, a CPU dostaje przerwanie dopiero po zakończeniu. W tym czasie procesor może obsługiwać sieć, liczyć, lub być w trybie uśpienia (oszczędność energii).
+          </div>
+        </div>
+      </section>
+    <!-- ═══════════════ Wielordzeniowosc ═══════════════ -->
+    <section class="section" id="s10">
+      <div class="section-header">
+        <span class="section-num">03</span>
+        <h2>Wielordzeniowość i RTOS (FreeRTOS / ESP32)</h2>
+      </div>
+      <div class="section-body">
+        <div class="short-card">
+          <h3>Szybkie podsumowanie</h3>
+          <ul>
+            <li>ESP32: Rdzeń 0 → sieć, Wi-Fi, BLE, wysyłanie. Rdzeń 1 → tylko czujniki (pinning).</li>
+            <li>FreeRTOS wbudowany domyślnie. Tasks = wątki. Queues = bezpieczny przekaz danych.</li>
+            <li>Mutex/semaphore chroni współdzielone zasoby przed wyścigiem.</li>
+          </ul>
+        </div>
+        <div class="card">
+            <p>Korzystając z ESP32 masz dostęp do systemu czasu rzeczywistego (FreeRTOS) oraz dwóch rdzeni. Dobrą praktyką jest "przypięcie" (pinning) zadań krytycznych czasowo (np. akwizycja ADC) do <strong>Rdzenia 1</strong>, a zadań obciążających system operacyjny (Wi-Fi, Bluetooth, wysyłka HTTP) do <strong>Rdzenia 0</strong>. Zapobiega to blokowaniu procesu czytania z czujników przez stos TCP/IP.</p>
+          </div>
+        <!-- Diagram dual core -->
+        <div class="diagram-wrap">
+          <div class="diagram-title">Architektura ESP32 — dual-core z FreeRTOS</div>
+          <svg viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg" width="100%">
+            <!-- Core 1 box -->
+            <rect x="20" y="20" width="300" height="160" rx="8" fill="rgba(0,255,136,0.04)" stroke="rgba(0,255,136,0.3)" stroke-width="1.5"/>
+            <text x="170" y="42" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#00ff88" font-weight="600">RDZEŃ 1 — Czujniki (pinned)</text>
+            <rect x="40" y="55" width="260" height="32" rx="5" fill="rgba(0,255,136,0.12)" stroke="rgba(0,255,136,0.3)"/>
+            <text x="170" y="77" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#00ff88">Task: SensorTask (prio=HIGH)</text>
+            <rect x="40" y="95" width="120" height="28" rx="4" fill="#1a2030" stroke="#243040"/>
+            <text x="100" y="114" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#8a9ab5">ISR Timer 500Hz</text>
+            <rect x="170" y="95" width="130" height="28" rx="4" fill="#1a2030" stroke="#243040"/>
+            <text x="235" y="114" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#8a9ab5">Ring Buffer → ADC</text>
+            <rect x="40" y="135" width="260" height="28" rx="4" fill="#1a2030" stroke="#243040"/>
+            <text x="170" y="154" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#8a9ab5">xQueueSend(dataQueue, &amp;sample, 0)</text>
+
+            <!-- Queue arrow -->
+            <rect x="330" y="85" width="60" height="30" rx="4" fill="rgba(157,111,255,0.15)" stroke="rgba(157,111,255,0.4)"/>
+            <text x="360" y="105" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#9d6fff">Queue</text>
+            <line x1="300" y1="100" x2="330" y2="100" stroke="#9d6fff" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+            <line x1="390" y1="100" x2="420" y2="100" stroke="#9d6fff" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+
+            <!-- Core 0 box -->
+            <rect x="400" y="20" width="300" height="160" rx="8" fill="rgba(0,212,255,0.04)" stroke="rgba(0,212,255,0.2)" stroke-width="1.5"/>
+            <text x="550" y="42" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#00d4ff" font-weight="600">RDZEŃ 0 — Komunikacja</text>
+            <rect x="420" y="55" width="260" height="32" rx="5" fill="rgba(0,212,255,0.08)" stroke="rgba(0,212,255,0.2)"/>
+            <text x="550" y="77" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#00d4ff">Task: CommTask (prio=LOW)</text>
+            <rect x="420" y="95" width="120" height="28" rx="4" fill="#1a2030" stroke="#243040"/>
+            <text x="480" y="114" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#8a9ab5">Wi-Fi / BLE stack</text>
+            <rect x="550" y="95" width="130" height="28" rx="4" fill="#1a2030" stroke="#243040"/>
+            <text x="615" y="114" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#8a9ab5">UART → Python</text>
+            <rect x="420" y="135" width="260" height="28" rx="4" fill="#1a2030" stroke="#243040"/>
+            <text x="550" y="154" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#8a9ab5">xQueueReceive(dataQueue, &amp;s, portMAX_DELAY)</text>
+
+            <text x="360" y="188" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#9d6fff">Thread-safe Queue</text>
+          </svg>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">C++ / ESP32 FreeRTOS</span>
+            <span class="code-label">Dual-core — sensor task + comm task</span>
+            <button class="copy-btn" onclick="copyCode(this)">kopiuj</button>
+          </div>
+          <pre><span class="pp">#include</span> <span class="str">"freertos/FreeRTOS.h"</span>
+<span class="pp">#include</span> <span class="str">"freertos/task.h"</span>
+<span class="pp">#include</span> <span class="str">"freertos/queue.h"</span>
+
+<span class="ty">QueueHandle_t</span> <span class="var">dataQueue</span>;
+
+<span class="cm">// Task na rdzeniu 1 — TYLKO czujniki</span>
+<span class="kw">void</span> <span class="fn">SensorTask</span>(<span class="kw">void</span><span class="op">*</span> <span class="var">pvParam</span>) {
+  <span class="ty">TickType_t</span> <span class="var">lastWake</span> <span class="op">=</span> <span class="fn">xTaskGetTickCount</span>();
+  <span class="kw">for</span>(;;) {
+    <span class="fn">vTaskDelayUntil</span>(<span class="op">&amp;</span><span class="var">lastWake</span>, <span class="fn">pdMS_TO_TICKS</span>(<span class="num">2</span>)); <span class="cm">// 500 Hz</span>
+    <span class="ty">int16_t</span> <span class="var">s</span> <span class="op">=</span> (<span class="ty">int16_t</span>)<span class="fn">analogRead</span>(<span class="num">34</span>);
+    <span class="fn">xQueueSend</span>(<span class="var">dataQueue</span>, <span class="op">&amp;</span><span class="var">s</span>, <span class="num">0</span>);
+  }
+}
+
+<span class="cm">// Task na rdzeniu 0 — komunikacja</span>
+<span class="kw">void</span> <span class="fn">CommTask</span>(<span class="kw">void</span><span class="op">*</span> <span class="var">pvParam</span>) {
+  <span class="ty">int16_t</span> <span class="var">sample</span>;
+  <span class="kw">for</span>(;;) {
+    <span class="kw">if</span> (<span class="fn">xQueueReceive</span>(<span class="var">dataQueue</span>, <span class="op">&amp;</span><span class="var">sample</span>, <span class="var">portMAX_DELAY</span>))
+      <span class="fn">sendBinarySample</span>(<span class="var">sample</span>);
+  }
+}
+
+<span class="kw">void</span> <span class="fn">setup</span>() {
+  <span class="var">dataQueue</span> <span class="op">=</span> <span class="fn">xQueueCreate</span>(<span class="num">64</span>, <span class="kw">sizeof</span>(<span class="ty">int16_t</span>));
+  <span class="cm">// xTaskCreatePinnedToCore(fn, name, stack, param, prio, handle, CORE)</span>
+  <span class="fn">xTaskCreatePinnedToCore</span>(<span class="var">SensorTask</span>, <span class="str">"Sensor"</span>, <span class="num">4096</span>, <span class="kw">NULL</span>, <span class="num">5</span>, <span class="kw">NULL</span>, <span class="num">1</span>);
+  <span class="fn">xTaskCreatePinnedToCore</span>(<span class="var">CommTask</span>,   <span class="str">"Comm"</span>,   <span class="num">8192</span>, <span class="kw">NULL</span>, <span class="num">3</span>, <span class="kw">NULL</span>, <span class="num">0</span>);
+}</pre>
+        </div>
+      </div>
+    </section>
+    <!-- ═══════════════ WatchDog ═══════════════ -->
+    <section class="section" id="s13">
+      <div class="section-header">
+        <span class="section-num">04</span>
+        <h2>Niezależność Sprzętowa — DMA i Watchdog</h2>
+      </div>
+      <div class="section-body">
+        <div class="short-card">
+          <h3>Szybkie podsumowanie</h3>
+          <ul>
+            <li>DMA: ADC→RAM bez CPU. Procesor drzemie, DMA woła go przerwaniem gdy skończy.</li>
+            <li>WDT (Watchdog): timer odlicza w dół. Brak "kopnięcia" w czasie → hardware restart.</li>
+            <li>ESP32 ma WDT wbudowany; <code>esp_task_wdt_reset()</code> resetuje licznik.</li>
+          </ul>
+        </div>
+
+        <div class="callout callout-danger">
+          <h3>Watchdog Timer (WDT) — schemat działania</h3>
+          Wyobraź sobie zegarek kuchenny ustawiany na 2 sekundy. Twój program musi go regularnie resetować. Jeśli procesor "zawiesi się" w nieskończonej pętli lub deadlocku, zegarek odliczy do zera i wywoła twardy reset sprzętowy — odcinając zasilanie procesora na ułamek sekundy. System wstaje i wznawia pracę bez interwencji człowieka.
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">C++ / ESP32</span>
+            <span class="code-label">Watchdog Timer — konfiguracja i "kopanie"</span>
+            <button class="copy-btn" onclick="copyCode(this)">kopiuj</button>
+          </div>
+          <pre><span class="pp">#include</span> <span class="str">"esp_task_wdt.h"</span>
+
+<span class="kw">void</span> <span class="fn">setup</span>() {
+  <span class="cm">// Ustaw WDT na 3 sekundy timeout</span>
+  <span class="fn">esp_task_wdt_init</span>(<span class="num">3</span>, <span class="kw">true</span>);   <span class="cm">// true = reset przy timeoucie</span>
+  <span class="fn">esp_task_wdt_add</span>(<span class="kw">NULL</span>);        <span class="cm">// dodaj bieżący task do WDT</span>
+}
+
+<span class="kw">void</span> <span class="fn">loop</span>() {
+  <span class="fn">doSomeWork</span>();
+
+  <span class="cm">// "Kopnięcie" psa — reset odliczania</span>
+  <span class="fn">esp_task_wdt_reset</span>();          <span class="cm">// musi być wywołane &lt; 3s</span>
+
+  <span class="cm">// Jeśli program "zawiesi się" przed kolejnym reset(),</span>
+  <span class="cm">// WDT wykryje to i zrestartuje układ sprzętowo.</span>
+}</pre>
+        </div>
+      </div>
+    </section>
+<!------------------------- IV. BLOK----------------------------->
+    <div class="divider" style="margin: 80px 0 40px;">
+    <div class="divider-line"></div>
+    <div class="divider-text" style="font-size: 14px; color: var(--accent);">IV. Komunikacja i Sieci</div>
+    <div class="divider-line"></div>
+    </div>
+    <!-- ═══════════════ Protokoły Sprzętowe ═══════════════ -->
+    <section class="section" id="s15">
+        <div class="section-header">
+          <span class="section-num">01</span>
+          <h2>Protokoły Sprzętowe (UART, I2C, SPI, I2S)</h2>
+        </div>
+        <div class="section-body">
+          <div class="card">
+            <p>Sposób w jaki mikrokontroler "rozmawia" z peryferiami determinuje maksymalną szybkość odczytu i ilość pinów. Różne moduły wymagają różnych interfejsów magistrali.</p>
+          </div>
+
+          <table class="comp-table">
+            <thead><tr><th>Protokół</th><th>Kable / Piny</th><th>Typ</th><th>Prędkość</th><th>Zastosowanie / Opis</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><strong>UART</strong></td>
+                <td>2 (TX, RX) + GND</td>
+                <td>Asynchroniczny, Point-to-Point</td>
+                <td>Wolny (Baud: 9600 - 1M)</td>
+                <td>Komunikacja z PC (USB-Serial), moduły GPS, GSM. Brak linii zegara — oba układy muszą mieć z góry ustawioną, zgodną prędkość.</td>
+              </tr>
+              <tr class="hl">
+                <td><strong>I2C</strong> (Wire)</td>
+                <td>2 (SDA, SCL) + GND</td>
+                <td>Synchroniczny, Szeregowy Bus</td>
+                <td>Średni (100kHz - 400kHz)</td>
+                <td>Czujniki środowiskowe (BME280), IMU (MPU6050), ekrany OLED. Obsługuje wiele urządzeń na dwóch drutach (adresacja), wymaga Pull-upów.</td>
+              </tr>
+              <tr>
+                <td><strong>SPI</strong></td>
+                <td>4 (MOSI, MISO, SCK, CS)</td>
+                <td>Synchroniczny, Full-Duplex</td>
+                <td>Szybki (do kilkudziesięciu MHz)</td>
+                <td>Moduły radiowe (NRF24), czytniki SD, precyzyjne ADC (medyczne). Bardzo szybki, ale każde nowe urządzenie wymaga własnego kabla CS (Chip Select).</td>
+              </tr>
+              <tr>
+                <td><strong>I2S</strong></td>
+                <td>3+ (BCLK, LRCLK, DIN/DOUT)</td>
+                <td>Synchroniczny dla Audio</td>
+                <td>Bardzo szybki</td>
+                <td>Zaprojektowany specjalnie pod ciągły strumień dźwięku (mikrofony cyfrowe MEMS, DAC). Utrzymuje rygorystyczny timing próbek L/R.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    <!-- ═══════════════ Komunikacja Szeregowa ═══════════════ -->
+    <section class="section" id="s1">
+      <div class="section-header">
+        <span class="section-num">02</span>
+        <h2>Komunikacja Szeregowa (Serial COM)</h2>
+      </div>
+      <div class="section-body">
+
+        <div class="short-card">
+          <h3>Szybkie podsumowanie</h3>
+          <ul>
+            <li>Format tekstowy (ASCII) – czytelny, wolny, "puchnie"; używaj do debugowania.</li>
+            <li>Format binarny – szybki, mały; jedyna opcja dla ≥500 Hz. Wymaga <code>struct</code> w Pythonie.</li>
+            <li>ASCII: liczba 4000 → 4 bajty. Binarnie: 4000 → 2 bajty (int16).</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Format Tekstowy (ASCII)</div>
+          <p>Zasada: wartości liczbowe są zamieniane na ciąg znaków (np. <code>analogRead()</code> → <code>"1024\n"</code>) i wysyłane bajt po bajcie. Każda cyfra to osobny bajt ASCII.</p>
+          <p>Czytelne bezpośrednio w Serial Monitorze ArduinoIDE. Proste parsowanie po stronie Pythona (<code>split()</code>, <code>int()</code>). Jednak liczba <code>4000</code> zajmuje <strong>4 bajty</strong> zamiast możliwych 2 bajtów w formacie binarnym.</p>
+        </div>
+
+        <div class="pros-cons">
+          <div class="pros">
+            <div class="pros-title">PLUSY — ASCII</div>
+            <ul>
+              <li>Debug w locie (Serial Monitor)</li>
+              <li>Trivialny parsing: <code>split()</code></li>
+              <li>Łatwe prototypowanie</li>
+            </ul>
+          </div>
+          <div class="cons">
+            <div class="cons-title">MINUSY — ASCII</div>
+            <ul>
+              <li>Bardzo wolny (3–5× więcej bajtów)</li>
+              <li>Obciąża CPU konwersją</li>
+              <li>Niedopuszczalny przy ≥200 Hz</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Format Binarny</div>
+          <p>Wysyłamy surowy stan pamięci RAM – np. 2 bajty int16_t bezpośrednio przez UART. Brak konwersji na tekst, zerowy narzut na procesor, idealne dla szybkiego próbkowania (EKG 500 Hz, akcelerometr).</p>
+          <p>Po stronie Pythona używamy biblioteki <code>struct</code> do dekodowania: <code>struct.unpack('&lt;h', data)</code>. W Serial Monitorze widać "krzaczki" – nie jest to problem, bo debugujemy inaczej (np. przez własny dekoder).</p>
+        </div>
+
+        <div class="pros-cons">
+          <div class="pros">
+            <div class="pros-title">PLUSY — BINARNY</div>
+            <ul>
+              <li>Maksymalna przepustowość</li>
+              <li>Minimalne zużycie CPU</li>
+              <li>Jedyna opcja dla ≥500 Hz</li>
+            </ul>
+          </div>
+          <div class="cons">
+            <div class="cons-title">MINUSY — BINARNY</div>
+            <ul>
+              <li>Wymaga dekodera po stronie PC</li>
+              <li>"Krzaczki" w Serial Monitorze</li>
+              <li>Trudniejszy initial setup</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- DIAGRAM 1: ASCII vs Binary pipeline -->
+        <div class="diagram-wrap">
+          <div class="diagram-title">Pipeline — ASCII vs Binarny</div>
+          <svg viewBox="0 0 760 180" xmlns="http://www.w3.org/2000/svg" width="100%" style="max-width:760px">
+            <defs>
+              <marker id="arrowGrey" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L8,3 z" fill="#3a4a5a"/>
+              </marker>
+              <marker id="arrowBlue" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L8,3 z" fill="#00d4ff"/>
+              </marker>
+              <marker id="arrowGreen" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L8,3 z" fill="#00ff88"/>
+              </marker>
+            </defs>
+
+            <!-- ASCII row -->
+            <rect x="10" y="20" width="100" height="44" rx="6" fill="#1a2030" stroke="#243040"/>
+            <text x="60" y="38" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#8a9ab5">ADC</text>
+            <text x="60" y="54" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e0eaf5">1024</text>
+
+            <line x1="110" y1="42" x2="148" y2="42" stroke="#3a4a5a" stroke-width="1.5" marker-end="url(#arrowGrey)"/>
+
+            <rect x="150" y="20" width="130" height="44" rx="6" fill="#1a2030" stroke="#243040"/>
+            <text x="215" y="37" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#ffab70">itoa() / sprintf()</text>
+            <text x="215" y="55" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e0eaf5">"1024\n" = 5 B</text>
+
+            <line x1="280" y1="42" x2="318" y2="42" stroke="#3a4a5a" stroke-width="1.5" marker-end="url(#arrowGrey)"/>
+
+            <rect x="320" y="20" width="130" height="44" rx="6" fill="#1a2030" stroke="#243040"/>
+            <text x="385" y="37" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#8a9ab5">UART 115200</text>
+            <text x="385" y="55" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e0eaf5">50 bitów/send</text>
+
+            <line x1="450" y1="42" x2="488" y2="42" stroke="#3a4a5a" stroke-width="1.5" marker-end="url(#arrowGrey)"/>
+
+            <rect x="490" y="20" width="130" height="44" rx="6" fill="#1a2030" stroke="#243040"/>
+            <text x="555" y="37" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#8a9ab5">Python</text>
+            <text x="555" y="55" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e0eaf5">int(line.strip())</text>
+
+            <text x="380" y="12" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#ff4466" font-weight="600">ASCII — wolno, czytelnie</text>
+
+            <!-- Binary row -->
+            <rect x="10" y="112" width="100" height="44" rx="6" fill="rgba(0,212,255,0.08)" stroke="rgba(0,212,255,0.3)"/>
+            <text x="60" y="130" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#8a9ab5">ADC</text>
+            <text x="60" y="146" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e0eaf5">1024</text>
+
+            <line x1="110" y1="134" x2="148" y2="134" stroke="#00d4ff" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+
+            <rect x="150" y="112" width="130" height="44" rx="6" fill="rgba(0,212,255,0.08)" stroke="rgba(0,212,255,0.3)"/>
+            <text x="215" y="129" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#00d4ff">cast uint16_t</text>
+            <text x="215" y="147" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e0eaf5">0x04 0x00 = 2 B</text>
+
+            <line x1="280" y1="134" x2="318" y2="134" stroke="#00d4ff" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+
+            <rect x="320" y="112" width="130" height="44" rx="6" fill="rgba(0,212,255,0.08)" stroke="rgba(0,212,255,0.3)"/>
+            <text x="385" y="129" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#00d4ff">UART 115200</text>
+            <text x="385" y="147" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e0eaf5">20 bitów/send</text>
+
+            <line x1="450" y1="134" x2="488" y2="134" stroke="#00d4ff" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+
+            <rect x="490" y="112" width="130" height="44" rx="6" fill="rgba(0,212,255,0.08)" stroke="rgba(0,212,255,0.3)"/>
+            <text x="555" y="129" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#00d4ff">Python</text>
+            <text x="555" y="147" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e0eaf5">struct.unpack('H')</text>
+
+            <text x="380" y="104" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#00ff88" font-weight="600">BINARNY — szybko, wydajnie</text>
+          </svg>
+        </div>
+
+        <!-- CODE: Python struct decode -->
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">Python</span>
+            <span class="code-label">Dekodowanie binarne — struct</span>
+            <button class="copy-btn" onclick="copyCode(this)">kopiuj</button>
+          </div>
+          <pre><span class="kw">import</span> <span class="var">serial</span>
+<span class="kw">import</span> <span class="var">struct</span>
+
+<span class="var">ser</span> <span class="op">=</span> <span class="var">serial</span>.<span class="fn">Serial</span>(<span class="str">'/dev/ttyUSB0'</span>, <span class="num">115200</span>)
+
+<span class="kw">while</span> <span class="kw">True</span>:
+    <span class="cm"># Czekaj na sync word: 0xAA 0xBB</span>
+    <span class="kw">if</span> <span class="var">ser</span>.<span class="fn">read</span>(<span class="num">1</span>) <span class="op">==</span> <span class="num">b'\xAA'</span> <span class="kw">and</span> <span class="var">ser</span>.<span class="fn">read</span>(<span class="num">1</span>) <span class="op">==</span> <span class="num">b'\xBB'</span>:
+        <span class="var">raw</span> <span class="op">=</span> <span class="var">ser</span>.<span class="fn">read</span>(<span class="num">8</span>)          <span class="cm"># 8 bajtów danych</span>
+        <span class="cm"># Format: uint32 timestamp, int16 ecg, int16 accel_x</span>
+        <span class="var">ts</span>, <span class="var">ecg</span>, <span class="var">ax</span> <span class="op">=</span> <span class="var">struct</span>.<span class="fn">unpack</span>(<span class="str">'&lt;IhH'</span>, <span class="var">raw</span>)
+        <span class="fn">print</span>(<span class="str">f"t={ts}ms  ecg={ecg}  ax={ax}"</span>)</pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">C++ / Arduino</span>
+            <span class="code-label">Wysyłanie binarne</span>
+            <button class="copy-btn" onclick="copyCode(this)">kopiuj</button>
+          </div>
+          <pre><span class="cm">// Wysyłanie surowych bajtów struct przez UART</span>
+<span class="ty">uint16_t</span> <span class="var">adc_val</span> <span class="op">=</span> <span class="fn">analogRead</span>(<span class="var">A0</span>);     <span class="cm">// 0–1023</span>
+<span class="ty">uint8_t</span>  <span class="var">header</span>[] <span class="op">=</span> {<span class="num">0xAA</span>, <span class="num">0xBB</span>};
+
+<span class="var">Serial</span>.<span class="fn">write</span>(<span class="var">header</span>, <span class="num">2</span>);
+<span class="var">Serial</span>.<span class="fn">write</span>((<span class="ty">uint8_t</span><span class="op">*</span>)<span class="op">&amp;</span><span class="var">adc_val</span>, <span class="kw">sizeof</span>(<span class="var">adc_val</span>));
+<span class="cm">// Razem: 4 bajty zamiast np. "1024\n" = 5 bajtów ASCII</span></pre>
+        </div>
+        <div class="callout callout-info">
+          <h3>Pro Tip</h3>
+          Binarny przesył redukuje liczbę przesyłanych bajtów o ponad 50%, co pozwala na osiągnięcie znacznie wyższych częstotliwości próbkowania przy tym samym Baud Rate.
+        </div>
+      </div>
+
+    </section>
+    <!-- ═══════════════ Budowa Ramki ═══════════════ -->
+    <section class="section" id="s4">
+        <div class="section-header">
+          <span class="section-num">03</span>
+          <h2>Budowa Ramki Binarnej (struct)</h2>
+        </div>
+        <div class="section-body">
+          <div class="card">
+            <div class="card-title">struct + __attribute__((packed))</div>
+            <p>Kompilator C domyślnie dodaje "padding" (puste bajty) między polami struktury, aby wyrównać je do granic pamięci. Atrybut <code>__attribute__((packed))</code> lub <code>#pragma pack(1)</code> nakazuje kompilatorowi układać pola bez żadnych odstępów, co jest krytyczne dla transmisji surowych bajtów.</p>
+          </div>
+          <!-- Diagram: ramka binarna -->
+        <div class="diagram-wrap">
+          <div class="diagram-title">Anatomia ramki binarnej — układ bajtów w pamięci</div>
+          <svg viewBox="0 0 720 120" xmlns="http://www.w3.org/2000/svg" width="100%">
+            <!-- Bytes -->
+            <rect x="20"  y="30" width="50" height="40" rx="4" fill="rgba(255,140,0,0.15)" stroke="rgba(255,140,0,0.5)"/>
+            <text x="45"  y="47" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#ffab70">SYNC</text>
+            <text x="45"  y="62" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#ff8c00" font-weight="600">0xAA</text>
+
+            <rect x="72"  y="30" width="50" height="40" rx="4" fill="rgba(255,140,0,0.15)" stroke="rgba(255,140,0,0.5)"/>
+            <text x="97"  y="47" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#ffab70">SYNC</text>
+            <text x="97"  y="62" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#ff8c00" font-weight="600">0xBB</text>
+
+            <rect x="124" y="30" width="50" height="40" rx="4" fill="rgba(157,111,255,0.12)" stroke="rgba(157,111,255,0.4)"/>
+            <text x="149" y="47" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#9d6fff">SEQ ID</text>
+            <text x="149" y="62" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#c0a0ff" font-weight="600">uint8</text>
+
+            <rect x="176" y="30" width="100" height="40" rx="4" fill="rgba(0,212,255,0.1)" stroke="rgba(0,212,255,0.3)"/>
+            <text x="226" y="47" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#00d4ff">TIMESTAMP</text>
+            <text x="226" y="62" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#00d4ff" font-weight="600">uint32 · 4B</text>
+
+            <rect x="278" y="30" width="75" height="40" rx="4" fill="rgba(0,255,136,0.1)" stroke="rgba(0,255,136,0.3)"/>
+            <text x="315" y="47" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#00ff88">ECG</text>
+            <text x="315" y="62" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#00ff88" font-weight="600">int16 · 2B</text>
+
+            <rect x="355" y="30" width="75" height="40" rx="4" fill="rgba(0,255,136,0.1)" stroke="rgba(0,255,136,0.3)"/>
+            <text x="392" y="47" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#00ff88">ACCEL_X</text>
+            <text x="392" y="62" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#00ff88" font-weight="600">int16 · 2B</text>
+
+            <rect x="432" y="30" width="75" height="40" rx="4" fill="rgba(0,255,136,0.1)" stroke="rgba(0,255,136,0.3)"/>
+            <text x="469" y="47" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#00ff88">ACCEL_Y</text>
+            <text x="469" y="62" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#00ff88" font-weight="600">int16 · 2B</text>
+
+            <rect x="509" y="30" width="75" height="40" rx="4" fill="rgba(255,68,102,0.1)" stroke="rgba(255,68,102,0.3)"/>
+            <text x="546" y="47" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#ff4466">CRC</text>
+            <text x="546" y="62" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#ff4466" font-weight="600">uint8 · 1B</text>
+
+            <!-- total -->
+            <text x="45"  y="92" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#5a6a80">B0</text>
+            <text x="97"  y="92" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#5a6a80">B1</text>
+            <text x="149" y="92" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#5a6a80">B2</text>
+            <text x="226" y="92" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#5a6a80">B3–B6</text>
+            <text x="315" y="92" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#5a6a80">B7–B8</text>
+            <text x="392" y="92" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#5a6a80">B9–B10</text>
+            <text x="469" y="92" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#5a6a80">B11–B12</text>
+            <text x="546" y="92" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#5a6a80">B13</text>
+
+            <text x="620" y="55" font-family="JetBrains Mono" font-size="10" fill="#00d4ff" font-weight="600">= 14 B</text>
+            <text x="620" y="70" font-family="JetBrains Mono" font-size="9" fill="#5a6a80">na ramkę</text>
+          </svg>
+        </div>
+          <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">C++ / Arduino</span>
+            <span class="code-label">Definicja i wysyłka struktury packed</span>
+            <button class="copy-btn" onclick="copyCode(this)">kopiuj</button>
+          </div>
+          <pre><span class="pp">#pragma pack(push, 1)</span>   <span class="cm">// = __attribute__((packed))</span>
+<span class="kw">struct</span> <span class="ty">DataFrame</span> {
+  <span class="ty">uint8_t</span>  <span class="var">sync0</span>;   <span class="cm">// 0xAA</span>
+  <span class="ty">uint8_t</span>  <span class="var">sync1</span>;   <span class="cm">// 0xBB</span>
+  <span class="ty">uint8_t</span>  <span class="var">seqId</span>;   <span class="cm">// numer sekwencyjny 0–255</span>
+  <span class="ty">uint32_t</span> <span class="var">ts</span>;      <span class="cm">// timestamp millis()</span>
+  <span class="ty">int16_t</span>  <span class="var">ecg</span>;     <span class="cm">// próbka EKG</span>
+  <span class="ty">int16_t</span>  <span class="var">ax</span>;      <span class="cm">// akcelerometr X</span>
+  <span class="ty">int16_t</span>  <span class="var">ay</span>;      <span class="cm">// akcelerometr Y</span>
+  <span class="ty">uint8_t</span>  <span class="var">crc</span>;     <span class="cm">// suma kontrolna</span>
+};
+<span class="pp">#pragma pack(pop)</span> <span class="cm">// = Przywraca domyślne wyrównywanie danych w pamięci.</span>
+
+<span class="ty">DataFrame</span> <span class="var">frame</span>;
+<span class="ty">uint8_t</span>   <span class="var">seqCounter</span> <span class="op">=</span> <span class="num">0</span>;
+
+<span class="kw">void</span> <span class="fn">sendFrame</span>(<span class="ty">int16_t</span> <span class="var">ecg</span>, <span class="ty">int16_t</span> <span class="var">ax</span>, <span class="ty">int16_t</span> <span class="var">ay</span>) {
+  <span class="var">frame</span>.<span class="var">sync0</span> <span class="op">=</span> <span class="num">0xAA</span>;
+  <span class="var">frame</span>.<span class="var">sync1</span> <span class="op">=</span> <span class="num">0xBB</span>;
+  <span class="var">frame</span>.<span class="var">seqId</span> <span class="op">=</span> <span class="var">seqCounter</span><span class="op">++</span>;
+  <span class="var">frame</span>.<span class="var">ts</span>    <span class="op">=</span> <span class="fn">millis</span>();
+  <span class="var">frame</span>.<span class="var">ecg</span>   <span class="op">=</span> <span class="var">ecg</span>;
+  <span class="var">frame</span>.<span class="var">ax</span>    <span class="op">=</span> <span class="var">ax</span>;
+  <span class="var">frame</span>.<span class="var">ay</span>    <span class="op">=</span> <span class="var">ay</span>;
+  <span class="var">frame</span>.<span class="var">crc</span>   <span class="op">=</span> <span class="fn">calcCRC</span>((<span class="ty">uint8_t</span><span class="op">*</span>)<span class="op">&amp;</span><span class="var">frame</span>, <span class="kw">sizeof</span>(<span class="var">frame</span>) <span class="op">-</span> <span class="num">1</span>);
+
+  <span class="var">Serial</span>.<span class="fn">write</span>((<span class="ty">uint8_t</span><span class="op">*</span>)<span class="op">&amp;</span><span class="var">frame</span>, <span class="kw">sizeof</span>(<span class="var">frame</span>));
+}</pre>
+        </div>
+        </div>
+      </section>
+    <!-- ═══════════════ Matematyka Baud Rate ═══════════════ -->
+    <section class="section" id="s5">
+      <div class="section-header">
+        <span class="section-num">04</span>
+        <h2>Wąskie Gardła (Bottlenecks) — Matematyka Baud Rate</h2>
+      </div>
+      <div class="section-body">
+        <div class="short-card">
+          <h3>Szybkie podsumowanie</h3>
+          <ul>
+            <li>1 bajt danych = ~10 bitów na łączu UART (start + 8 bitów + stop).</li>
+            <li>500 Hz × 10 B/ramkę × 10 bit/B = <strong>50 000 b/s</strong> → wymaga min. 115200 baud.</li>
+            <li>9600 baud przy 500 Hz = natychmiastowe przepełnienie bufora i utrata danych.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Obliczanie wymaganego Baud Rate</div>
+          <p>Każdy bajt wysyłany przez UART zajmuje na łączu faktycznie <strong>10 bitów</strong>: 1 bit startu + 8 bitów danych + 1 bit stopu. To narzut 25% ponad wartość użytkową.</p>
+        </div>
+
+        <div class="diagram-wrap">
+          <div class="diagram-title">Kalkulator przepustowości — przykładowe konfiguracje</div>
+          <table class="comp-table">
+            <thead>
+              <tr><th>Konfiguracja</th><th>Ramka</th><th>Częstotl.</th><th>Wymagane b/s</th><th>Baud Rate</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Debug ASCII, 1 czujnik</td>
+                <td>~12 B</td>
+                <td>10 Hz</td>
+                <td>1 200 b/s</td>
+                <td>9600</td>
+                <td><span class="tag-g">✓ OK</span></td>
+              </tr>
+              <tr>
+                <td>Binarny, 3 czujniki</td>
+                <td>14 B</td>
+                <td>100 Hz</td>
+                <td>14 000 b/s</td>
+                <td>19200</td>
+                <td><span class="tag-g">✓ OK</span></td>
+              </tr>
+              <tr class="hl">
+                <td>EKG binarny, 500 Hz</td>
+                <td>10 B</td>
+                <td>500 Hz</td>
+                <td>50 000 b/s</td>
+                <td>115200</td>
+                <td><span class="tag-g">✓ OK</span></td>
+              </tr>
+              <tr>
+                <td>EKG ASCII, 500 Hz</td>
+                <td>~35 B</td>
+                <td>500 Hz</td>
+                <td>175 000 b/s</td>
+                <td>115200</td>
+                <td><span class="tag-r">✗ PRZEPEŁNI</span></td>
+              </tr>
+              <tr>
+                <td>Multi-modal, 8 kan., 1kHz</td>
+                <td>40 B</td>
+                <td>1000 Hz</td>
+                <td>400 000 b/s</td>
+                <td>460800 / Wi-Fi</td>
+                <td><span class="tag-o">⚠ Wi-Fi/BT</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout callout-note">
+          <strong>Wzór matematyczny</strong>
+          Wymagane_baudrate = Częstotliwość [Hz] × Rozmiar_ramki [B] × 10<br>
+          Zawsze dobieraj baud rate z 30–50% zapasem, bo wbudowany sprzętowy bufor UART ma tylko 64 bajty pojemności.
+        </div>
+      </div>
+    </section>
+    <!-- ═══════════════ Pakietowanie i CRC ═══════════════ -->
+    <section class="section" id="s12">
+      <div class="section-header">
+        <span class="section-num">05</span>
+        <h2>Strategie Pakietowania i Odporność Ramek</h2>
+      </div>
+      <div class="section-body">
+        <div class="short-card">
+          <h3>Szybkie podsumowanie</h3>
+          <ul>
+            <li>Batching: 1 nagłówek + N próbek → narzut header spada do kilku %.</li>
+            <li>Sequence ID (uint8, 0–255): Python wykrywa zgubione pakiety.</li>
+            <li>CRC: 1 bajt na końcu. Jeden błędny bit → ramka odrzucona.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Redukcja narzutu — batching</div>
+          <p>Zamiast wysyłać każdą ramkę z oddzielnym nagłówkiem synchronizującym, pakujemy dane np. po 20 próbek. Drastycznie redukuje to ilość "zmarnowanych" bajtów nagłówka w stosunku do bajtów niosących cenne dane.</p>
+          
+          <div class="callout callout-note" style="margin-top: 14px;">
+            <strong>Zysk z pakietowania</strong>
+            Pojedynczy send: 2B sync + 1B seq + 4B ts + 2B data = <span class="text-accent">9B</span> Narzut nagłówka: <span class="text-accent">78%</span><br>
+            Batch 20 próbek: 2B sync + 1B seq + 4B ts + 20×2B data = <span class="text-accent">47B</span> Narzut nagłówka spada do <span class="text-accent">15%</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">CRC — Cyclic Redundancy Check</div>
+          <p>Przed wysłaniem mikrokontroler wykonuje szybką operację XOR (lub polynomial CRC-8) na wszystkich bajtach ramki i dokłada wynik jako ostatni bajt. Python po odebraniu powtarza tę samą operację i porównuje. Jeśli wynik się różni — ramka jest uszkodzona i zostaje odrzucona (NaN na wykresie zamiast błędnej wartości).</p>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">C++ / Arduino</span>
+            <span class="code-label">CRC-8 (XOR) + Sequence ID + Batch send</span>
+            <button class="copy-btn" onclick="copyCode(this)">kopiuj</button>
+          </div>
+          <pre><span class="ty">uint8_t</span> <span class="fn">calcCRC8</span>(<span class="ty">uint8_t</span><span class="op">*</span> <span class="var">data</span>, <span class="ty">uint8_t</span> <span class="var">len</span>) {
+  <span class="ty">uint8_t</span> <span class="var">crc</span> <span class="op">=</span> <span class="num">0xFF</span>;
+  <span class="kw">for</span> (<span class="ty">uint8_t</span> <span class="var">i</span> <span class="op">=</span> <span class="num">0</span>; <span class="var">i</span> <span class="op">&lt;</span> <span class="var">len</span>; <span class="var">i</span><span class="op">++</span>)
+    <span class="var">crc</span> <span class="op">^=</span> <span class="var">data</span>[<span class="var">i</span>];   <span class="cm">// prosta wersja XOR</span>
+  <span class="kw">return</span> <span class="var">crc</span>;
+}
+
+<span class="cm">// Python odpowiednik:</span>
+<span class="cm">// crc = 0xFF</span>
+<span class="cm">// for b in data: crc ^= b</span>
+<span class="cm">// if crc != received_crc: packet is CORRUPTED</span>
+
+<span class="pp">#define</span> <span class="var">BATCH_N</span> <span class="num">20</span>
+<span class="ty">int16_t</span>  <span class="var">batchBuf</span>[<span class="var">BATCH_N</span>];
+<span class="ty">uint8_t</span>  <span class="var">batchIdx</span> <span class="op">=</span> <span class="num">0</span>;
+<span class="ty">uint8_t</span>  <span class="var">seqId</span>   <span class="op">=</span> <span class="num">0</span>;
+
+<span class="kw">void</span> <span class="fn">addSample</span>(<span class="ty">int16_t</span> <span class="var">s</span>) {
+  <span class="var">batchBuf</span>[<span class="var">batchIdx</span><span class="op">++</span>] <span class="op">=</span> <span class="var">s</span>;
+  <span class="kw">if</span> (<span class="var">batchIdx</span> <span class="op">==</span> <span class="var">BATCH_N</span>) {
+    <span class="ty">uint8_t</span> <span class="var">hdr</span>[] <span class="op">=</span> {<span class="num">0xAA</span>, <span class="num">0xBB</span>, <span class="var">seqId</span><span class="op">++</span>};
+    <span class="ty">uint8_t</span> <span class="var">crc</span>   <span class="op">=</span> <span class="fn">calcCRC8</span>((<span class="ty">uint8_t</span><span class="op">*</span>)<span class="var">batchBuf</span>, <span class="var">BATCH_N</span> <span class="op">*</span> <span class="num">2</span>);
+    <span class="var">Serial</span>.<span class="fn">write</span>(<span class="var">hdr</span>, <span class="num">3</span>);
+    <span class="var">Serial</span>.<span class="fn">write</span>((<span class="ty">uint8_t</span><span class="op">*</span>)<span class="var">batchBuf</span>, <span class="var">BATCH_N</span> <span class="op">*</span> <span class="num">2</span>);
+    <span class="var">Serial</span>.<span class="fn">write</span>(<span class="var">crc</span>);
+    <span class="var">batchIdx</span> <span class="op">=</span> <span class="num">0</span>;
+  }
+}</pre>
+        </div>
+      </div>
+    </section>
+    <!-- ═══════════════ Kontrola Przepływu (UDP) ═══════════════ -->
+    <section class="section" id="s14">
+      <div class="section-header">
+        <span class="section-num">06</span>
+        <h2>Kontrola Przepływu — ACK/NACK, RTS/CTS, XON/XOFF</h2>
+      </div>
+      <div class="section-body">
+        <div class="short-card">
+          <h3>Szybkie podsumowanie</h3>
+          <ul>
+            <li>ACK/NACK: gwarancja dostarczenia (jak TCP), ale wolne — czeka na odpowiedź.</li>
+            <li>RTS/CTS: 4-kablowe, sprzętowe, zero obciążenia CPU. Przemysłowy standard.</li>
+            <li>XON/XOFF: jednokabeowe, ale niebezpieczne przy transmisji binarnej (kolizja bajtów).</li>
+            <li>W medycznym EKG: świadomie wybieramy UDP-like (bez retransmisji) + Sequence ID.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Dylemat medyczny — retransmisja vs interpolacja</div>
+          <p>Zgubiona paczka 5 ms sygnału EKG. Jeśli zastosujemy retransmisję (TCP-like), Python otrzyma dane poprawnie, ale z opóźnieniem np. 50 ms. Model Deep Learning zobaczy "szarpnięcie" na osi czasu i może zinterpretować je jako arytmię!</p>
+          <p>Rozwiązanie: podejście UDP-like. Pozwalamy pakietowi przepaść. Sequence ID informuje Pythona o zgubie. Python wstawia interpolowaną wartość (średnia z sąsiadów) — oś czasu pozostaje idealna, a model nie widzi artefaktu.</p>
+        </div>
+
+        <div class="diagram-wrap">
+          <div class="diagram-title">Porównanie metod kontroli przepływu</div>
+          <table class="comp-table">
+            <thead><tr><th>Metoda</th><th>Mechanizm</th><th>Narzut</th><th>Implementacja</th><th>Zastosowanie</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><strong>ACK/NACK</strong></td>
+                <td>Czekaj na bajt potwierdzenia po każdym pakiecie</td>
+                <td><span class="tag-r">Wysoki (RTT)</span></td>
+                <td>SW — łatwa</td>
+                <td>Konfiguracja, pliki, wolne dane</td>
+              </tr>
+              <tr class="hl">
+                <td><strong>RTS/CTS</strong></td>
+                <td>4 kable; pin HW blokuje nadajnik gdy bufor pełny</td>
+                <td><span class="tag-g">Zerowy</span></td>
+                <td>HW — wymaga konwertera</td>
+                <td>Przemysłowy, high-speed UART</td>
+              </tr>
+              <tr>
+                <td><strong>XON/XOFF</strong></td>
+                <td>Specjalne bajty ASCII 17/19 zatrzymują nadawanie</td>
+                <td><span class="tag-o">Mały</span></td>
+                <td>SW — prosta</td>
+                <td>Tylko transmisja tekstowa!</td>
+              </tr>
+              <tr>
+                <td><strong>UDP-like + SeqID</strong></td>
+                <td>Brak retransmisji; Python interpoluje braki</td>
+                <td><span class="tag-g">Minimalny</span></td>
+                <td>SW — elegancka</td>
+                <td>EKG, sygnały czasu rzeczywistego</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">Python</span>
+            <span class="code-label">Detekcja zgubionych pakietów — Sequence ID</span>
+            <button class="copy-btn" onclick="copyCode(this)">kopiuj</button>
+          </div>
+          <pre><span class="kw">import</span> <span class="var">numpy</span> <span class="kw">as</span> <span class="var">np</span>
+
+<span class="var">expected_seq</span> <span class="op">=</span> <span class="num">0</span>
+<span class="var">ecg_data</span>     <span class="op">=</span> []
+
+<span class="kw">def</span> <span class="fn">process_packet</span>(<span class="var">seq_id</span>, <span class="var">samples</span>):
+  <span class="kw">global</span> <span class="var">expected_seq</span>
+
+  <span class="kw">if</span> <span class="var">seq_id</span> <span class="op">!=</span> <span class="var">expected_seq</span>:
+    <span class="var">lost</span> <span class="op">=</span> (<span class="var">seq_id</span> <span class="op">-</span> <span class="var">expected_seq</span>) <span class="op">%</span> <span class="num">256</span>
+    <span class="fn">print</span>(<span class="str">f"⚠ Zgubiono {lost} pakiet(ów)! seq={expected_seq}→{seq_id}"</span>)
+    <span class="cm"># Wstawiamy NaN zamiast brakujących danych</span>
+    <span class="kw">for</span> <span class="var">_</span> <span class="kw">in</span> <span class="fn">range</span>(<span class="var">lost</span> <span class="op">*</span> <span class="num">20</span>):   <span class="cm"># 20 próbek / pakiet</span>
+      <span class="var">ecg_data</span>.<span class="fn">append</span>(<span class="var">np</span>.<span class="var">nan</span>)
+
+  <span class="var">ecg_data</span>.<span class="fn">extend</span>(<span class="var">samples</span>)
+  <span class="var">expected_seq</span> <span class="op">=</span> (<span class="var">seq_id</span> <span class="op">+</span> <span class="num">1</span>) <span class="op">%</span> <span class="num">256</span></pre>
+        </div>
+
+        <div class="callout callout-ok">
+          <span class="text-green">Złota zasada aparatury medycznej</span>
+          Nigdy nie opóźniaj sygnału w czasie rzeczywistym — lepiej stracić próbkę niż zaburzyć oś czasu. Algorytmy ML i diagnostyczne opierają się na synchroniczności próbek. Utrata 5 ms co jakiś czas jest akceptowalna; przesunięcie całego wykresu o 50 ms może spowodować błędną diagnozę.
+        </div>
+      </div>
+    </section>
+    <!-- ═══════════════ Łączność Bezprzewodowa ═══════════════ -->
+    <section class="section" id="s16">
+      <div class="section-header">
+        <span class="section-num">07</span>
+        <h2>Łączność Bezprzewodowa (Wi-Fi, BLE, MQTT)</h2>
+      </div>
+      <div class="section-body">
+        
+        <div class="short-card">
+          <h3>Szybkie podsumowanie</h3>
+          <ul>
+            <li><strong>Wi-Fi (UDP):</strong> Bezpieczne dla czasu rzeczywistego (EKG 500Hz). Pakiety mogą ginąć, ale nie ma opóźnień ("szarpania" wykresu).</li>
+            <li><strong>Wi-Fi (MQTT):</strong> Standard w IoT. Architektura Publikacja/Subskrypcja. Lekki i niezawodny do telemetrii.</li>
+            <li><strong>Bluetooth Classic (SPP):</strong> Działa jak wirtualny kabel UART. Prosty w kodzie, ale "pożera" baterię.</li>
+            <li><strong>Bluetooth LE (BLE):</strong> Ekstremalnie energooszczędny. Wymienia dane przez system Charakterystyk i Usług, a nie ciągły strumień bajtów.</li>
+          </ul>
+        </div>
+
+        <div class="callout callout-warn">
+          <strong>Architektura na ESP32</strong>
+          Pamiętaj, że cały stos sieciowy (obsługa Wi-Fi oraz Bluetooth) na układach ESP32 działa domyślnie na Rdzeniu 0. Jeśli zablokujesz ten rdzeń, urządzenie natychmiast zerwie połączenie z ruterem.
+        </div>
+
+        <div class="card">
+          <div class="card-title">Porównanie technologii bezprzewodowych</div>
+          <p>Wybór protokołu definiuje architekturę całej aplikacji w Pythonie lub na serwerze webowym.</p>
+          
+          <div class="kv-block" style="margin-top: 14px;">
+            <div class="kv-row">
+              <span class="kv-key">Bluetooth Classic</span>
+              <span class="kv-val">Prosty w użyciu (SerialBT). Wysoki pobór prądu. Starsze standardy.</span>
+            </div>
+            <div class="kv-row">
+              <span class="kv-key">Bluetooth LE (BLE)</span>
+              <span class="kv-val kv-green">Bateria pastylkowa wystarcza na miesiące. Wymaga nauki architektury GATT.</span>
+            </div>
+            <div class="kv-row">
+              <span class="kv-key">Wi-Fi (TCP / HTTP)</span>
+              <span class="kv-val kv-orange">Gwarancja dostawy. Duży narzut danych, bywa wolne przy strumieniowaniu z czujników.</span>
+            </div>
+            <div class="kv-row">
+              <span class="kv-key">Wi-Fi (UDP)</span>
+              <span class="kv-val kv-accent">Wystrzeliwuje dane na ślepo w sieć. Idealne do ciągłego EKG (minimalne opóźnienie).</span>
+            </div>
+            <div class="kv-row">
+              <span class="kv-key">Wi-Fi (MQTT)</span>
+              <span class="kv-val kv-purple">Broker zajmuje się dystrybucją. Świetne do budowy stacji pogodowych i smart home.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Architektura MQTT — Przepływ Informacji</div>
+          <p>W przeciwieństwie do protokołu HTTP, gdzie klient musi pytać serwer "czy masz nowe dane?", MQTT działa asynchronicznie, wysyłając dane bezpośrednio do zainteresowanych systemów.</p>
+          
+          <div class="timeline" style="margin-top:16px">
+            <div class="tl-item">
+              <div class="tl-left"><div class="tl-dot" style="background:var(--accent)"></div><div class="tl-line"></div></div>
+              <div><div class="tl-ts">Mikrokontroler (Wydawca)</div><div class="tl-title">Publikacja pomiaru</div><div class="tl-desc">ESP32 wysyła paczkę JSON na określony temat, np: <code>sensor/ekg/pacjent1</code></div></div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-left"><div class="tl-dot" style="background:#9060e0"></div><div class="tl-line"></div></div>
+              <div><div class="tl-ts">Broker MQTT (np. Mosquitto na Raspberry Pi)</div><div class="tl-title">Odbiór i Dystrybucja</div><div class="tl-desc">Broker odbiera ramkę i sprawdza w tabeli, kto subskrybuje ten konkretny temat.</div></div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-left"><div class="tl-dot" style="background:#00c070"></div></div>
+              <div><div class="tl-ts">Aplikacja Python / Web (Subskrybent)</div><div class="tl-title">Reakcja na event</div><div class="tl-desc">Aplikacja natychmiast otrzymuje dane od Brokera i aktualizuje wykres na ekranie w czasie rzeczywistym.</div></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+    
+    <!-- ═══════════════ S-UI — Komponenty UI ═══════════════ -->
+    <section class="section" id="s-ui">
+      <div class="section-header">
+        <span class="section-num">UI</span>
+        <h2>Komponenty UI — gotowe do użycia</h2>
+      </div>
+      <div class="section-body">
+
+        <div class="short-card">
+          <h3>Jak używać</h3>
+          <ul>
+            <li>Każda klasa CSS jest już załadowana w pliku — wystarczy wkleić HTML.</li>
+            <li><code>.badge-*</code> — małe etykiety inline (protokół, platforma, typ).</li>
+            <li><code>.pill-*</code> — status projektu lub modułu (ukończony, w trakcie).</li>
+            <li><code>.callout-*</code> — bloki informacyjne z lewym paskiem (note / warn / danger / ok).</li>
+            <li><code>.kv-block</code> + <code>.kv-row</code> — tabela klucz-wartość (spec techniczne).</li>
+            <li><code>.stat-grid</code> + <code>.stat-card</code> — metryki liczbowe na górze sekcji.</li>
+            <li><code>.steps</code> — wskaźnik kroków procesu (init → ISR → bufor → TX).</li>
+            <li><code>.timeline</code> + <code>.tl-item</code> — log zdarzeń lub historia pakietów.</li>
+            <li><code>.chip-group</code> + <code>.chip</code> — klikalne filtry / tagi z JS.</li>
+            <li><code>.has-tooltip</code> + <code>.tooltip</code> — dymek po najechaniu, bez JS.</li>
+            <li><code>.prog-wrap</code> + <code>.prog-fill</code> — pasek postępu (bufor, RAM, baud).</li>
+            <li><code>.divider</code> — separator sekcji z tekstową etykietą.</li>
+          </ul>
+        </div>
+
+        <!-- BADGES -->
+        <div class="card">
+          <div class="card-title">Badges — etykiety inline</div>
+          <p>Do tagowania protokołów, platform, typów danych. Używaj w <code>.item-tags</code>, nagłówkach kart komponentów lub przy wynikach wyszukiwania.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">
+            <span class="badge badge-accent"><span class="badge-dot" style="background:var(--accent)"></span>ESP32</span>
+            <span class="badge badge-green"><span class="badge-dot" style="background:#00c070"></span>Ukończony</span>
+            <span class="badge badge-orange"><span class="badge-dot" style="background:#e07800"></span>W trakcie</span>
+            <span class="badge badge-red"><span class="badge-dot" style="background:#e03050"></span>Błąd</span>
+            <span class="badge badge-purple"><span class="badge-dot" style="background:#9060e0"></span>FreeRTOS</span>
+            <span class="badge badge-gray">SPI</span>
+            <span class="badge badge-gray">I²C</span>
+            <span class="badge badge-gray">UART</span>
+            <span class="badge badge-gray">24-bit ADC</span>
+            <span class="badge badge-gray">DMA</span>
+          </div>
+        </div>
+
+        <!-- PILLS -->
+        <div class="card">
+          <div class="card-title">Status Pills — stan projektu / modułu</div>
+          <p>Większe niż badge, z pulsującym dottem. Używaj w nagłówkach projektów i kart komponentów.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">
+            <span class="pill pill-done"><span class="pill-dot dot-g"></span>Ukończony</span>
+            <span class="pill pill-wip"><span class="pill-dot dot-o"></span>W trakcie</span>
+            <span class="pill pill-danger"><span class="pill-dot dot-r"></span>Błąd CRC</span>
+            <span class="pill pill-info"><span class="pill-dot dot-b"></span>Testowanie</span>
+          </div>
+        </div>
+
+        <!-- CALLOUTS -->
+        <div class="card">
+          <div class="card-title">Callout Boxes — cztery warianty</div>
+          <p>Zastępują obecne <code>.info-box</code> i <code>.warn-box</code> — dają 4 semantyczne poziomy. Lewy border bez border-radius (flat design).</p>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+            <div class="callout callout-note"><strong>Notatka</strong>Funkcja <code>micros()</code> na Arduino R3 aktualizuje się co 4 µs — planuj z uwzględnieniem tej ziarnistości.</div>
+            <div class="callout callout-warn"><strong>Uwaga</strong>Przy baud rate 9600 i próbkowaniu 500 Hz bufor UART przepełni się w ciągu kilku sekund.</div>
+            <div class="callout callout-danger"><strong>Krytyczne</strong>Brak rzutowania <code>(uint32_t)</code> przed przesunięciem bitowym na AVR prowadzi do cichego zgubienia danych.</div>
+            <div class="callout callout-ok"><strong>Rozwiązanie</strong>Użyj <code>prevTime += INTERVAL</code> zamiast <code>prevTime = now</code> — dryfowanie znika całkowicie.</div>
+          </div>
+        </div>
+
+        <!-- KV BLOCK -->
+        <div class="card">
+          <div class="card-title">Key-Value Block — dane techniczne</div>
+          <p>Idealne do spec-sheet komponentu. Czytelniejsze niż tabela, bardziej kompaktowe. Modyfikatory wartości: <code>.kv-accent</code>, <code>.kv-green</code>, <code>.kv-orange</code>, <code>.kv-red</code>.</p>
+          <div class="kv-block" style="margin-top:12px">
+            <div class="kv-row"><span class="kv-key">CPU</span><span class="kv-val kv-accent">Xtensa LX6 · 240 MHz · dual-core</span></div>
+            <div class="kv-row"><span class="kv-key">ADC</span><span class="kv-val">12-bit · 18 kanałów · 0–3.3V</span></div>
+            <div class="kv-row"><span class="kv-key">Baud rate</span><span class="kv-val kv-green">115 200 bps ✓ wystarczający</span></div>
+            <div class="kv-row"><span class="kv-key">Bufor UART</span><span class="kv-val kv-orange">64 B ⚠ mały przy ≥100 Hz</span></div>
+            <div class="kv-row"><span class="kv-key">Deep Sleep</span><span class="kv-val">~10 µA (zegar RTC aktywny)</span></div>
+            <div class="kv-row"><span class="kv-key">FreeRTOS</span><span class="kv-val kv-green">wbudowany domyślnie</span></div>
+          </div>
+        </div>
+
+        <!-- STAT CARDS -->
+        <div class="card">
+          <div class="card-title">Stat Cards — metryki projektu</div>
+          <p>Umieszczaj na górze kart projektów lub sekcji teorii. <code>.sv-accent</code> / <code>.sv-green</code> / <code>.sv-orange</code> kolorują wartość.</p>
+          <div class="stat-grid" style="margin-top:12px">
+            <div class="stat-card"><div class="stat-label">Freq. próbkowania</div><div class="stat-val sv-accent">500</div><div class="stat-sub">Hz · Rdzeń 1</div></div>
+            <div class="stat-card"><div class="stat-label">Rozmiar ramki</div><div class="stat-val">14</div><div class="stat-sub">B packed struct</div></div>
+            <div class="stat-card"><div class="stat-label">Baud rate</div><div class="stat-val sv-green">115k</div><div class="stat-sub">bps UART</div></div>
+            <div class="stat-card"><div class="stat-label">Bufor UART</div><div class="stat-val sv-orange">64</div><div class="stat-sub">B ⚠ mały</div></div>
+          </div>
+        </div>
+
+        <!-- PROGRESS BARS -->
+        <div class="card">
+          <div class="card-title">Progress Bars — zajętość, przepustowość</div>
+          <p>Do wizualizacji zajętości bufora, RAM, przepustowości łącza. Klasy koloru: domyślny (accent), <code>.pf-green</code>, <code>.pf-orange</code>, <code>.pf-red</code>.</p>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">
+            <div class="prog-wrap">
+              <div class="prog-label"><span>Przepustowość UART (50k / 115k bps)</span><span>43%</span></div>
+              <div class="prog-track"><div class="prog-fill pf-green" style="width:43%"></div></div>
+            </div>
+            <div class="prog-wrap">
+              <div class="prog-label"><span>Zajętość Ring Buffer (108 / 256 slotek)</span><span>42%</span></div>
+              <div class="prog-track"><div class="prog-fill" style="width:42%"></div></div>
+            </div>
+            <div class="prog-wrap">
+              <div class="prog-label"><span>RAM ESP32 (475 / 520 KB)</span><span>91%</span></div>
+              <div class="prog-track"><div class="prog-fill pf-orange" style="width:91%"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEPS -->
+        <div class="card">
+          <div class="card-title">Step Indicator — wieloetapowy proces</div>
+          <p>Stany kroków: <code>.step-done</code>, <code>.step-active</code>, <code>.step-idle</code>. Między krokami wstaw <code>&lt;div class="step-line"&gt;</code> (z <code>.step-line-done</code> gdy ukończony).</p>
+          <div class="steps" style="margin-top:16px">
+            <div class="step step-done"><div class="step-circle">1</div><span class="step-text">Init SPI</span></div>
+            <div class="step-line step-line-done"></div>
+            <div class="step step-done"><div class="step-circle">2</div><span class="step-text">ISR Timer</span></div>
+            <div class="step-line step-line-done"></div>
+            <div class="step step-active"><div class="step-circle">3</div><span class="step-text">Ring Buffer</span></div>
+            <div class="step-line"></div>
+            <div class="step step-idle"><div class="step-circle">4</div><span class="step-text">UART TX</span></div>
+            <div class="step-line"></div>
+            <div class="step step-idle"><div class="step-circle">5</div><span class="step-text">Python RX</span></div>
+          </div>
+        </div>
+
+        <!-- TIMELINE -->
+        <div class="card">
+          <div class="card-title">Timeline — log pakietów / zdarzeń</div>
+          <p>Kolor <code>.tl-dot</code> ustawiaj inline: <code>style="background:#00c070"</code> (ok), <code>#e07800</code> (warn), <code>#e03050</code> (error).</p>
+          <div class="timeline" style="margin-top:14px">
+            <div class="tl-item">
+              <div class="tl-left"><div class="tl-dot" style="background:#00c070"></div><div class="tl-line"></div></div>
+              <div><div class="tl-ts">14:32:01.004</div><div class="tl-title">Frame #142 received</div><div class="tl-desc">CRC OK · seq=142 · ts=284008ms · ecg=+1247</div></div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-left"><div class="tl-dot" style="background:#e07800"></div><div class="tl-line"></div></div>
+              <div><div class="tl-ts">14:32:01.122</div><div class="tl-title">Frame #143 missing</div><div class="tl-desc">seq gap → inserted NaN ×20 samples</div></div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-left"><div class="tl-dot" style="background:#e03050"></div></div>
+              <div><div class="tl-ts">14:32:01.502</div><div class="tl-title">Frame #145 CRC error</div><div class="tl-desc">expected=0xA3 got=0x71 → frame discarded</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CHIP GROUP -->
+        <div class="card">
+          <div class="card-title">Chip Group — filtry i tagi klikalne</div>
+          <p>Dodaj klasę <code>.chip-active</code> przez JS na kliknięty chip. Użyj w katalogu komponentów i bazie projektów do filtrowania.</p>
+          <div class="chip-group" style="margin-top:12px" id="chipDemo">
+            <div class="chip chip-active" onclick="chipToggle(this)">Wszystkie</div>
+            <div class="chip" onclick="chipToggle(this)">ESP32</div>
+            <div class="chip" onclick="chipToggle(this)">Arduino</div>
+            <div class="chip" onclick="chipToggle(this)">SPI</div>
+            <div class="chip" onclick="chipToggle(this)">I²C</div>
+            <div class="chip" onclick="chipToggle(this)">FreeRTOS</div>
+            <div class="chip" onclick="chipToggle(this)">DMA</div>
+            <div class="chip" onclick="chipToggle(this)">ADC 24-bit</div>
+          </div>
+        </div>
+
+        <!-- TOOLTIP + DIVIDER -->
+        <div class="card">
+          <div class="card-title">Tooltip i Divider</div>
+          <p>Tooltip działa czystym CSS — zero JS. Dodaj <code>.has-tooltip</code> do wrappera i <code>.tooltip</code> wewnątrz. Divider z etykietą do separacji sekcji.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;align-items:center">
+            <span class="badge badge-accent has-tooltip" style="cursor:default">
+              0xAA 0xBB
+              <span class="tooltip">Sync word — Python szuka tych bajtów na początku ramki</span>
+            </span>
+            <span class="badge badge-orange has-tooltip" style="cursor:default">
+              CRC-8
+              <span class="tooltip">1 bajt sumy kontrolnej na końcu ramki</span>
+            </span>
+            <span class="badge badge-gray has-tooltip" style="cursor:default">
+              packed struct
+              <span class="tooltip">__attribute__((packed)) — zero paddingu między polami</span>
+            </span>
+          </div>
+          <div class="divider" style="margin-top:20px">
+            <div class="divider-line"></div>
+            <div class="divider-text">przykład divider z etykietą</div>
+            <div class="divider-line"></div>
+          </div>
+        </div>
+        <div class="card">
+          <p>
+            Aby uniknąć problemów, zawsze używaj pinu <span class="text-accent">GPIO 34</span>. 
+            Pamiętaj, że podłączenie <span class="text-red">5V spali płytkę</span>! 
+            Zawsze stosuj <span class="mark-orange">konwerter napięć</span> dla bezpieczeństwa.
+          </p>
+          <p>
+          Domyślny znacznik to <span class="mark-bg">informacja</span>. 
+          Możesz też użyć <span class="mark-bg-green">sukcesu</span>, 
+          zwrócić uwagę na <span class="mark-bg-orange">ostrzeżenie</span>, 
+          albo podkreślić <span class="mark-bg-red">błąd krytyczny</span>.
+        </p>
+        </div>
+      </div>
+    </section>
+    </main>
+  </div>

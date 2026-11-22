@@ -318,3 +318,40 @@ def test_upgrade_pilot_only_untouched_rows(monkeypatch):
         db.query(models.KnowledgeArticle).filter(models.KnowledgeArticle.slug == slug).delete()
         db.commit()
         db.close()
+
+
+# ───────────────────────── v8: archiwum tylko dla admina, import partii ─────────────────────────
+def test_archive_admin_only(users):
+    assert client.get("/api/archiwum").status_code in (401, 403)
+    assert client.get("/api/archiwum", headers=users["user"]["h"]).status_code == 403
+    assert client.get("/api/archiwum", headers=users["mod"]["h"]).status_code == 403
+    r = client.get("/api/archiwum", headers=users["admin"]["h"])
+    assert r.status_code == 200 and "Mikrokontroler (MCU)" in r.text
+    assert "Mikrokontroler (MCU) vs Mikroprocesor" not in client.get("/").text      # nie ma w publicznym HTML
+
+
+def test_import_batch_once_as_review(monkeypatch):
+    import sys
+    import types
+    import knowledge_service as ks
+    slug, cslug, bid = "t-imp-" + uuid.uuid4().hex[:6], "t-imp-k-" + uuid.uuid4().hex[:6], "t-batch-" + uuid.uuid4().hex[:6]
+    mod = types.ModuleType("t_fake_batch")
+    mod.COURSES = [{"slug": cslug, "title": TAG + " kurs", "level": "basic", "position": 0, "summary": "s"}]
+    mod.ARTICLES = [{"slug": slug, "kind": "lesson", "course": cslug, "position": 1, "level": "basic", "title": TAG + " import", "summary": "s", "body": BODY, "tags": [], "widgets": {}}]
+    sys.modules["t_fake_batch"] = mod
+    monkeypatch.setattr(ks, "BATCHES", [(bid, "t_fake_batch")])
+    monkeypatch.setenv("KNOWLEDGE_SEED", "1")
+    db = SessionLocal()
+    try:
+        assert "dodano 1" in ks.import_batches(SessionLocal)
+        row = db.query(models.KnowledgeArticle).filter(models.KnowledgeArticle.slug == slug).first()
+        assert row and row.published is False and row.draft_state == "review"
+        db.delete(row)                                           # usunięcie nie powoduje ponownego importu
+        db.commit()
+        assert ks.import_batches(SessionLocal) == "brak nowych partii"
+        assert db.query(models.KnowledgeArticle).filter(models.KnowledgeArticle.slug == slug).first() is None
+    finally:
+        db.query(models.KnowledgeCourse).filter(models.KnowledgeCourse.slug == cslug).delete()
+        db.query(models.KnowledgeImport).filter(models.KnowledgeImport.batch_id == bid).delete()
+        db.commit()
+        db.close()

@@ -86,6 +86,22 @@ Widget działa w **izolowanej ramce** `<iframe sandbox="allow-scripts" srcdoc=�
 Widget ma ciemne tło strony wewnątrz ramki; kolory podaj wprost (np. `#0e1117`, `#56e1fd`). Przykład: widget ADC w artykule
 „ADC — przetworniki analogowo-cyfrowe i rozdzielczość”.
 
+### Nowe bloki (v8)
+Wszystkie w stylu platformy, działają razem z pozostałymi (bez zagnieżdżania). Przykłady na żywo: zakładka „Instrukcja”.
+- `:::neutral Tytuł` (alias `gray`) – szara ramka, neutralna obok note/warn/danger/ok.
+- `:::steps` – kroki, wiersz `Tytuł | opis`. `:::timeline` – oś czasu, wiersz `Data | Tytuł | opis`.
+- `:::progress` – paski, wiersz `Etykieta | 0–100 | opis | kolor` (green, orange, red, accent).
+- `:::def` – definicje `Termin | opis`. `:::checklist` – `- [x] gotowe` / `- [ ] do zrobienia` (tylko do odczytu).
+- `:::details Tytuł` – zwijana sekcja. `:::tabs` – zakładki, każda sekcja zaczyna się linią `=== Tytuł` (max 8).
+- Diagramy rysowane przez platformę (bez bibliotek zewnętrznych, kolory z motywu):
+  `:::flow` (algorytm: `(id) start/koniec`, `[id] krok`, `{id} decyzja`, `a -> b : etykieta`, strzałka wstecz tworzy pętlę),
+  `:::er` (baza: `tabela: kolumna PK, kolumna FK`, `a 1--* b : etykieta`),
+  `:::sequence` (pierwsza linia uczestnicy po przecinku, potem `A -> B : treść`, `-->` linia przerywana).
+  Limity: 40 węzłów/komunikatów, 16 tabel; błąd składni pokazuje komunikat zamiast diagramu.
+  Kod: `app/static/knowledge-blocks.js` (bloki powstają przez DOM/SVG API, tekst zawsze przez `textContent`).
+- Alternatywy dla diagramów: obraz wgrany w sekcji „Obrazy”, własny `:::figure` (SVG) albo widget. Mermaid nie jest użyty
+  (duża biblioteka zewnętrzna); można dodać później jako opcję lokalną.
+
 ### Obrazy
 W edytorze (po pierwszym zapisie treści) sekcja **Obrazy**: wybierz plik JPEG/PNG/WebP/GIF, opcjonalnie wpisz podpis, kliknij
 „Wgraj obraz”, potem „Wstaw” (wstawia `![podpis](/static/media/…)`). Obraz sam w akapicie wyświetla się jako rysunek z podpisem.
@@ -125,6 +141,18 @@ Próbki możesz po prostu usunąć w panelu admina. Uwagi merytoryczne: [WIEDZA-
 **Aktualizacja próbek na istniejącej bazie (v7):** przy starcie próbki w wersji z v6 są podmieniane na poprawione, ale
 **tylko** te, które nie były edytowane (porównanie skrótu treści ze starą wersją, brak autora i brak wersji oczekującej).
 Edytowane ręcznie zostają nietknięte (log: „zaktualizowano N, pominięto M”). `KNOWLEDGE_SEED=0` wyłącza także to.
+
+## Archiwum (tylko admin)
+Dotychczasowy Niezbędnik v1 nie jest już częścią publicznej strony. Leży w `app/archive/niezbednik.html` i jest pobierany
+przez `GET /api/archiwum`, który wymaga zalogowanego **administratora** (moderator, użytkownik i gość dostają 403/401).
+Przycisk „Archiwum (admin)” jest na stronie głównej Wiedzy i widoczny tylko dla admina; wejście przez `#theory` bez uprawnień
+przekierowuje do Wiedzy. Gdy wszystko zostanie przeniesione, usuń plik, endpoint w `main.py` i widok `view-theory`.
+
+## Partie treści z archiwum
+Przenoszone sekcje trafiają do bazy **jako propozycje „Do przeglądu”** (nieopublikowane): admin widzi je w „Do zatwierdzenia”,
+czyta, poprawia i zatwierdza albo odrzuca/usuwa. Każda partia importuje się tylko raz (tabela `knowledge_imports`), więc
+usunięta propozycja nie wraca. Partie są zdefiniowane w `knowledge_service.BATCHES`; pierwsza: `v8-podstawy-sprzetu`
+(kurs „Podstawy sprzętu”: MCU a CPU, częstotliwość taktowania, zasilanie i wspólna masa). `KNOWLEDGE_SEED=0` wyłącza import.
 
 ## Migracja treści z archiwum
 

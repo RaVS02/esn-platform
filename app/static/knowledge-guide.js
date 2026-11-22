@@ -32,6 +32,14 @@
         { title: "Statystyki (kafelki z liczbami)", src: ":::stats\nBaud | 115200 | bps | green\nBufor | 64 | B | orange\nBity | 10 | na bajt | accent\n:::\n\nKolumny: etykieta | wartość | jednostka | kolor (green, orange, accent)." },
         { title: "Plusy i minusy", src: ":::pros PLUSY\n- prosty\n- tani\n:::\n\n:::cons MINUSY\n- wolny\n:::" },
         { title: "Karta", src: ":::card Tytuł karty\nTreść karty w **markdownie**.\n:::" },
+        { title: "Szara ramka (neutralna)", src: ":::neutral Dodatkowa informacja\nCoś pobocznego, co nie jest ostrzeżeniem ani wskazówką.\n:::" },
+        { title: "Kroki (Tytuł | opis)", src: ":::steps Wgrywanie programu\nPodłącz płytkę | Kablem USB z transmisją danych\nWybierz port | W menu Narzędzia → Port\nKliknij Wgraj | Poczekaj na komunikat o zakończeniu\n:::" },
+        { title: "Oś czasu (Data | Tytuł | opis)", src: ":::timeline Rozwój mikroprocesorów\n1971 | Intel 4004 | Pierwszy mikroprocesor, 4 bity\n1978 | Intel 8086 | Architektura x86\n1985 | ARM1 | Początek rodziny ARM\n:::" },
+        { title: "Pasek postępu (Etykieta | 0–100 | opis | kolor)", src: ":::progress\nRAM | 62 | 320 KB z 512 KB | orange\nFlash | 35 | 1,4 MB z 4 MB | green\nCPU | 90 | zbyt wysokie obciążenie | red\n:::" },
+        { title: "Definicje (Termin | opis)", src: ":::def\nISR | Procedura obsługi przerwania – krótka funkcja wywoływana sprzętowo\nDMA | Przenoszenie danych bez udziału rdzenia\n:::" },
+        { title: "Lista kontrolna", src: ":::checklist\n- [x] Sprawdzono napięcia\n- [ ] Przetestowano na płytce stykowej\n:::" },
+        { title: "Zwijana sekcja", src: ":::details Pokaż rozwiązanie zadania\nTu jest rozwiązanie, widoczne po kliknięciu.\n:::" },
+        { title: "Zakładki (sekcje po „=== Tytuł”)", src: ":::tabs\n=== Arduino\nPierwsza zakładka, **markdown** działa.\n=== MicroPython\nDruga zakładka.\n:::" },
         { title: "Kod z kolorowaniem składni", src: "§§§cpp Miganie diodą\nvoid setup() { pinMode(2, OUTPUT); }\nvoid loop() { digitalWrite(2, !digitalRead(2)); delay(500); }\n§§§\n\nJęzyki: cpp, c, arduino, python, bash, yaml, json, ini, rust, js, html. Po nazwie języka można dać tytuł." }
       ] },
 
@@ -50,6 +58,18 @@
       ":::\n\n" +
       "Poniżej przykład rysunku SVG – kod i wynik:\n"),
       examples: [{ title: "Rysunek SVG", src: ":::figure Dzielnik napięcia\n<svg viewBox=\"0 0 200 80\" xmlns=\"http://www.w3.org/2000/svg\">\n  <rect x=\"20\" y=\"25\" width=\"60\" height=\"30\" rx=\"4\" fill=\"none\" stroke=\"#56e1fd\" stroke-width=\"2\"/>\n  <text x=\"50\" y=\"45\" text-anchor=\"middle\" fill=\"#e6edf3\" font-size=\"14\">R1</text>\n  <path d=\"M80 40 H150\" stroke=\"#3fb950\" stroke-width=\"2\"/>\n</svg>\n:::" }] },
+
+    { id: "diagramy", title: "4a. Diagramy rysowane przez platformę", intro: F(
+      "Zamiast wgrywać obraz, możesz opisać diagram tekstem – platforma narysuje go w stylu strony (kolory zgodne z motywem, ostry na każdym ekranie, edytowalny). Trzy rodzaje:\n\n" +
+      "- **`:::flow`** – algorytm. Węzły: `(id) Tekst` = start/koniec, `[id] Tekst` = krok, `{id} Tekst` = decyzja. Strzałki: `a -> b` lub `a -> b : etykieta`. Strzałka do wcześniejszego węzła tworzy pętlę.\n" +
+      "- **`:::er`** – baza danych. Tabela: `nazwa: kolumna PK, kolumna FK, kolumna`. Relacja: `a 1--* b : etykieta` (znaczniki `1`, `0..1`, `*`, `0..*`, `1..*`).\n" +
+      "- **`:::sequence`** – komunikacja. Pierwsza linia to uczestnicy po przecinku, potem `A -> B : treść` (`-->` = linia przerywana, np. odpowiedź).\n\n" +
+      "Limity: 40 węzłów/komunikatów, 16 tabel. Błąd składni pokazuje czytelny komunikat zamiast diagramu. Gdy potrzebujesz czegoś, czego te bloki nie potrafią – wgraj obraz albo narysuj SVG.\n"),
+      examples: [
+        { title: "Algorytm (flow)", src: ":::flow Odczyt czujnika z weryfikacją\n(s) Start\n[a] Odczytaj ADC\n{c} Wartość w zakresie?\n[b] Zapisz do bufora\n(e) Koniec\ns -> a\na -> c\nc -> b : tak\nc -> a : nie\nb -> e\n:::" },
+        { title: "Baza danych (er)", src: ":::er Platforma ESN\nusers: id PK, login, email\nprojects: id PK, owner_id FK, title\ncomponents: id PK, name, category\nproject_components: project_id FK, component_id FK\nusers 1--* projects : posiada\nprojects 1--* project_components : zawiera\ncomponents 1--* project_components : użyty w\n:::" },
+        { title: "Komunikacja (sequence)", src: ":::sequence Ramka z potwierdzeniem\nMCU, PC\nMCU -> PC : ramka (SYNC, dane, CRC)\nPC -> PC : sprawdź CRC\nPC --> MCU : ACK\n:::" }
+      ] },
 
     { id: "widgety", title: "5. Widgety (własne animacje i kalkulatory)", intro: F(
       "Widget to mała, **samodzielna** strona HTML + CSS + JS wyświetlana w izolowanej ramce. Nie ma dostępu do sieci, do strony ani do Twoich danych (sandbox + polityka CSP) – dlatego bezpiecznie można w nim uruchamiać skrypty.\n\n" +

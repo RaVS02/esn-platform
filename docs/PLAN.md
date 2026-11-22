@@ -11,6 +11,14 @@ Kolejność jest orientacyjna, każdy etap jest oddawany małymi krokami: funkcj
 - Wiedza v7: obrazy w treściach, biblioteka szablonów widgetów, zakładka „Instrukcja” w panelu redakcji, poprawki merytoryczne
   próbek (z bezpieczną aktualizacją istniejącej bazy), naprawa układu bloku klucz–wartość.
 
+- Wiedza v8: nowe bloki (kroki, oś czasu, postęp, definicje, lista kontrolna, zwijana, zakładki, szara ramka), diagramy
+  flow/er/sequence, archiwum tylko dla admina, import partii treści jako propozycji do przeglądu, kurs „Podstawy sprzętu”.
+
+## Następne kroki (uzgodniona kolejność)
+1. v9: uproszczony kreator (tryb „Prosty / Zaawansowany”: dodawanie bloków formularzem, zmiana kolejności, markdown generowany).
+2. v10: edytor opisu projektu dla użytkowników (ten sam renderer, tylko bezpieczne bloki, bez SVG i widgetów).
+3. Mermaid lokalnie jako opcja dodatkowa (jeśli własne diagramy nie wystarczą). Kolejne partie z archiwum.
+
 ## Etap 2: treści i narzędzia
 - Migracja pozostałych sekcji archiwum do Wiedzy wraz z przeglądem merytorycznym i stylistycznym (kursy: pamięć i RTOS,
   komunikacja bezprzewodowa; niezbędniki: pinout, zasilanie, izolacja).

@@ -181,7 +181,7 @@
     return out;
   }
 
-  var CALLOUT = { note: "callout-note", info: "callout-info", warn: "callout-warn", warning: "callout-warn", danger: "callout-danger", critical: "callout-danger", ok: "callout-ok", tip: "callout-ok" };
+  var CALLOUT = { note: "callout-note", info: "callout-info", warn: "callout-warn", warning: "callout-warn", danger: "callout-danger", critical: "callout-danger", ok: "callout-ok", tip: "callout-ok", neutral: "callout-neutral", gray: "callout-neutral" };
   var figSeq = 0, widgetSeq = 0, widgetMap = {};
 
   function figureNode(arg, svg) {
@@ -271,7 +271,10 @@
         });
       } else if (n === "figure") node = figureNode(b.arg, b.text);
       else if (n === "widget") { var a = b.arg.split(/\s+/); node = widgetNode(a[0] || "", a[1], widgets); }
-      else { node = h("div", { "class": "callout callout-info" }); node.appendChild(mdFragment(b.text)); }
+      else {
+        var ext = global.ESNKnowledgeBlocks && global.ESNKnowledgeBlocks.render(n, b.arg, b.text, { h: h, inline: inlineHtml, md: mdFragment });
+        if (ext) node = ext; else { node = h("div", { "class": "callout callout-info" }); node.appendChild(mdFragment(b.text)); }
+      }
       container.appendChild(node);
     });
     return container;
@@ -309,7 +312,7 @@
     el.textContent = "";
     var staff = isStaff();
     var actions = h("div", { "class": "kn-actions" }, [
-      h("button", { type: "button", "class": "btn-action", onclick: function () { app.navigate("theory"); }, text: "Archiwum: Niezbędnik v1 →" }),
+      isAdmin() ? h("button", { type: "button", "class": "btn-action", onclick: function () { app.navigate("theory"); }, text: "Archiwum (admin): Niezbędnik v1 →" }) : null,
       staff ? h("button", { type: "button", "class": "btn-action primary", onclick: function () { go("redakcja"); }, text: "Panel redakcji" }) : null
     ]);
     el.appendChild(h("section", { "class": "hero kn-hero" }, [
@@ -434,6 +437,17 @@
     ["Statystyki", ":::stats\nBaud rate | 115k | bps UART | green\nBufor | 64 | B | orange\n:::\n"],
     ["Plusy", ":::pros PLUSY\n- zaleta\n:::\n"], ["Minusy", ":::cons MINUSY\n- wada\n:::\n"],
     ["Rysunek SVG", ":::figure Podpis rysunku\n<svg viewBox=\"0 0 200 80\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"10\" y=\"10\" width=\"180\" height=\"60\" rx=\"6\" fill=\"none\" stroke=\"#56e1fd\"/></svg>\n:::\n"],
+    ["Szara ramka", ":::neutral Informacja\nTreść pomocnicza.\n:::\n"],
+    ["Kroki", ":::steps Instrukcja\nPodłącz zasilanie | Sprawdź polaryzację przed włączeniem\nWgraj program | Przez USB\n:::\n"],
+    ["Oś czasu", ":::timeline Historia\n1971 | Pierwszy mikroprocesor | Intel 4004\n1981 | IBM PC | Intel 8088\n:::\n"],
+    ["Postęp", ":::progress\nWykorzystanie RAM | 62 | 320 KB z 512 KB | orange\nFlash | 35 | | green\n:::\n"],
+    ["Definicje", ":::def\nISR | Procedura obsługi przerwania\nDMA | Bezpośredni dostęp do pamięci\n:::\n"],
+    ["Lista kontrolna", ":::checklist\n- [x] Sprawdzone napięcie\n- [ ] Przetestowane na płytce\n:::\n"],
+    ["Zwijana", ":::details Pokaż rozwiązanie\nTreść widoczna po rozwinięciu.\n:::\n"],
+    ["Zakładki", ":::tabs\n=== Arduino\nTreść pierwszej zakładki.\n=== Python\nTreść drugiej zakładki.\n:::\n"],
+    ["Diagram: algorytm", ":::flow Odczyt czujnika\n(s) Start\n[a] Odczytaj ADC\n{c} Wartość poprawna?\n[b] Zapisz do bufora\n(e) Koniec\ns -> a\na -> c\nc -> b : tak\nc -> a : nie\nb -> e\n:::\n"],
+    ["Diagram: baza", ":::er Użytkownicy i projekty\nusers: id PK, login, email\nprojects: id PK, owner_id FK, title\nusers 1--* projects : posiada\n:::\n"],
+    ["Diagram: sekwencja", ":::sequence Ramka z potwierdzeniem\nMCU, PC\nMCU -> PC : ramka\nPC --> MCU : ACK\n:::\n"],
     ["Widget", ":::widget nazwa-widgetu 320\n:::\n"],
     ["Kod", "```cpp Tytuł przykładu\nvoid setup() {}\n```\n"]
   ];

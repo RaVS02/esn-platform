@@ -61,6 +61,21 @@ akceptacji. Poniżej miejsca, które warto sprawdzić. Pozycje oznaczone ❗ to 
 - Odbiornik w Pythonie: poprzednia pętla gubiła ramki przy przesunięciu; nowa szuka znacznika w buforze, a format `struct` jest zgodny
   z rozmiarem ramki.
 
+## Partia v8: Podstawy sprzętu (zmiany względem archiwum)
+- **MCU a CPU:** „SoC” zastąpiono ostrożniejszym „układ typu system-on-chip”; „miesiącami na baterii” uzależniono od trybów
+  uśpienia; dodano tabelę porównawczą, uwagę o nazwach płytek (Pico = MCU, Pi 5 = CPU), diagram wyboru i quiz.
+- **Taktowanie:** doprecyzowano, że 1 cykl ≈ 1 instrukcja dotyczy najprostszych instrukcji (mnożenie, dzielenie, pamięć trwają
+  dłużej); dopisano czas cyklu (62,5 ns / 4,2 ns), zależność mocy od f i U², tryby 80/160/240 MHz; ceny oznaczone jako
+  orientacyjne (klony Uno, płytki ESP32); dodano kalkulator czasu wykonania.
+- **Zasilanie – korekty ważne merytorycznie:**
+  - VIN/5V zwykle wymaga ok. 4,5–5 V (stabilizator LDO ma spadek ok. 1 V), więc pojedyncza cela Li-Ion do VIN **nie** wystarcza;
+    w archiwum sugerowano pakiet Li-Ion. Dodano wyjaśnienie.
+  - Piki Wi-Fi „do 600 mA” zastąpiono „kilkaset mA, zasilacz co najmniej 500 mA”.
+  - „LDO wymagane w audio i EKG” → „preferowane” (dobra przetwornica z filtrem też działa).
+  - „Spalenie komponentów” przy braku wspólnej masy → „błędy, w skrajnych przypadkach uszkodzenia”; dopisano wyjątek (izolacja).
+  - Dodano wzory na sprawność i moc strat LDO oraz kalkulator.
+  - Do sprawdzenia przez Ciebie: wartości limitów USB i prądów zależą od konkretnej płytki.
+
 ## Uwagi ogólne
 - Cudzysłowy: w nowych treściach używam polskich „…”. W archiwum są proste "…".
 - Terminologia: proponuję słowniczek (bufor, ramka, próbka, przerwanie) i trzymanie się jednego tłumaczenia.

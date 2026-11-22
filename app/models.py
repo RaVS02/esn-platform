@@ -254,3 +254,11 @@ class KnowledgeReview(Base):
     action = Column(String(20), nullable=False)           # create | submit | approve | reject | publish | unpublish | discard
     note = Column(String(500), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class KnowledgeImport(Base):
+    """Zapis zastosowanych partii treści (każda partia z archiwum importowana jest tylko raz, nawet po usunięciu treści)."""
+    __tablename__ = "knowledge_imports"
+
+    batch_id = Column(String(60), primary_key=True)
+    applied_at = Column(DateTime, default=datetime.utcnow)

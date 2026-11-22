@@ -49,6 +49,9 @@ może się pomylić, a konto może zostać przejęte):
 - obrazy w treści: w renderze dozwolone tylko `src` zaczynające się od `/static/media/` (reszta jest zastępowana komunikatem –
   brak zewnętrznych pikseli śledzących); wgrywanie przez system mediów (typ po magic bytes, czyszczenie EXIF, limity), prawo
   wgrywania mają admin oraz redaktor-autor danej treści, pliki znikają razem z treścią,
+- nowe bloki i diagramy (v8) budowane są przez DOM/SVG API z `textContent`; tekst pochodzący od autora nigdy nie trafia do
+  `innerHTML` poza markdownem (DOMPurify); liczba elementów diagramów jest ograniczona,
+- archiwum (Niezbędnik v1) jest poza publicznym HTML i serwowane tylko adminowi (`/api/archiwum`, zaufany plik serwera),
 - bloki kodu nigdy nie przechodzą przez `innerHTML` poza wynikiem `highlight.js` (który escapuje),
 - serwer waliduje typ, poziom, długości, liczbę i nazwy widgetów, a role sprawdza przy każdym wywołaniu.
 Nie wolno poluzowywać flag `sandbox` ani dodawać `allow-same-origin` do widgetów.

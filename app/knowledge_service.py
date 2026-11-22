@@ -269,6 +269,54 @@ def seed_pilot(SessionLocal) -> str:
         db.close()
 
 
+BATCHES = [("v8-podstawy-sprzetu", "knowledge_batch_v8")]
+
+
+def import_batches(SessionLocal) -> str:
+    """Importuje partie treści z archiwum jako propozycje „Do przeglądu” (nieopublikowane), każdą partię tylko raz.
+    Admin widzi je w zakładce „Do zatwierdzenia”, przegląda i zatwierdza albo odrzuca/usuwa. Wyłączane KNOWLEDGE_SEED=0."""
+    import importlib
+    import os
+    if os.getenv("KNOWLEDGE_SEED", "1") == "0":
+        return "wyłączone"
+    db = SessionLocal()
+    out = []
+    try:
+        for bid, modname in BATCHES:
+            if db.query(models.KnowledgeImport).filter(models.KnowledgeImport.batch_id == bid).first():
+                continue
+            mod = importlib.import_module(modname)
+            courses = {}
+            for c in mod.COURSES:
+                row = db.query(models.KnowledgeCourse).filter(models.KnowledgeCourse.slug == c["slug"]).first()
+                if not row:
+                    row = models.KnowledgeCourse(slug=c["slug"], title=c["title"], summary=c["summary"], level=c["level"],
+                                                 position=c.get("position", 0), published=True)
+                    db.add(row)
+                    db.flush()
+                courses[c["slug"]] = row
+            added = 0
+            for i, a in enumerate(mod.ARTICLES):
+                if db.query(models.KnowledgeArticle.id).filter(models.KnowledgeArticle.slug == a["slug"]).first():
+                    continue
+                course = courses.get(a.get("course"))
+                row = models.KnowledgeArticle(
+                    slug=a["slug"], kind=a["kind"], course_id=course.id if course else None, position=a.get("position", i),
+                    title=a["title"], summary=a["summary"], body=a["body"], level=a["level"], tags=a.get("tags", []),
+                    widgets=a.get("widgets", {}), reading_min=reading_minutes(a["body"]), published=False,
+                    draft=None, draft_state="review", author_id=None)
+                db.add(row)
+                db.flush()
+                db.add(models.KnowledgeReview(article_id=row.id, user_id=None, action="submit", note="import z archiwum: " + bid))
+                added += 1
+            db.add(models.KnowledgeImport(batch_id=bid))
+            db.commit()
+            out.append(f"{bid}: dodano {added} propozycji do przeglądu")
+        return "; ".join(out) or "brak nowych partii"
+    finally:
+        db.close()
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Router
 # ─────────────────────────────────────────────────────────────────────────────
