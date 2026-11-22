@@ -355,3 +355,11 @@ def test_import_batch_once_as_review(monkeypatch):
         db.query(models.KnowledgeImport).filter(models.KnowledgeImport.batch_id == bid).delete()
         db.commit()
         db.close()
+
+
+def test_editor_list_has_search_fields(users):
+    r = client.post("/api/knowledge/editor/items", headers=users["admin"]["h"], json=art(TAG + " pola", summary="opis szukany", tags=["alfa"]))
+    assert r.status_code in (200, 201), r.text
+    rows = client.get("/api/knowledge/editor/items", headers=users["admin"]["h"]).json()
+    row = [x for x in rows if x["title"] == TAG + " pola"][0]
+    assert row["summary"] == "opis szukany" and row["tags"] == ["alfa"]

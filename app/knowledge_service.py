@@ -447,6 +447,7 @@ def build_router(get_db, get_current_user) -> APIRouter:
                 "level": c["level"], "published": bool(a.published), "state": a.draft_state or "none", "status": status_label(a),
                 "has_pending": bool(a.draft), "author": author, "author_id": a.author_id, "review_note": a.review_note or "",
                 "course_id": c["course_id"], "position": c["position"],
+                "summary": c.get("summary") or "", "tags": c.get("tags") or [],
                 "updated_at": a.updated_at.isoformat() if a.updated_at else None}
 
     @router.get("/api/knowledge/editor/items")

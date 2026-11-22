@@ -14,9 +14,12 @@ Kolejność jest orientacyjna, każdy etap jest oddawany małymi krokami: funkcj
 - Wiedza v8: nowe bloki (kroki, oś czasu, postęp, definicje, lista kontrolna, zwijana, zakładki, szara ramka), diagramy
   flow/er/sequence, archiwum tylko dla admina, import partii treści jako propozycji do przeglądu, kurs „Podstawy sprzętu”.
 
+- Wiedza v9: kreator blokowy (tryb prosty/zaawansowany), wyszukiwanie, filtry i sortowanie listy treści, kod jak w projektach,
+  wspólny styl kontrolek w widgetach.
+
 ## Następne kroki (uzgodniona kolejność)
-1. v9: uproszczony kreator (tryb „Prosty / Zaawansowany”: dodawanie bloków formularzem, zmiana kolejności, markdown generowany).
-2. v10: edytor opisu projektu dla użytkowników (ten sam renderer, tylko bezpieczne bloki, bez SVG i widgetów).
+1. v10: edytor opisu projektu dla użytkowników (ten sam renderer, tylko bezpieczne bloki, bez SVG i widgetów).
+2. Kolejne partie treści z archiwum (przerwania, struktury pamięci, bufory, protokoły…).
 3. Mermaid lokalnie jako opcja dodatkowa (jeśli własne diagramy nie wystarczą). Kolejne partie z archiwum.
 
 ## Etap 2: treści i narzędzia

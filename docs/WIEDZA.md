@@ -86,6 +86,18 @@ Widget działa w **izolowanej ramce** `<iframe sandbox="allow-scripts" srcdoc=�
 Widget ma ciemne tło strony wewnątrz ramki; kolory podaj wprost (np. `#0e1117`, `#56e1fd`). Przykład: widget ADC w artykule
 „ADC — przetworniki analogowo-cyfrowe i rozdzielczość”.
 
+### Kreator blokowy i lista treści (v9)
+- Nad polem treści w edytorze są dwa tryby: **Prosty (bloki)** i **Zaawansowany (markdown)**. W prostym treść to lista kart-bloków:
+  dodajesz blok z listy (tekst, kod, ramki, parametry, statystyki, kroki, oś czasu, paski postępu, definicje, lista kontrolna,
+  diagramy, zakładki, SVG, widget, obraz), wypełniasz pola formularza (tabele danych jako wiersze z przyciskiem ×), zmieniasz
+  kolejność strzałkami, duplikujesz lub usuwasz. Kreator tylko czyta i zapisuje to samo pole markdown, więc tryby można
+  przełączać bez utraty treści (formatowanie odstępów może się nieznacznie znormalizować). Wybór trybu jest pamiętany
+  w przeglądarce (domyślnie prosty). Kod: `app/static/knowledge-wizard.js` (definicje bloków w `DEFS` – nowy blok dodajesz tam).
+- Lista „Treści” w panelu ma wyszukiwarkę (tytuł, opis, tagi, autor, slug), filtry (typ, poziom, status) i sortowanie.
+- Kod w artykułach wygląda jak w kartach projektów (nagłówek z nazwą języka i „Kopiuj” nad ciemnym polem, motyw VS Code).
+- Widgety dostają wspólny, ładniejszy styl kontrolek (suwaki z wypełnieniem, pola, listy, przyciski) wstrzykiwany do każdej
+  ramki; własne style widgetu mogą go nadpisać.
+
 ### Nowe bloki (v8)
 Wszystkie w stylu platformy, działają razem z pozostałymi (bez zagnieżdżania). Przykłady na żywo: zakładka „Instrukcja”.
 - `:::neutral Tytuł` (alias `gray`) – szara ramka, neutralna obok note/warn/danger/ok.

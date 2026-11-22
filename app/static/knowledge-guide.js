@@ -13,12 +13,12 @@
       "- **Redaktor** zapisuje szkic i wysyła go do przeglądu. **Administrator** zatwierdza (publikuje) albo odrzuca z komentarzem.\n" +
       "- Opublikowana treść, którą edytujesz, nie znika: zmiany czekają jako *wersja oczekująca*, a publicznie widać starą wersję do zatwierdzenia.\n" +
       ":::\n\n" +
-      "Statusy: **Szkic** (tylko Ty i admin), **Do przeglądu** (zablokowana dla redaktora do decyzji), **Odrzucona** (zobacz komentarz i popraw), **Opublikowana**.\n") },
+      "Lista treści w panelu ma wyszukiwarkę (tytuł, opis, tagi, autor), filtry typu, poziomu i statusu oraz sortowanie.\n\nStatusy: **Szkic** (tylko Ty i admin), **Do przeglądu** (zablokowana dla redaktora do decyzji), **Odrzucona** (zobacz komentarz i popraw), **Opublikowana**.\n") },
 
     { id: "pierwsza", title: "2. Pierwsza treść krok po kroku", md: F(
       "1. **+ Nowa treść** → wybierz *Typ* (artykuł / lekcja kursu / niezbędnik) i *Poziom*.\n" +
       "2. Wpisz **Tytuł**, krótki **Opis** (widać go na liście) i do 8 **tagów**.\n" +
-      "3. Pisz w polu treści. Przyciski nad nim wstawiają gotowe bloki w miejscu kursora.\n" +
+      "3. Wybierz tryb nad polem treści: **Prosty (bloki)** – dodajesz bloki z listy (ramki, tabele, kroki, diagramy, kod, widget), wypełniasz pola formularza i zmieniasz kolejność strzałkami, a markdown powstaje sam; **Zaawansowany** – piszesz markdown ręcznie, przyciski wstawiają gotowe bloki. Tryby można przełączać bez utraty treści (wybór jest zapamiętany).\n" +
       "4. **Zapisz** (tworzy szkic). Dopiero po zapisie możesz wgrywać **obrazy**.\n" +
       "5. Sprawdź podgląd, także na telefonie. Potem **Wyślij do przeglądu**.\n" +
       "6. Lekcja kursu: wybierz *Kurs* i *Pozycję* (kolejność lekcji; kursy zakłada administrator w zakładce „Kursy”).\n") },
