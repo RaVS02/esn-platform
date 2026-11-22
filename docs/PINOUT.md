@@ -154,6 +154,7 @@ i zrób dla nich osobną grupę.
               "pad": false,               // opcjonalnie: pad pod obudową
               "x": 34, "y": 7 } ],        // tylko board: położenie w %
   "image_as_background": false,           // tylko board: czy użyć zdjęcia głównego komponentu jako tła
+  "default_tab": "interactive",           // interactive|image – zakładka startowa, gdy są i rysunek, i obraz
   "board":  { "aspect": 1.6, "labels": true },
   "shapes": [ { "t": "rect", "x": 0, "y": 36, "w": 9, "h": 28, "label": "USB-C", "kind": "conn" } ],
   "groups": [ { "name": "Qwiic", "pins": ["Q1","Q2","Q3","Q4"], "note": "…" } ],
@@ -165,7 +166,33 @@ i zrób dla nich osobną grupę.
 Limity: do 400 pinów, 120 kształtów, 30 grup, 10 źródeł na komponent. Pełny pinout jest zwracany tylko przez
 `GET /api/catalog/{id}`; lista `GET /api/catalog` zawiera jedynie `pinout_summary` (obudowa i liczba pinów), żeby nie rosła.
 
-## 10. Generowanie opisu przez asystenta AI
+## 10. Obraz pinoutu: zamiast rysunku interaktywnego albo obok niego
+
+Nie zawsze trzeba rysować pinout w edytorze. Gdy masz gotowy rysunek (np. z datasheetu) albo zdjęcie płytki z opisanymi
+pinami, wgraj go jako zdjęcie komponentu z **rolą „Pinout”** (okno edycji komponentu → panel „Zdjęcia”). **Podpis zdjęcia
+staje się podpisem rysunku** (np. „Figure 3. AGS10 pinout”). Obrazy z tą rolą **nie pojawiają się w ogólnej galerii**,
+są tylko w sekcji Pinout.
+
+Sekcja sama dobiera widok do tego, co komponent ma:
+
+| Co ma komponent | Co widać |
+|---|---|
+| tylko obraz (pole Pinout puste) | obraz z podpisem i miniaturami, bez tabeli |
+| lista pinów (`layout: none`) + obraz | obraz obok tabeli pinów (wyjaśnienie co i jak) |
+| rysunek interaktywny + obraz | **zakładki** „Rysunek interaktywny / Obraz”, tabela pinów wspólna |
+| tylko rysunek interaktywny | jak dotąd |
+
+Zakładką startową rządzi linia **`default_tab: interactive`** (domyślnie) albo **`default_tab: image`**
+(w JSON: `"default_tab"`). Zaznaczenie pinu i filtry kategorii przeżywają przełączanie zakładek.
+Kliknięcie obrazu otwiera podgląd z powiększaniem (tylko obrazy pinoutu).
+
+Format: JPEG/PNG/WebP/GIF, do 5 MB (limity w `docs/MEDIA.md`). Rysunki z białym tłem wyświetlane są na jasnej karcie,
+żeby czarne linie z datasheetów były czytelne.
+
+W `pinout-demo.html` zobaczysz dwa przykłady (rysunek + obraz oraz sam obraz), a w edytorze przycisk „Obraz pinoutu…” pokaże
+podgląd Twojego pliku w zakładce.
+
+## 11. Generowanie opisu przez asystenta AI
 
 Opis można wygenerować w czacie i wkleić do pola *Pinout*. Wklej asystentowi poniższy prompt razem z tabelą pinów z datasheetu
 (albo załącznikiem PDF) oraz dwoma fragmentami tego README: rozdziałem **3. Format tekstowy** i **4. Układy rysunku**.
@@ -194,7 +221,7 @@ Ważne:
   w edytorze (rozdział 5).
 - Wynik wklejony do edytora w `pinout-demo.html` od razu pokaże błędy składni, zanim trafi do bazy.
 
-## 11. Co dalej: model 3D z punktami (plan, jeszcze nie zaimplementowane)
+## 12. Co dalej: model 3D z punktami (plan, jeszcze nie zaimplementowane)
 
 Obecny układ `board` to 2D. Widok w stylu esp-labs („Poznaj płytkę”: obracany model z numerowanymi punktami i kartami po bokach)
 da się dołożyć jako osobny `layout: "model3d"` na tych samych danych (`pins`, `groups`, kategorie, tabela), z dodatkowymi:

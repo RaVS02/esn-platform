@@ -1,0 +1,78 @@
+/* ESN Content – sekcje kart (kod, zasoby, relacje) i edytory w oknach edycji. Zmienne motywu z style.css. */
+.esn-sec { margin: 30px 0; }
+.esn-sec .section-title { margin-bottom: 14px; }
+
+/* zakładki środowisk + blok kodu */
+.esn-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; border-bottom: 1px solid var(--border); }
+.esn-tabs button { background: none; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; color: var(--text3); padding: 8px 14px; font: 600 12px var(--mono); cursor: pointer; }
+.esn-tabs button:hover { color: var(--text); }
+.esn-tabs button[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+.esn-tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 4px; }
+.esn-code-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 6px; }
+.esn-code-title { font: 12px var(--mono); color: var(--text3); }
+.esn-copy { background: var(--bg2); color: var(--text2); border: 1px solid var(--border2); border-radius: 6px; padding: 4px 12px; font: 12px var(--mono); cursor: pointer; }
+.esn-copy:hover { color: var(--accent); border-color: var(--accent); }
+.esn-code-panel .code-block { margin: 0; }
+.esn-code-panel .code-block pre { overflow-x: auto; max-height: 560px; }
+
+/* zasoby */
+.esn-res { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.esn-res-item { display: flex; align-items: center; justify-content: space-between; gap: 14px; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; }
+.esn-res-main { min-width: 0; }
+.esn-res-label { font-weight: 600; color: var(--text); overflow-wrap: anywhere; }
+.esn-res-meta { font: 11px var(--mono); color: var(--text3); margin-top: 2px; }
+.esn-res-lic { font-size: 12px; color: var(--text3); margin-top: 4px; }
+.esn-badge { display: inline-block; font: 700 10px var(--mono); letter-spacing: .04em; padding: 2px 7px; border-radius: 4px; border: 1px solid var(--accent); color: var(--accent); }
+.esn-res-btn { flex: 0 0 auto; background: var(--bg3); color: var(--accent); border: 1px solid var(--accent); border-radius: 6px; padding: 6px 14px; font: 12px var(--mono); text-decoration: none; }
+.esn-res-btn:hover { background: var(--accent); color: var(--bg); }
+.esn-res-note { font-size: 12px; color: var(--text3); margin-top: 10px; }
+.esn-linkbtn { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; text-decoration: underline; cursor: pointer; }
+
+/* karty relacji */
+.esn-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.esn-card { display: flex; gap: 12px; align-items: center; text-align: left; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 10px; color: var(--text); cursor: pointer; font-family: var(--sans); }
+.esn-card:hover { border-color: var(--accent); background: var(--card2); }
+.esn-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.esn-card img, .esn-card-ph { flex: 0 0 64px; width: 64px; height: 64px; border-radius: 8px; object-fit: cover; background: var(--bg3); display: flex; align-items: center; justify-content: center; color: var(--text3); font-size: 22px; }
+.esn-card-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.esn-card-txt strong { font-size: 14px; overflow-wrap: anywhere; }
+.esn-card-note { font-size: 12px; color: var(--accent); }
+.esn-card-cat { font-size: 11.5px; color: var(--text3); overflow-wrap: anywhere; }
+
+/* edytory w oknach edycji */
+.esn-ed { margin: 15px 0; padding: 12px; border: 1px dashed var(--border2); border-radius: 8px; background: var(--bg2); }
+.esn-ed-head { margin-bottom: 10px; font: 12px var(--mono); color: var(--accent); }
+.esn-ed-note { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+.esn-ed-note.err { color: var(--red); }
+.esn-ed-list { display: grid; gap: 10px; margin-bottom: 10px; }
+.esn-ed-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 8px; display: grid; gap: 6px; }
+.esn-ed-card.is-err { border-color: var(--red); }
+.esn-ed-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.esn-ed-row > .esn-ed-in { flex: 1 1 180px; }
+.esn-ed-in, .esn-ed-sel, .esn-ed-code, .esn-ed-file { box-sizing: border-box; background: var(--bg2); color: var(--text); border: 1px solid var(--border2); border-radius: 5px; padding: 6px 8px; font: 12px var(--sans); }
+.esn-ed-in { width: 100%; }
+.esn-ed-code { width: 100%; font: 12px/1.45 var(--mono); resize: vertical; white-space: pre; tab-size: 2; }
+.esn-ed-ic { background: var(--bg2); color: var(--text2); border: 1px solid var(--border2); border-radius: 5px; padding: 4px 9px; font-size: 12px; cursor: pointer; }
+.esn-ed-ic:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); }
+.esn-ed-ic:disabled { opacity: .35; cursor: default; }
+.esn-ed-bar { display: flex; gap: 8px; align-items: center; }
+.esn-ed-add { background: var(--bg3); color: var(--accent); border: 1px solid var(--accent); border-radius: 6px; padding: 6px 14px; font: 12px var(--mono); cursor: pointer; }
+.esn-ed-add:hover:not(:disabled) { background: var(--accent); color: var(--bg); }
+.esn-ed-add:disabled { opacity: .5; cursor: default; }
+.esn-sug { display: grid; gap: 4px; margin: 6px 0 10px; }
+.esn-sug-i { text-align: left; background: var(--card); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; font: 12px var(--sans); cursor: pointer; }
+.esn-sug-i:hover { border-color: var(--accent); }
+.esn-chip { display: inline-block; background: var(--bg3); border: 1px solid var(--accent); color: var(--accent); border-radius: 99px; padding: 3px 12px; font: 12px var(--mono); }
+.esn-res-forms { display: grid; gap: 10px; }
+.esn-form { border: 1px solid var(--border); border-radius: 8px; padding: 10px; background: var(--card); display: grid; gap: 8px; }
+.esn-form-t { font: 600 12px var(--mono); color: var(--text2); cursor: pointer; }
+details.esn-form > summary { list-style: revert; }
+.esn-rights { font-size: 12px; color: var(--text2); line-height: 1.5; display: flex; gap: 6px; align-items: flex-start; }
+
+/* kolorowanie składni – VS Code Dark+ (highlight.js vs2015) */
+.code-block.esn-hl{background:#1e1e1e;border-color:#333}
+.code-block.esn-hl pre{margin:0}
+.code-block.esn-hl code.hljs{background:transparent;padding:0;color:#dcdcdc;font-family:var(--mono)}
+.esn-others-lbl{margin:14px 0 6px;font-size:11px;color:var(--text3);font-family:var(--mono)}
+.esn-others{display:flex;flex-wrap:wrap;gap:8px}
+.esn-other{padding:5px 12px;border:1px solid var(--border);border-radius:999px;background:var(--bg2);color:var(--text2);font-size:12px;font-family:var(--mono)}

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Boolean
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Boolean, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from sqlalchemy import JSON
@@ -147,4 +147,110 @@ class Media(Base):
     caption = Column(String(300), nullable=True)
     position = Column(Integer, default=0)
     uploaded_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class ProjectComponent(Base):
+    """Relacja projekt ↔ podzespół z katalogu (dwustronna: karta projektu i karta podzespołu)."""
+    __tablename__ = "project_components"
+    __table_args__ = (UniqueConstraint("project_id", "component_id", name="uq_project_component"),)
+
+    id = Column(Integer, primary_key=True, index=True)
+    project_id = Column(Integer, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True)
+    component_id = Column(Integer, ForeignKey("official_components.id", ondelete="CASCADE"), nullable=False, index=True)
+    note = Column(String(200), nullable=True)        # np. „czujnik temperatury”
+    position = Column(Integer, default=0)
+
+
+class CodeExample(Base):
+    """Przykład kodu dla projektu lub podzespołu w wybranym środowisku (Arduino, ESP-IDF, MicroPython…)."""
+    __tablename__ = "code_examples"
+
+    id = Column(Integer, primary_key=True, index=True)
+    owner_type = Column(String(20), nullable=False, index=True)   # project | component | platform
+    owner_id = Column(Integer, nullable=False, index=True)
+    lang = Column(String(30), nullable=False, default="other")
+    title = Column(String(120), nullable=True)                    # np. nazwa pliku: src/main.cpp
+    code = Column(Text, nullable=False)
+    position = Column(Integer, default=0)
+
+
+class Resource(Base):
+    """Zasób do pobrania: link zewnętrzny albo plik hostowany (tylko z licencją i potwierdzeniem praw)."""
+    __tablename__ = "resources"
+
+    id = Column(Integer, primary_key=True, index=True)
+    owner_type = Column(String(20), nullable=False, index=True)
+    owner_id = Column(Integer, nullable=False, index=True)
+    kind = Column(String(10), nullable=False)                     # link | file
+    rtype = Column(String(20), nullable=False, default="other")   # datasheet | docs | schematic | pcb | firmware | model3d | guide | repo | other
+    label = Column(String(200), nullable=False)
+    url = Column(String(500), nullable=True)                      # kind = link
+    path = Column(String(255), nullable=True)                     # kind = file (względem static/)
+    original_name = Column(String(255), nullable=True)
+    mime = Column(String(100), nullable=True)
+    size_bytes = Column(Integer, default=0)
+    license = Column(String(30), nullable=True)
+    license_note = Column(String(300), nullable=True)             # autor / źródło / uznanie autorstwa
+    position = Column(Integer, default=0)
+    uploaded_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# WIEDZA: niezbędniki, poradniki, artykuły i kursy (lekcje = artykuły z kind='lesson')
+# ─────────────────────────────────────────────────────────────────────────────
+class KnowledgeCourse(Base):
+    __tablename__ = "knowledge_courses"
+
+    id = Column(Integer, primary_key=True, index=True)
+    slug = Column(String(120), unique=True, index=True, nullable=False)
+    title = Column(String(150), nullable=False)
+    summary = Column(String(400), default="")
+    level = Column(String(15), default="basic")          # basic | intermediate | advanced
+    position = Column(Integer, default=0)
+    published = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class KnowledgeArticle(Base):
+    """Treść wiedzy. Kolumny content (title, body…) to wersja OPUBLIKOWANA (lub robocza, dopóki nie opublikowano).
+    Po publikacji edycje trafiają do `draft` i dopiero akceptacja admina podmienia wersję publiczną."""
+    __tablename__ = "knowledge_articles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    slug = Column(String(140), unique=True, index=True, nullable=False)
+    kind = Column(String(15), nullable=False, default="article", index=True)    # essential | guide | article | lesson
+    course_id = Column(Integer, ForeignKey("knowledge_courses.id", ondelete="SET NULL"), nullable=True, index=True)
+    position = Column(Integer, default=0)
+    title = Column(String(150), nullable=False)
+    summary = Column(String(400), default="")
+    body = Column(Text, default="")
+    level = Column(String(15), default="basic")
+    tags = Column(JSON, default=list)
+    widgets = Column(JSON, default=dict)                  # nazwa → kod HTML widgetu (renderowany w izolowanym iframe)
+    reading_min = Column(Integer, default=1)
+
+    published = Column(Boolean, default=False, index=True)
+    published_at = Column(DateTime, nullable=True)
+    draft = Column(JSON, nullable=True)                   # oczekujące zmiany opublikowanej treści
+    draft_state = Column(String(10), default="draft")     # none | draft | review | rejected
+    review_note = Column(String(500), nullable=True)
+    reviewed_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    reviewed_at = Column(DateTime, nullable=True)
+
+    author_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class KnowledgeReview(Base):
+    """Historia decyzji i zmian statusu (kto, co, kiedy)."""
+    __tablename__ = "knowledge_reviews"
+
+    id = Column(Integer, primary_key=True, index=True)
+    article_id = Column(Integer, ForeignKey("knowledge_articles.id", ondelete="CASCADE"), index=True, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    action = Column(String(20), nullable=False)           # create | submit | approve | reject | publish | unpublish | discard
+    note = Column(String(500), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)

@@ -80,7 +80,7 @@
   }
 
   function normalize(src) {
-    var d = { pins: [], sources: [], shapes: [], groups: [], board: { aspect: 1.6, labels: null }, imageAsBackground: false,
+    var d = { pins: [], sources: [], shapes: [], groups: [], board: { aspect: 1.6, labels: null }, imageAsBackground: false, defaultTab: "interactive",
               package: "", view: "", notes: "", layout: "none", warning: "" };
     if (!src || typeof src !== "object" || !Array.isArray(src.pins)) return d;
     d.package = str(src.package); d.view = str(src.view); d.notes = str(src.notes);
@@ -93,7 +93,8 @@
       return { label: str(x && x.label), url: safeUrl(str(x && x.url)) };
     }).filter(function (x) { return x.label || x.url; });
 
-    d.imageAsBackground = src.image_as_background === true;   // zdjęcie komponentu jako tło trybu board (domyślnie: nie)
+    d.imageAsBackground = src.image_as_background === true;
+    d.defaultTab = src.default_tab === "image" ? "image" : "interactive";   // zakładka startowa, gdy są i rysunek, i obraz   // zdjęcie komponentu jako tło trybu board (domyślnie: nie)
     var b = src.board || {};
     d.board.aspect = Math.max(0.4, Math.min(4, num(b.aspect) || 1.6));
     d.board.labels = b.labels === true || b.labels === false ? b.labels : null;
@@ -300,6 +301,34 @@
     });
   }
 
+  /* ── widok obrazu (wgrany rysunek pinoutu, np. z datasheetu) ───────── */
+  function imageViewer(imgs, title) {
+    var idx = 0, wrap = h("div", { "class": "po-imgs" });
+    var im = h("img", { "class": "po-img", alt: "", draggable: "false" });
+    var main = h("button", { type: "button", "class": "po-img-main", "aria-label": "Powiększ obraz" }, [im]);
+    var cap = h("div", { "class": "po-img-cap" }), thumbs = h("div", { "class": "po-img-thumbs" });
+    function show(i) {
+      idx = i; im.src = imgs[i].url; im.alt = imgs[i].caption || title || "Pinout";
+      cap.textContent = imgs[i].caption || "";
+      Array.prototype.forEach.call(thumbs.children, function (b, k) { b.classList.toggle("on", k === i); b.setAttribute("aria-current", String(k === i)); });
+    }
+    main.addEventListener("click", function () {
+      var items = imgs.map(function (x) { return { url: x.url, caption: x.caption || title }; });
+      if (global.ESNMedia && global.ESNMedia.openLightbox) global.ESNMedia.openLightbox(items, idx);
+      else global.open(imgs[idx].url, "_blank", "noopener");
+    });
+    imgs.forEach(function (x, i) {
+      if (imgs.length < 2) return;
+      var b = h("button", { type: "button", "class": "po-img-th", "aria-label": "Obraz " + (i + 1) + (x.caption ? ": " + x.caption : "") }, [h("img", { src: x.url, alt: "", loading: "lazy" })]);
+      b.addEventListener("click", function () { show(i); });
+      thumbs.appendChild(b);
+    });
+    wrap.appendChild(main); wrap.appendChild(cap);
+    if (imgs.length > 1) wrap.appendChild(thumbs);
+    show(0);
+    return wrap;
+  }
+
   /* ── render główny ───────────────────────────────────────────────────── */
   function render(root, data, opts) {
     opts = opts || {};
@@ -307,21 +336,48 @@
     var image = d.layout === "board" && d.imageAsBackground ? safeImg(str(opts.image)) : "";
     root.textContent = "";
     root.classList.add("pinout");
-    if (!d.pins.length) return null;
+    var imgs = (Array.isArray(opts.images) ? opts.images : []).map(function (x) {
+      return { url: safeImg(str(x && x.url)), caption: str(x && x.caption) };
+    }).filter(function (x) { return x.url; });
+    var hasPins = d.pins.length > 0;
+    if (!hasPins && !imgs.length) return null;
+    var canInter = hasPins && d.layout !== "none", canImg = imgs.length > 0;
+    var view = canInter && canImg ? d.defaultTab : canImg ? "image" : "interactive";
 
     var state = { sel: null, grp: null, active: {} }, rowsEl = {}, pinEls = {};
     svgPins = pinEls;
     var hasType = d.pins.some(function (p) { return p.type; });
 
-    root.appendChild(h("div", { "class": "po-head" }, [
-      h("div", { "class": "po-meta", text: [d.package, d.view].filter(Boolean).concat([d.pins.length + " wyprowadzeń"]).join(" · ") })
-    ]));
+    var metaBits = [d.package, d.view].filter(Boolean);
+    if (hasPins) metaBits.push(d.pins.length + " wyprowadzeń");
+    else metaBits.push(imgs.length + (imgs.length === 1 ? " obraz" : " obrazy"));
+    root.appendChild(h("div", { "class": "po-head" }, [h("div", { "class": "po-meta", text: metaBits.join(" · ") })]));
     if (d.warning) root.appendChild(h("p", { "class": "po-warn", text: d.warning }));
-    root.appendChild(h("p", { "class": "po-help",
-      text: "Najedź lub wybierz pin na rysunku albo w tabeli – drugi widok podświetli się. Strzałki przesuwają fokus, Enter/Spacja zaznacza, Esc czyści." }));
+    var HELP_DRAW = "Najedź lub wybierz pin na rysunku albo w tabeli – drugi widok podświetli się. Strzałki przesuwają fokus, Enter/Spacja zaznacza, Esc czyści.";
+    var HELP_IMG = hasPins ? "Kliknij obraz, aby powiększyć. Wiersz w tabeli pokazuje szczegóły pinu (Strzałki przesuwają fokus, Esc czyści)." : "Kliknij obraz, aby powiększyć.";
+    var help = h("p", { "class": "po-help", text: view === "image" ? HELP_IMG : HELP_DRAW });
+    root.appendChild(help);
+
+    // przełącznik widoku: rysunek interaktywny / wgrany obraz
+    var tabs = null;
+    if (canInter && canImg) {
+      tabs = h("div", { "class": "po-tabs", role: "tablist", "aria-label": "Widok pinoutu" });
+      [["interactive", "Rysunek interaktywny"], ["image", "Obraz (" + imgs.length + ")"]].forEach(function (v) {
+        var b = h("button", { type: "button", role: "tab", "data-v": v[0], text: v[1] });
+        b.addEventListener("click", function () { setView(v[0]); });
+        b.addEventListener("keydown", function (e) {
+          if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+          e.preventDefault();
+          var other = v[0] === "image" ? "interactive" : "image";
+          setView(other); tabs.querySelector('[data-v="' + other + '"]').focus();
+        });
+        tabs.appendChild(b);
+      });
+      root.appendChild(tabs);
+    }
 
     var filters = h("div", { "class": "po-filters", role: "group", "aria-label": "Filtr kategorii" });
-    root.appendChild(filters);
+    if (hasPins) root.appendChild(filters);
     var grid = h("div", { "class": "po-grid" + (d.layout === "none" ? " po-grid-table" : "") });
     root.appendChild(grid);
 
@@ -407,9 +463,14 @@
       el.addEventListener("keydown", function (ev) { onKey(ev, i, inTable); });
     }
 
-    // rysunek
-    var left = h("div", { "class": "po-card po-left" }), svg = null;
-    if (d.layout !== "none") {
+    // widok (rysunek interaktywny lub obraz) – wymienny, panel szczegółów i tabela są wspólne
+    var left = h("div", { "class": "po-card po-left" }), viewHost = h("div", { "class": "po-viewhost" }), svg = null;
+    left.appendChild(viewHost);
+    if (hasPins) left.appendChild(detail);
+    grid.appendChild(left);
+
+    function drawInteractive() {
+      svgPins = pinEls;   // rejestr pinów TEJ instancji (zmienna jest współdzielona przez wszystkie pinouty na stronie)
       var posCount = d.pins.filter(function (p) { return !p.pad; }).length;
       var g = geometry(d.layout, posCount, d);
       svg = s("svg", { "class": "po-svg" + (d.layout === "board" ? " po-svg-board" : ""), viewBox: "0 0 " + g.w + " " + g.h, role: "group",
@@ -425,10 +486,26 @@
           });
         }
       } else drawChip(svg, d, g, opts, onPin);
-      left.appendChild(svg);
+      viewHost.appendChild(svg);
     }
-    left.appendChild(detail);
-    grid.appendChild(left);
+    function setView(v) {
+      view = v;
+      viewHost.textContent = "";
+      Object.keys(pinEls).forEach(function (k) { delete pinEls[k]; });
+      svg = null;
+      grid.className = "po-grid" + (v === "image" ? " po-grid-image" : !canInter ? " po-grid-table" : "");
+      if (v === "image") viewHost.appendChild(imageViewer(imgs, opts.title || d.package));
+      else if (canInter) drawInteractive();
+      help.textContent = v === "image" ? HELP_IMG : HELP_DRAW;
+      // stan zaznaczenia, grupy i filtrów przenosimy na nowo narysowany rysunek
+      if (state.sel !== null && pinEls[state.sel]) pinEls[state.sel].classList.add("sel");
+      if (state.grp !== null) groupIdx[state.grp].forEach(function (i) { if (pinEls[i]) pinEls[i].classList.add("grp"); });
+      if (hasPins) applyFilters();
+      if (tabs) Array.prototype.forEach.call(tabs.children, function (b) {
+        var on = b.getAttribute("data-v") === v;
+        b.setAttribute("aria-selected", String(on)); b.tabIndex = on ? 0 : -1;
+      });
+    }
 
     // tabela
     var thead = h("tr", {}, [h("th", { text: "Nr" }), h("th", { text: "Nazwa" }), h("th", { text: "Kategoria" })]);
@@ -448,10 +525,10 @@
       wire(tr, i, true);
       rowsEl[i] = tr; tbody.appendChild(tr);
     });
-    grid.appendChild(h("div", { "class": "po-card po-tw" }, [h("table", {}, [h("thead", {}, [thead]), tbody])]));
+    if (hasPins) grid.appendChild(h("div", { "class": "po-card po-tw" }, [h("table", {}, [h("thead", {}, [thead]), tbody])]));
 
     // grupy: złącza i magistrale
-    if (d.groups.length) {
+    if (hasPins && d.groups.length) {
       var gwrap = h("div", { "class": "po-groups" }, [h("h4", { text: "Złącza i magistrale" })]);
       var glist = h("div", { "class": "po-glist" });
       d.groups.forEach(function (gr, gi) {
@@ -493,9 +570,10 @@
       });
       filters.appendChild(b);
     }
-    addBtn("all", "Wszystkie (" + d.pins.length + ")");
+    if (hasPins) addBtn("all", "Wszystkie (" + d.pins.length + ")");
     present.forEach(function (k) { addBtn(k, CATS[k][0] + " (" + d.pins.filter(function (p) { return p.cat === k; }).length + ")", CATS[k][1]); });
     applyFilters();
+    setView(view);
 
     // stopka – styl callout z platformy
     if (d.notes) {
@@ -514,7 +592,7 @@
       });
       root.appendChild(src);
     }
-    return { select: select, selectGroup: selectGroup, svg: svg, state: function () { return { sel: state.sel, grp: state.grp, active: state.active }; }, data: d };
+    return { select: select, selectGroup: selectGroup, setView: setView, view: function () { return view; }, svg: svg, state: function () { return { sel: state.sel, grp: state.grp, active: state.active }; }, data: d };
   }
 
   /* ── sekcja do karty podzespołu ──────────────────────────────────────── */
@@ -525,7 +603,7 @@
     slot.appendChild(h("h3", { "class": "section-title", text: "Pinout i opis wyprowadzeń" }));
     var body = h("div", { "class": "po-body-wrap" });
     slot.appendChild(body);
-    var ctl = render(body, pinout, { title: opts.title, image: opts.image });
+    var ctl = render(body, pinout, { title: opts.title, image: opts.image, images: opts.images });
     if (ctl) return ctl;
     body.appendChild(h("p", { "class": "po-empty", text: "Ten podzespół nie ma jeszcze opisu wyprowadzeń." }));
     if (opts.isAdmin && typeof opts.onEdit === "function") {
@@ -559,13 +637,14 @@
     text.split(/\r?\n/).forEach(function (raw, i) {
       var line = raw.trim(), ln = "Linia " + (i + 1) + ": ";
       if (!line || line.charAt(0) === "#") return;
-      var m = line.match(/^(package|view|layout|source|notes|aspect|labels|image_as_background|shape|group)\s*:\s*(.*)$/i);
+      var m = line.match(/^(package|view|layout|source|notes|aspect|labels|image_as_background|default_tab|shape|group)\s*:\s*(.*)$/i);
       if (m) {
         var k = m[1].toLowerCase(), v = m[2].trim(), f = v.split("|").map(function (x) { return x.trim(); });
         if (!v) return;
         if (k === "source") out.sources.push({ label: f[0], url: f[1] || "" });
         else if (k === "aspect") { var a = num(v); if (a === null) throw new Error(ln + "aspect musi być liczbą, np. 1.6"); (out.board = out.board || {}).aspect = a; }
         else if (k === "labels") (out.board = out.board || {}).labels = /^(tak|yes|true|1)$/i.test(v);
+        else if (k === "default_tab") out.default_tab = /^(image|obraz)/i.test(v) ? "image" : "interactive";
         else if (k === "image_as_background") out.image_as_background = /^(tak|yes|true|1)$/i.test(v);
         else if (k === "shape") {
           var t = f[0].toLowerCase(), c;
@@ -596,6 +675,7 @@
     ["package", "view", "layout"].forEach(function (k) { if (p[k]) lines.push(k + ": " + clean(p[k])); });
     if (p.board && p.board.aspect) lines.push("aspect: " + p.board.aspect);
     if (p.board && typeof p.board.labels === "boolean") lines.push("labels: " + (p.board.labels ? "tak" : "nie"));
+    if (p.default_tab === "image") lines.push("default_tab: image");
     if (typeof p.image_as_background === "boolean") lines.push("image_as_background: " + (p.image_as_background ? "tak" : "nie"));
     (p.sources || []).forEach(function (x) { lines.push("source: " + clean(x.label) + " | " + str(x.url)); });
     if (p.notes) lines.push("notes: " + clean(p.notes));

@@ -187,3 +187,9 @@ Interaktywny opis wyprowadzeń i wyglądu podzespołów w katalogu: [docs/PINOUT
 
 ## Zdjęcia (system mediów)
 Wiele zdjęć na projekt/komponent, role, powiększanie, limity i zabezpieczenia: [docs/MEDIA.md](docs/MEDIA.md).
+
+## Bezpieczeństwo
+Zasady przy dopisywaniu kodu (escapowanie danych, wgrywanie plików, biblioteki): [docs/BEZPIECZENSTWO.md](docs/BEZPIECZENSTWO.md).
+
+## Relacje, kod i pliki do pobrania
+Powiązania projekt↔podzespół, przykłady kodu dla wielu środowisk, linki i pliki z licencją: [docs/TRESCI.md](docs/TRESCI.md).

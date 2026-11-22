@@ -17,6 +17,8 @@ from pydantic import BaseModel
 import models, schemas, utils, auth
 from database import engine, get_db, SessionLocal
 import media_service
+import content_service
+import knowledge_service
 from fastapi.responses import JSONResponse
 
 # Inicjalizacja bazy
@@ -34,6 +36,14 @@ try:
     print("[media] migracja zdjęć:", media_service.migrate_legacy(SessionLocal))
 except Exception as _e:
     print("[media] UWAGA: migracja zdjęć nie powiodła się:", _e)
+try:
+    print("[wiedza] przykładowe treści:", knowledge_service.seed_pilot(SessionLocal))
+except Exception as _e:
+    print("[wiedza] UWAGA: nie udało się dodać przykładowych treści:", _e)
+try:
+    print("[content] migracja relacji i kodu:", content_service.migrate(SessionLocal))
+except Exception as _e:
+    print("[content] UWAGA: migracja relacji/kodu nie powiodła się:", _e)
 
 
 @app.middleware("http")
@@ -45,7 +55,7 @@ async def upload_guard(request: Request, call_next):
             return JSONResponse({"detail": "Żądanie jest za duże."}, status_code=413)
     response = await call_next(request)
     parts = request.url.path.split("/")
-    if len(parts) > 2 and parts[1] == "static" and parts[2] in ("media", "projects", "catalog", "avatars"):
+    if len(parts) > 2 and parts[1] == "static" and parts[2] in ("media", "files", "projects", "catalog", "avatars"):
         # Nawet gdyby w katalogu uploadów znalazł się stary plik .html/.svg – przeglądarka nie wykona w nim skryptów.
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Content-Security-Policy"] = "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; sandbox"
@@ -422,7 +432,7 @@ def create_project(
     # 2. Bezpieczne wypakowanie danych (zapobieganie błędowi 'multiple values')
     project_data = project.dict()
     project_data.pop("is_official", None) # <--- TO NAPRAWIA TWÓJ BŁĄD!
-    for _f in ("image_main", "image_schematic", "image_gallery_1", "image_gallery_2", "markdown_path"):
+    for _f in ("image_main", "image_schematic", "image_gallery_1", "image_gallery_2", "markdown_path", "code_snippet", "code_lang"):
         project_data.pop(_f, None)   # ścieżki plików ustala wyłącznie serwer (system mediów) – nigdy klient
 
     # 3. Zapis do bazy
@@ -459,7 +469,7 @@ def update_project(
     update_data = project_update.dict()
     # Usuwamy is_official z danych wejściowych, aby nie nadpisać go przypadkiem
     update_data.pop("is_official", None) 
-    for _f in ("image_main", "image_schematic", "image_gallery_1", "image_gallery_2", "markdown_path"):
+    for _f in ("image_main", "image_schematic", "image_gallery_1", "image_gallery_2", "markdown_path", "code_snippet", "code_lang"):
         update_data.pop(_f, None)   # ścieżki plików ustala wyłącznie serwer (system mediów) – nigdy klient
 
     # Aktualizacja pól tekstowych
@@ -497,6 +507,7 @@ def delete_project(
         shutil.rmtree(project_dir, ignore_errors=True)
     
     media_service.delete_owner(db, "project", project.id)
+    content_service.delete_owner_content(db, "project", project.id)
     # Po usunięciu plików kasujemy wpis w bazie danych
     db.delete(project)
     db.commit()
@@ -702,6 +713,8 @@ def clean_pinout(p):
            "sources": sources, "notes": s(p.get("notes"), 3000)}
     if p.get("layout") in PINOUT_LAYOUTS:
         out["layout"] = p["layout"]
+    if p.get("default_tab") in ("interactive", "image"):
+        out["default_tab"] = p["default_tab"]
     if isinstance(p.get("image_as_background"), bool):
         out["image_as_background"] = p["image_as_background"]
     if shapes: out["shapes"] = shapes
@@ -914,6 +927,7 @@ def delete_catalog_item(
         raise HTTPException(status_code=404, detail="Nie znaleziono komponentu")
     
     media_service.delete_owner(db, "component", item.id)
+    content_service.delete_owner_content(db, "component", item.id)
     # KASOWANIE FIZYCZNEGO FOLDERU Z DYSKU (stare uploady sprzed systemu mediów)
     safe_name = re.sub(r'[^a-z0-9]+', '-', item.name.lower()).strip('-')
     catalog_dir = os.path.join("static", "catalog", f"{item.id}_{safe_name}")
@@ -960,3 +974,5 @@ def set_user_role(
 
 # --- SYSTEM MEDIÓW (zdjęcia projektów, komponentów i platformy) ---
 app.include_router(media_service.build_router(get_db, get_current_user))
+app.include_router(content_service.build_router(get_db, get_current_user))   # relacje, kod, zasoby
+app.include_router(knowledge_service.build_router(get_db, get_current_user))   # wiedza: niezbędniki, poradniki, artykuły, kursy

@@ -224,8 +224,10 @@
     opts = opts || {};
     var fb = (opts.fallback || []).filter(function (x) { return x && x.url; });
     slot.textContent = "";
+    var skip = opts.exclude || ["pinout"];     // obrazy pinoutu pokazuje sekcja Pinout, nie ogólna galeria
     return api.list(ownerType, ownerId).then(function (items) {
       if (!slot.isConnected) return;
+      items = items.filter(function (i) { return skip.indexOf(i.role) < 0; });
       if (!items.length && fb.length) items = fb;
       collage(slot, items);
     }).catch(function () { if (slot.isConnected) collage(slot, fb); });
@@ -264,6 +266,7 @@
       head.appendChild(h("span", { "class": "esn-mm-cnt", text: total() + " / " + maxFiles() }));
       var info = "JPEG, PNG, WebP, GIF · do " + maxMB() + " MB" + (limits ? " · Twoje miejsce: " + limits.used_mb + " z " + limits.quota_mb + " MB" : "");
       head.appendChild(h("div", { "class": "esn-mm-note", text: info }));
+      if (opts.hint) head.appendChild(h("div", { "class": "esn-mm-note", text: opts.hint }));
       if (!ownerId) head.appendChild(h("div", { "class": "esn-mm-note", text: "Zdjęcia zostaną wgrane po zapisaniu." }));
       drop.classList.toggle("full", total() >= maxFiles());
       input.disabled = total() >= maxFiles();

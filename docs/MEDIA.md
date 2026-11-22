@@ -16,6 +16,7 @@ artykuły i grafiki całej platformy (`owner_type = platform`).
 - nad polem widać licznik („3 / 20”) i Twoje wykorzystane miejsce.
 
 Role: projekt – `main`, `schematic`, `gallery`; komponent – `main`, `gallery`, `pinout`; platforma – `main`, `gallery`.
+Obrazy z rolą `pinout` są pokazywane w sekcji Pinout karty komponentu, a nie w ogólnej galerii (patrz `docs/PINOUT.md`, rozdział 10).
 
 **W karcie projektu/komponentu** zdjęcia są w tej samej mozaice co dotąd (do 4 kafelków, „+N” przy reszcie).
 Kliknięcie otwiera podgląd z powiększaniem:
@@ -63,6 +64,8 @@ Dodatkowo nginx przyjmuje żądania do 8 MB (`client_max_body_size` w `nginx.con
    Dotyczyło też avatarów (rozszerzenie brane z nazwy użytkownika).
 3. **Nadpisywanie dowolnych pól projektu** parametrem `field` w `/upload` (np. `title`).
 4. Brak limitów rozmiaru i liczby plików.
+
+**Pliki do pobrania** (`docs/TRESCI.md`) dzielą z zdjęciami tę samą pulę miejsca na konto, limit wgrań na godzinę i globalny sufit dysku.
 
 ## Co się dzieje z istniejącymi zdjęciami
 

@@ -27,7 +27,7 @@ import models
 
 MB = 1024 * 1024
 STATIC_ROOT = os.path.abspath("static")
-UPLOAD_PREFIXES = ("media/", "projects/", "catalog/", "avatars/")   # tylko tu wolno kasować pliki
+UPLOAD_PREFIXES = ("media/", "files/", "projects/", "catalog/", "avatars/")   # tylko tu wolno kasować pliki
 
 
 def _int(name, default):
@@ -48,13 +48,19 @@ CFG = {
     "uploads_per_hour": _int("MEDIA_UPLOADS_PER_HOUR", 60),
     "staff_uploads_per_hour": _int("MEDIA_STAFF_UPLOADS_PER_HOUR", 300),
     "global_cap": _int("MEDIA_GLOBAL_CAP_MB", 5000) * MB,
+    # pliki do pobrania (zasoby) – patrz content_service.py
+    "res_max_file_bytes": _int("RES_MAX_FILE_MB", 7) * MB,
+    "res_max_per_owner": _int("RES_MAX_PER_OWNER", 15),
+    "code_max_items": _int("CODE_MAX_ITEMS", 12),
+    "code_max_bytes": _int("CODE_MAX_KB", 60) * 1024,
     "per_owner": {
         "project": _int("MEDIA_MAX_PER_PROJECT", 20),
         "component": _int("MEDIA_MAX_PER_COMPONENT", 20),
         "platform": _int("MEDIA_MAX_PLATFORM", 200),
     },
 }
-CFG["max_request_bytes"] = CFG["max_file_bytes"] + 1 * MB
+# limit żądania = największy dopuszczalny plik (zdjęcie albo zasób) + narzut multipart
+CFG["max_request_bytes"] = max(CFG["max_file_bytes"], CFG["res_max_file_bytes"]) + 1 * MB
 
 ROLES = {
     "project": ["main", "schematic", "gallery"],
@@ -330,12 +336,15 @@ def owner_exists_and_can_edit(db: Session, user, owner_type: str, owner_id: int)
 def usage(db: Session, user, owner_type: str, owner_id: int) -> dict:
     owner_count = db.query(func.count(models.Media.id)).filter(
         models.Media.owner_type == owner_type, models.Media.owner_id == owner_id).scalar() or 0
-    user_bytes = db.query(func.coalesce(func.sum(models.Media.size_bytes), 0)).filter(
-        models.Media.uploaded_by == user.id).scalar() or 0
-    last_hour = db.query(func.count(models.Media.id)).filter(
-        models.Media.uploaded_by == user.id,
-        models.Media.created_at > datetime.utcnow() - timedelta(hours=1)).scalar() or 0
-    total = db.query(func.coalesce(func.sum(models.Media.size_bytes), 0)).scalar() or 0
+    hour_ago = datetime.utcnow() - timedelta(hours=1)
+    R = models.Resource
+    # zdjęcia i hostowane pliki do pobrania dzielą jedną pulę miejsca i jeden limit wgrań na godzinę
+    user_bytes = (db.query(func.coalesce(func.sum(models.Media.size_bytes), 0)).filter(models.Media.uploaded_by == user.id).scalar() or 0) \
+        + (db.query(func.coalesce(func.sum(R.size_bytes), 0)).filter(R.uploaded_by == user.id, R.kind == "file").scalar() or 0)
+    last_hour = (db.query(func.count(models.Media.id)).filter(models.Media.uploaded_by == user.id, models.Media.created_at > hour_ago).scalar() or 0) \
+        + (db.query(func.count(R.id)).filter(R.uploaded_by == user.id, R.kind == "file", R.created_at > hour_ago).scalar() or 0)
+    total = (db.query(func.coalesce(func.sum(models.Media.size_bytes), 0)).scalar() or 0) \
+        + (db.query(func.coalesce(func.sum(R.size_bytes), 0)).filter(R.kind == "file").scalar() or 0)
     return {"owner_count": owner_count, "user_bytes": int(user_bytes), "last_hour": last_hour, "total_bytes": int(total)}
 
 
