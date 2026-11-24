@@ -151,6 +151,19 @@ akceptacji. Poniżej miejsca, które warto sprawdzić. Pozycje oznaczone ❗ to 
   zasada rdzenia 0 dla stosu Wi-Fi jako domyślne zachowanie, a nie reguła bezwzględna.
 - **Do sprawdzenia przez Ciebie:** przykład PubSubClient (adres brokera, zależność od biblioteki) oraz zgodność wersji bibliotek.
 
+## Partia v15: Dane i liczby w pamięci (zmiany względem archiwum)
+- **Typy stałego rozmiaru:** archiwum oznaczało `long tstamp = millis();` jako błąd rozmiaru, ale `long` ma 32 bity na AVR i ESP32. Prawdziwy problem to
+  znak (przepełnienie po ok. 24,8 dnia zamiast 49,7), więc lekcja zaleca `uint32_t` z właściwym uzasadnieniem. Zakresy w tabeli poprawione
+  (np. `int16_t` od −32768, `uint32_t` do 4 294 967 295). Dodano widget zakresu i zawijania typów oraz widget dokładności `float`.
+- **24 bity i U2:** animacja krok po kroku (składanie 3 bajtów, rozszerzenie znaku). Doprecyzowano, dlaczego rzutowanie przed przesunięciem jest
+  konieczne (`int` 16-bitowy na AVR), dodano wariant z przesunięciem arytmetycznym (z zastrzeżeniem o standardzie), uwagę, że po rozszerzeniu
+  znaku górny bajt to 0x00 lub 0xFF (a nie zawsze „pusty”), oraz ostrzeżenie, by sprawdzić w nocie kolejność bajtów i kod (U2 lub offset binary).
+- **Nowe względem archiwum:** kolejność bajtów (endianness) z widgetem, jawna serializacja, odbiór w Pythonie (`struct`), zawijanie `millis()` i
+  bezpieczne odejmowanie czasu, `float` w przerwaniach (AVR bez FPU, ESP32 z ograniczeniami).
+- **Do sprawdzenia przez Ciebie:** zdanie o FPU w przerwaniach ESP32 (zależy od konfiguracji), rozszerzenie znaku przesunięciem (wersja standardu).
+- To była ostatnia sekcja archiwum, której treść nie była jeszcze w bazie: s0, s7 (v8), s8 i s2 (v10), s1/s4/s5/s6 (pilot), s9/s11 (v11),
+  s10/s13 (v12), s15/s17/s18/s19 (pilot i v13), s12/s14/s16 (v14), s3 (v15).
+
 ## Uwagi ogólne
 - Cudzysłowy: w nowych treściach używam polskich „…”. W archiwum są proste "…".
 - Terminologia: proponuję słowniczek (bufor, ramka, próbka, przerwanie) i trzymanie się jednego tłumaczenia.

@@ -269,7 +269,7 @@ def seed_pilot(SessionLocal) -> str:
         db.close()
 
 
-BATCHES = [("v8-podstawy-sprzetu", "knowledge_batch_v8"), ("v10-czas-i-przerwania", "knowledge_batch_v10"), ("v11-bufory", "knowledge_batch_v11"), ("v12-rtos-animacje", "knowledge_batch_v12"), ("v13-protokoly-sygnal", "knowledge_batch_v13"), ("v14-transmisja", "knowledge_batch_v14")]
+BATCHES = [("v8-podstawy-sprzetu", "knowledge_batch_v8"), ("v10-czas-i-przerwania", "knowledge_batch_v10"), ("v11-bufory", "knowledge_batch_v11"), ("v12-rtos-animacje", "knowledge_batch_v12"), ("v13-protokoly-sygnal", "knowledge_batch_v13"), ("v14-transmisja", "knowledge_batch_v14"), ("v15-dane-i-liczby", "knowledge_batch_v15")]
 
 
 def import_batches(SessionLocal) -> str:
