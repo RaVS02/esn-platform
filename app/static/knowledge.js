@@ -185,9 +185,24 @@
   var CALLOUT = { note: "callout-note", info: "callout-info", warn: "callout-warn", warning: "callout-warn", danger: "callout-danger", critical: "callout-danger", ok: "callout-ok", tip: "callout-ok", neutral: "callout-neutral", gray: "callout-neutral" };
   var figSeq = 0, widgetSeq = 0, widgetMap = {};
 
+  // Rysunki SVG (np. z pilotażu) mają kolory starej, ciemnej palety wpisane jako #hex/rgba. Przy renderowaniu podmieniamy je na zmienne motywu,
+  // żeby czytały się w jasnym i ciemnym motywie (treść w bazie zostaje bez zmian).
+  var FIG_HEX = {
+    "#e0eaf5": "var(--text)", "#8a9ab5": "var(--text2)", "#5a6a80": "var(--text3)", "#00d4ff": "var(--accent)", "#56e1fd": "var(--accent)",
+    "#00ff88": "var(--green)", "#ff4466": "var(--red)", "#ff8c00": "var(--orange)", "#9d6fff": "var(--purple)",
+    "#ffab70": "var(--orange-t)", "#c0a0ff": "var(--purple-t)", "#1a2030": "var(--card2)", "#243040": "var(--border2)", "#3a4a5a": "var(--border2)",
+    "#1e2a3a": "var(--border)", "#0e1117": "var(--bg2)", "#080b10": "var(--bg)", "#141920": "var(--card)"
+  };
+  var FIG_RGB = { "0,212,255": "accent", "86,225,253": "accent", "0,255,136": "green", "255,140,0": "orange", "157,111,255": "purple", "255,68,102": "red" };
+  function figureTheme(svg) {
+    return String(svg).replace(/rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,/g, function (m, r, g, b) {
+      var n = FIG_RGB[r + "," + g + "," + b]; return n ? "rgba(var(--" + n + "-rgb)," : m;
+    }).replace(/#[0-9a-fA-F]{6}\b/g, function (m) { return FIG_HEX[m.toLowerCase()] || m; });
+  }
+
   function figureNode(arg, svg) {
     var n = ++figSeq, prefix = "kf" + n + "-";
-    var clean = purify(svg, {
+    var clean = purify(figureTheme(svg), {
       USE_PROFILES: { svg: true, svgFilters: true, html: true },
       FORBID_TAGS: ["style", "script", "use", "image", "foreignobject", "a", "iframe", "object", "embed", "form", "link", "meta", "base"],
       FORBID_ATTR: ["srcdoc", "formaction"]
@@ -216,7 +231,7 @@
   }
 
   var WIDGET_CSP = "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; media-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'";
-  var WIDGET_CSS = ":root{color-scheme:dark}body{font:14px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;color:#e6edf3}" +
+  var WIDGET_CSS_RAW = "body{font:14px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;color:#e6edf3}" +
     "label{display:block;color:#9fb0c3;font-size:12px}" +
     "input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:99px;margin:10px 0;outline:none;cursor:pointer;background:linear-gradient(to right,#56e1fd var(--p,50%),#30363d var(--p,50%))}" +
     "input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;background:#0d1117;border:2px solid #56e1fd;box-shadow:0 0 0 4px rgba(86,225,253,.15);transition:box-shadow .15s}" +
@@ -229,16 +244,44 @@
     "button{background:#161b22;color:#e6edf3;border:1px solid #30363d;border-radius:8px;padding:7px 14px;font:inherit;cursor:pointer;transition:border-color .15s,color .15s,background .15s}" +
     "button:hover:not(:disabled){border-color:#56e1fd;color:#56e1fd}button:active:not(:disabled){background:#1c2530}button:disabled{opacity:.5;cursor:default}button:focus-visible{outline:2px solid #56e1fd;outline-offset:2px}" +
     "input[type=checkbox],input[type=radio]{accent-color:#56e1fd}";
+  // Paleta widgetów: [ciemna, jasna]. Treści widgetów (także zapisane w bazie) mają kolory wpisane jako #hex; przy renderowaniu
+  // podmieniamy je na zmienne --w-*, więc widgety zmieniają motyw bez zmiany ich kodu.
+  var WIDGET_PAL = {
+    text: ["#e6edf3", "#14202e"], muted: ["#9fb0c3", "#4a5b72"], border: ["#30363d", "#c3cedb"], card: ["#161b22", "#ffffff"],
+    bg: ["#0d1117", "#f4f7fb"], bar: ["#21262d", "#dde4ee"], acc: ["#56e1fd", "#0a7ea4"], ok: ["#3fb950", "#1a8a3a"],
+    bad: ["#f85149", "#d1242f"], warn: ["#ff8c00", "#b85c00"], dim: ["#6e7681", "#5d6e85"], accbg: ["#0e3a4a", "#d3edf6"],
+    pink: ["#ff7bd5", "#b3329a"], warnbg: ["#3a2a0e", "#fbe9cf"], badbg: ["#3a1d1d", "#fbdcdc"], badbg2: ["#2a1111", "#fdeaea"],
+    okbg: ["#1d3b24", "#d6f0dc"], press: ["#1c2530", "#e6ecf4"]
+  };
+  var WIDGET_HEX = {};
+  Object.keys(WIDGET_PAL).forEach(function (k) { WIDGET_HEX[WIDGET_PAL[k][0]] = k; });
+  // Kolory starej palety platformy (widgety z pilotażu, np. ADC) – przypisane do odpowiadających im zmiennych
+  var WIDGET_ALIAS = { "#e0eaf5": "text", "#8a9ab5": "muted", "#5a6a80": "dim", "#0e1117": "bg", "#080b10": "bg", "#141920": "card",
+    "#1e2a3a": "border", "#243040": "border", "#1a2030": "card", "#00d4ff": "acc", "#00ff88": "ok", "#ff4466": "bad", "#ffab70": "warn" };
+  Object.keys(WIDGET_ALIAS).forEach(function (k) { if (!WIDGET_HEX[k]) WIDGET_HEX[k] = WIDGET_ALIAS[k]; });
+  function widgetVars(i) {
+    return Object.keys(WIDGET_PAL).map(function (k) { return "--w-" + k + ":" + WIDGET_PAL[k][i]; }).join(";") + ";--w-acc-rgb:" + (i ? "10,126,164" : "86,225,253");
+  }
+  function widgetTheme(src) {
+    return String(src).replace(/rgba\(\s*(?:86\s*,\s*225\s*,\s*253|0\s*,\s*212\s*,\s*255)\s*,/g, "rgba(var(--w-acc-rgb),").replace(/#[0-9a-fA-F]{6}\b/g, function (m) {
+      var n = WIDGET_HEX[m.toLowerCase()]; return n ? "var(--w-" + n + ")" : m;
+    });
+  }
+  var WIDGET_THEME_CSS = ":root{color-scheme:dark;" + widgetVars(0) + "}:root[data-theme=light]{color-scheme:light;" + widgetVars(1) + "}" +
+    ":root[data-theme=light] select{background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%234a5b72' stroke-width='1.6'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 10px center}";
+  var WIDGET_CSS = widgetTheme(WIDGET_CSS_RAW);
   function widgetDoc(code, id) {
     var poster = "(function(){var i=" + JSON.stringify(id) + ",last=0;function m(){var b=document.body;if(!b)return 0;var c=getComputedStyle(b);return Math.ceil(b.getBoundingClientRect().height+parseFloat(c.marginTop||0)+parseFloat(c.marginBottom||0));}" +
       "function p(){try{var h=m();if(h&&Math.abs(h-last)>1){last=h;parent.postMessage({esnw:i,h:h},'*')}}catch(e){}}" +
       "function fr(r){var a=parseFloat(r.min)||0,b=isNaN(parseFloat(r.max))?100:parseFloat(r.max),v=(parseFloat(r.value)-a)/((b-a)||1)*100;r.style.setProperty('--p',Math.max(0,Math.min(100,v))+'%')}" +
       "function fa(){[].forEach.call(document.querySelectorAll('input[type=range]'),fr)}addEventListener('input',function(e){if(e.target&&e.target.type==='range')fr(e.target)},true);setInterval(fa,400);" +
       "function init(){fa();p();if(window.ResizeObserver&&document.body){new ResizeObserver(p).observe(document.body)}addEventListener('resize',p);addEventListener('load',p);setTimeout(p,80)}" +
+      "addEventListener('message',function(e){var d=e.data;if(d&&(d.esnTheme==='light'||d.esnTheme==='dark'))document.documentElement.setAttribute('data-theme',d.esnTheme)});" +
       "if(document.readyState==='loading')addEventListener('DOMContentLoaded',init);else init();})();";
-    var body = String(code || "").replace(/<!doctype[^>]*>/ig, "");
-    return "<!doctype html><html><head><meta charset=\"utf-8\"><meta http-equiv=\"Content-Security-Policy\" content=\"" + WIDGET_CSP + "\">" +
-      "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><style>" + WIDGET_CSS + "html,body{margin:0;background:transparent}</style><script>" + poster + "<\/script></head><body>" + body + "</body></html>";
+    var body = widgetTheme(String(code || "").replace(/<!doctype[^>]*>/ig, ""));
+    var theme = window.ESNTheme ? window.ESNTheme.effective() : "dark";
+    return "<!doctype html><html data-theme=\"" + theme + "\"><head><meta charset=\"utf-8\"><meta http-equiv=\"Content-Security-Policy\" content=\"" + WIDGET_CSP + "\">" +
+      "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><style>" + WIDGET_THEME_CSS + WIDGET_CSS + "html,body{margin:0;background:transparent}</style><script>" + poster + "<\/script></head><body>" + body + "</body></html>";
   }
   function widgetNode(name, heightArg, widgets) {
     var code = widgets && widgets[name];
@@ -246,9 +289,17 @@
     var id = "w" + (++widgetSeq), hgt = Math.max(80, Math.min(1200, parseInt(heightArg, 10) || 320));
     var f = h("iframe", { "class": "kn-widget", sandbox: "allow-scripts", referrerpolicy: "no-referrer", title: "Interaktywny widget: " + name, style: "height:" + hgt + "px", loading: "lazy" });
     f.srcdoc = widgetDoc(code, id);
+    f.addEventListener("load", function () { try { if (window.ESNTheme && f.contentWindow) f.contentWindow.postMessage({ esnTheme: window.ESNTheme.effective() }, "*"); } catch (err) { /* ignoruj */ } });
     widgetMap[id] = f;
     return h("div", { "class": "kn-widget-wrap" }, [f]);
   }
+  document.addEventListener("esn-theme", function (ev) {
+    var t = ev.detail && ev.detail.theme; if (t !== "light" && t !== "dark") return;
+    Object.keys(widgetMap).forEach(function (k) {
+      var f = widgetMap[k];
+      try { if (f.isConnected && f.contentWindow) f.contentWindow.postMessage({ esnTheme: t }, "*"); } catch (err) { /* iframe w trakcie ładowania */ }
+    });
+  });
   window.addEventListener("message", function (e) {
     var d = e.data; if (!d || typeof d.esnw !== "string" || typeof d.h !== "number") return;
     var f = widgetMap[d.esnw]; if (!f || f.contentWindow !== e.source) return;

@@ -109,28 +109,20 @@
 
 @media (prefers-reduced-motion: reduce) { .pinout * { transition: none !important; } }
 
-/* ── przełącznik widoku i wgrany obraz pinoutu ── */
-.pinout .po-tabs { display: flex; gap: 6px; margin: 0 0 14px; border-bottom: 1px solid var(--border); }
-.pinout .po-tabs button {
-  background: none; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px;
-  color: var(--text3); padding: 8px 14px; font: 600 12px var(--mono); letter-spacing: .04em; cursor: pointer;
-}
-.pinout .po-tabs button:hover { color: var(--text); }
-.pinout .po-tabs button[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
-.pinout .po-tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 4px; }
-
-/* widok obrazu: obraz po lewej, tabela pinów obok (na wąskim kontenerze – jedna kolumna); bez „przyklejania” */
-.pinout .po-grid-image .po-left { position: static; }
-.pinout .po-imgs { display: flex; flex-direction: column; align-items: center; gap: 10px; }
-.pinout .po-img-main {
-  display: flex; align-items: center; justify-content: center; width: 100%; padding: 16px; border: 0; cursor: zoom-in;
-  background: #fff; border-radius: 8px;       /* rysunki z datasheetów mają zwykle białe tło i czarne linie */
-}
-.pinout .po-img-main:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.pinout .po-img { max-width: 100%; max-height: min(70vh, 640px); width: auto; height: auto; display: block; object-fit: contain; }
-.pinout .po-img-cap { font-size: 12.5px; color: var(--text2); text-align: center; min-height: 1.4em; }
-.pinout .po-img-thumbs { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-.pinout .po-img-th { width: 76px; height: 56px; padding: 2px; background: #fff; border: 2px solid var(--border2); border-radius: 6px; cursor: pointer; opacity: .65; }
-.pinout .po-img-th.on { border-color: var(--accent); opacity: 1; }
-.pinout .po-img-th img { width: 100%; height: 100%; object-fit: contain; display: block; }
-.pinout .po-img-th:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* ─── jasny motyw: numery pinów, zaznaczenie, pad (DAP) ─── */
+:root[data-theme="light"] .pinout .po-pin rect, :root[data-theme="light"] .pinout .po-pin circle { fill-opacity: .3; stroke-width: 1.7; }
+:root[data-theme="light"] .pinout .po-pin .po-num { fill: var(--text); }
+:root[data-theme="light"] .pinout .po-pin.hl rect, :root[data-theme="light"] .pinout .po-pin:focus-visible rect,
+:root[data-theme="light"] .pinout .po-pin.hl circle, :root[data-theme="light"] .pinout .po-pin:focus-visible circle,
+:root[data-theme="light"] .pinout .po-pin.sel rect, :root[data-theme="light"] .pinout .po-pin.sel circle,
+:root[data-theme="light"] .pinout .po-pin.grp rect, :root[data-theme="light"] .pinout .po-pin.grp circle { stroke: var(--text); }
+:root[data-theme="light"] .pinout .po-pin.hl rect, :root[data-theme="light"] .pinout .po-pin.hl circle { fill-opacity: .6; }
+:root[data-theme="light"] .pinout .po-sh-chip { fill: #c9d3df; stroke: var(--text2); }
+:root[data-theme="light"] .pinout .po-sh-conn { fill: #d4dce6; stroke: var(--text2); }
+:root[data-theme="light"] .pinout .po-sh-btn  { fill: #f3dcc6; }
+:root[data-theme="light"] .pinout .po-sh-led  { fill: rgba(var(--accent-rgb),.22); }
+/* pad pod układem (DAP/EP): wyraźniejszy w obu motywach, podpis czytelny */
+.pinout .po-pin rect[stroke-dasharray] { fill-opacity: .35; stroke-width: 2; }
+.pinout .po-pin rect[stroke-dasharray] + text.po-num { font-size: 12px; letter-spacing: .04em; }
+:root[data-theme="light"] .pinout .po-pin rect[stroke-dasharray] { fill-opacity: .55; }
+:root[data-theme="light"] .pinout .po-chip { color: color-mix(in srgb, var(--c) 62%, #000); }

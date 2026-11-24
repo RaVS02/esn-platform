@@ -23,11 +23,16 @@ Kolejność jest orientacyjna, każdy etap jest oddawany małymi krokami: funkcj
 - Wiedza v13: kursy „Interfejsy i protokoły” (UART/I2C/SPI/I2S, animacje ramki I2C i SPI, kalkulator pull-upów) i „Sygnał i bezpieczeństwo pomiarów” (izolacja, ochrona wejścia, CMRR, filtry RC).
 - Wiedza v14: kurs „Transmisja danych w praktyce” (batching, CRC, kontrola przepływu, Wi-Fi/BLE/MQTT); widgety z wyborem tempa animacji.
 - Wiedza v15: kurs „Dane i liczby w pamięci”. Zawartość archiwum została w całości przeniesiona do bazy (po Twoim przeglądzie można usunąć plik, endpoint i widok).
+- Motyw jasny/ciemny, etap 1 (v16): paleta jasna, przełącznik (auto/jasny/ciemny), poprawka podglądu edytora Wiedzy. Szczegóły: `docs/MOTYW.md`.
+- Motyw, etap 2 (v17): widgety (paleta `--w-*` + postMessage), magazyn, galeria pinoutów (kontrast DAP/pinów), czcionka nagłówków Space Grotesk.
 
 ## Następne kroki (uzgodniona kolejność)
-1. Nowa treść poza archiwum (do uzgodnienia): ADC w praktyce (aliasing, Nyquist, szum), PWM i silniki, tranzystory i sterowanie obciążeniem, debugowanie (multimetr, analizator logiczny), tryby uśpienia i zasilanie bateryjne, LED i rezystory.
-2. Szablony dla opisów podzespołów oraz ścieżki tematyczne / powiązane treści.
-3. Mermaid lokalnie jako opcja dodatkowa (jeśli własne diagramy nie wystarczą).
+1. Edytor schematów: jasny motyw i wspólny zestaw ikon (z magazynem) przy integracji z platformą.
+2. Limity AI i własny klucz API (BYOK).
+3. Poprawki mobilne (RWD), szerokość markdown, czcionki emoji.
+4. Tłumaczenie PL/EN (mechanizm `t('klucz')` → główne ekrany → moduły → treści z polem języka).
+5. Przebudowa magazynu na serwerze, kalkulatory w Narzędziach, integracja edytora schematów, nowe tematy Wiedzy (ADC, PWM, tranzystory, debugowanie, uśpienie, LED), ścieżki tematyczne.
+6. Mermaid lokalnie jako opcja dodatkowa (jeśli własne diagramy nie wystarczą).
 
 ## Etap 2: treści i narzędzia
 - Migracja pozostałych sekcji archiwum do Wiedzy wraz z przeglądem merytorycznym i stylistycznym (kursy: pamięć i RTOS,

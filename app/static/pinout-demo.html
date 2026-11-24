@@ -5,11 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ESN Pinout – demo i edytor</title>
 <!-- Działa z serwera (/static/pinout-demo.html) i lokalnie (dwuklik) – pliki leżą obok siebie. -->
-<link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="pinout.css">
-<link rel="stylesheet" href="media.css">
-<script src="pinout.js"></script>
-<script src="media.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=2.21">
+<link rel="stylesheet" href="pinout.css?v=6">
+<script src="theme.js?v=3"></script>
+<script src="pinout.js?v=4"></script>
 <style>
   body { padding: 28px 24px 80px; max-width: 1280px; margin: 0 auto; }
   h1 { font: 700 22px var(--mono); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 6px; }
@@ -36,6 +37,7 @@
 </style>
 </head>
 <body>
+<button type="button" class="theme-toggle" id="themeToggle" aria-label="Motyw" style="float:right"></button>
 <h1>ESN Pinout – demo możliwości</h1>
 <p class="lead">Jeden komponent, wiele rodzajów podzespołów. Poniżej galeria układów rysunku (to, co zobaczysz w karcie katalogu) oraz
   <b>edytor na żywo</b> – wpisujesz opis, po prawej od razu widzisz efekt, a gotowy tekst wklejasz w pole „Pinout” w edycji komponentu.
@@ -52,8 +54,6 @@
     <button id="copyTxt" type="button">Kopiuj tekst (do pola Pinout)</button>
     <button id="copyJson" type="button">Kopiuj JSON</button>
     <label class="btn">Zdjęcie płytki… <input id="img" type="file" accept="image/*"></label>
-    <label class="btn">Obraz pinoutu… <input id="pimg" type="file" accept="image/*" multiple></label>
-    <button id="noPimg" type="button" hidden>Usuń obrazy pinoutu</button>
     <button id="noImg" type="button" hidden>Usuń zdjęcie</button>
     <label class="pickbox" id="pickWrap" hidden><input type="checkbox" id="pick" checked> klik na rysunku = nowy punkt</label>
   </div>
@@ -198,22 +198,7 @@ U2 @5,50 | D+ | usb | I/O | USB D+ |
 U3 @5,57 | D− | usb | I/O | USB D− |` }
 };
 
-/* przykładowe „rysunki z datasheetu” (SVG generowany w przeglądarce – w aplikacji to wgrane zdjęcia z rolą Pinout) */
-function figure(title, pins) {
-  var s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 380" font-family="Times New Roman,serif"><rect width="520" height="380" fill="#fff"/>' +
-    '<rect x="150" y="50" width="220" height="230" rx="10" fill="none" stroke="#000" stroke-width="3"/><circle cx="260" cy="165" r="14" fill="none" stroke="#000" stroke-width="2"/>';
-  pins.forEach(function (p) { s += '<rect x="' + p[1] + '" y="' + p[2] + '" width="56" height="34" fill="none" stroke="#555" stroke-dasharray="5 3"/><text x="' + (p[1] + 28) + '" y="' + (p[2] + 22) + '" font-size="15" text-anchor="middle">' + p[0] + '</text><text x="' + (p[1] + (p[1] < 260 ? -12 : 68)) + '" y="' + (p[2] + 22) + '" font-size="13">' + p[3] + '</text>'; });
-  s += '<text x="260" y="330" font-size="16" text-anchor="middle">' + title + '</text></svg>';
-  return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(s);
-}
-var FIG_PINS = [["SCL", 158, 58, "1"], ["VCC", 306, 58, "4"], ["SDA", 158, 240, "2"], ["GND", 306, 240, "3"]];
-EX.img_both = { title: "Rysunek interaktywny + wgrany obraz (przełączane zakładkami)", desc: "Komponent ma i rysunek z narzędzia, i obrazy z datasheetu. Zakładki przełączają widok, a tabela pinów zostaje wspólna. `default_tab: image` ustawia obraz jako startowy.",
-  text: "package: Moduł 4-pin\nview: widok z góry\nlayout: sip\ndefault_tab: interactive\nnotes: Przykład poglądowy.\n\n1 | SCL | i2c | Wejście | Zegar I²C |\n2 | SDA | i2c | I/O | Dane I²C |\n3 | GND | ground | Masa | Masa |\n4 | VCC | power | Zasilanie | 3,3 V |",
-  images: [{ url: figure("Figure 3. Przykładowy pinout (rysunek z datasheetu)", FIG_PINS), caption: "Figure 3. Przykładowy pinout (rysunek z datasheetu)" },
-           { url: figure("Widok od strony elementów", FIG_PINS), caption: "Widok od strony elementów (zdjęcie z opisem pinów)" }] };
-EX.img_only = { title: "Tylko wgrany obraz (bez rysunku i bez listy pinów)", desc: "Gdy masz gotowy, ładny rysunek: wgrywasz go z rolą Pinout i zostawiasz pole Pinout puste. Podpis zdjęcia staje się podpisem rysunku.",
-  text: "", images: [{ url: figure("Figure 1. Gotowy rysunek pinoutu", FIG_PINS), caption: "Figure 1. Gotowy rysunek pinoutu" }] };
-var LIST = ["qfn", "soic", "to92", "to220", "sot23", "diode", "sip", "board", "img_both", "img_only"];
+var LIST = ["qfn", "soic", "to92", "to220", "sot23", "diode", "sip", "board"];
 
 /* ── galeria ── */
 var gal = document.getElementById("gal");
@@ -222,13 +207,13 @@ LIST.forEach(function (k) {
   box.className = "ex"; hd.className = "exh"; p.className = "exd";
   var h2 = document.createElement("h2"); h2.textContent = ex.title; hd.appendChild(h2);
   p.textContent = ex.desc; box.appendChild(hd); box.appendChild(p); box.appendChild(slot); gal.appendChild(box);
-  try { ESNPinout.mountSection(slot, ex.text ? ESNPinout.parseText(ex.text) : null, { title: k === "diode" ? "1N4148" : k === "to92" ? "BC547" : undefined, images: ex.images }); }
+  try { ESNPinout.mountSection(slot, ESNPinout.parseText(ex.text), { title: k === "diode" ? "1N4148" : k === "to92" ? "BC547" : undefined }); }
   catch (e) { slot.textContent = "Błąd: " + e.message; }
 });
 
 /* ── edytor ── */
 var $ = function (id) { return document.getElementById(id); };
-var src = $("src"), prev = $("preview"), err = $("err"), image = "", pimgs = [];
+var src = $("src"), prev = $("preview"), err = $("err"), image = "";
 var sel = $("preset");
 LIST.concat(["_new"]).forEach(function (k) { var o = document.createElement("option"); o.value = k; o.textContent = k === "_new" ? "— pusty szablon —" : EX[k].title; sel.appendChild(o); });
 function load(k) { src.value = k === "_new" ? ESNPinout.TEMPLATE : EX[k].text; draw(); }
@@ -238,7 +223,7 @@ function draw() {
   var data = null;
   try { data = ESNPinout.parseText(src.value); err.textContent = ""; }
   catch (e) { err.textContent = "⚠ " + e.message; return; }
-  var ctl = data && ESNPinout.render(prev, data, { image: image, images: pimgs, onBoardClick: $("pick").checked ? addPoint : undefined });
+  var ctl = data && ESNPinout.render(prev, data, { image: image, onBoardClick: $("pick").checked ? addPoint : undefined });
   if (!ctl) prev.textContent = "";
   var board = data && data.layout === "board";
   $("pickWrap").hidden = !board;
@@ -256,12 +241,6 @@ $("img").addEventListener("change", function (e) {
     if (!/^\s*image_as_background\s*:/m.test(src.value)) src.value = src.value.replace(/^(layout:.*)$/m, "$1\nimage_as_background: tak");
     draw(); }; r.readAsDataURL(f);
 });
-$("pimg").addEventListener("change", function (e) {
-  Array.prototype.forEach.call(e.target.files, function (f) {
-    var r = new FileReader(); r.onload = function () { pimgs.push({ url: String(r.result), caption: f.name }); $("noPimg").hidden = false; draw(); }; r.readAsDataURL(f);
-  });
-});
-$("noPimg").addEventListener("click", function () { pimgs = []; this.hidden = true; $("pimg").value = ""; draw(); });
 $("noImg").addEventListener("click", function () { image = ""; src.value = src.value.replace(/^image_as_background:.*\n?/m, ""); this.hidden = true; $("img").value = ""; draw(); });
 function copy(text, btn) {
   var done = function () { var t = btn.textContent; btn.textContent = "Skopiowano ✓"; setTimeout(function () { btn.textContent = t; }, 1400); };

@@ -83,8 +83,10 @@ Widget działa w **izolowanej ramce** `<iframe sandbox="allow-scripts" srcdoc=�
 - brak sieci (`connect-src 'none'`, obrazy tylko `data:`), brak formularzy, okien i nawigacji strony,
 - zasoby (czcionki, biblioteki) trzeba zawrzeć w kodzie.
 
-Widget ma ciemne tło strony wewnątrz ramki; kolory podaj wprost (np. `#0e1117`, `#56e1fd`). Przykład: widget ADC w artykule
-„ADC — przetworniki analogowo-cyfrowe i rozdzielczość”.
+Widget ma tło przezroczyste (widać tło strony) i dostosowuje się do motywu jasnego/ciemnego. Kolory podawaj z palety widgetów
+(np. `#e6edf3` tekst, `#9fb0c3` opis, `#30363d` ramka, `#161b22` przyciski, `#0d1117` pola/wyniki, `#56e1fd` akcent, `#3fb950` dobrze,
+`#f85149` źle, `#ff8c00` ostrzeżenie; pełna lista w `docs/MOTYW.md`) albo od razu zmiennych `var(--w-text)`, `var(--w-acc)`…:
+platforma podmienia je na wersję jasną lub ciemną. Przykład: widget ADC w artykule „ADC — przetworniki analogowo-cyfrowe i rozdzielczość”.
 
 ### Opis projektu w edytorze (v10)
 W oknie dodawania/edycji projektu jest sekcja **„Opis projektu (artykuł z blokami…)”** – ten sam kreator (tryb prosty/zaawansowany)
