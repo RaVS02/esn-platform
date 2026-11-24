@@ -255,7 +255,8 @@
     f.style.height = Math.max(80, Math.min(1200, d.h)) + "px";
   });
 
-  function renderBody(container, body, widgets) {
+  function renderBody(container, body, widgets, opts) {
+    var safe = !!(opts && opts.safe);   // tryb użytkownika (opis projektu): bez SVG i widgetów
     container.textContent = "";
     var group = null;   // grupa plusy/minusy
     parseBlocks(body).forEach(function (b) {
@@ -285,7 +286,8 @@
           var col = { accent: "sv-accent", green: "sv-green", orange: "sv-orange" }[(p[3] || "").toLowerCase()] || "";
           node.appendChild(h("div", { "class": "stat-card" }, [h("div", { "class": "stat-label", text: p[0] || "" }), h("div", { "class": "stat-val " + col, text: p[1] || "" }), h("div", { "class": "stat-sub", text: p[2] || "" })]));
         });
-      } else if (n === "figure") node = figureNode(b.arg, b.text);
+      } else if ((n === "figure" || n === "widget") && safe) node = h("div", { "class": "callout callout-neutral" }, [h("h3", { text: "Blok niedostępny" }), "Rysunki SVG i widgety są dostępne tylko w artykułach Wiedzy. Użyj obrazu lub diagramu."]);
+      else if (n === "figure") node = figureNode(b.arg, b.text);
       else if (n === "widget") { var a = b.arg.split(/\s+/); node = widgetNode(a[0] || "", a[1], widgets); }
       else {
         var ext = global.ESNKnowledgeBlocks && global.ESNKnowledgeBlocks.render(n, b.arg, b.text, { h: h, inline: inlineHtml, md: mdFragment });
@@ -487,6 +489,7 @@
       if (sec.md) renderBody(body, sec.md, {});
       if (sec.intro) body.appendChild(renderBody(h("div"), sec.intro, {}));
       (sec.examples || []).forEach(function (ex) {
+        ex = { title: ex.title, src: String(ex.src).replace(/§§§/g, "```") };
         body.appendChild(h("div", { "class": "kn-example" }, [h("div", { "class": "kn-pv-label", text: ex.title }), codeBlock("md Kod do wklejenia", ex.src),
           h("div", { "class": "kn-pv-label", text: "Wynik" }), renderBody(h("div", { "class": "kn-ex-out" }), ex.src, {})]));
       });
@@ -647,7 +650,7 @@
       var pvTimer = null;
       /* tryb prosty (kreator blokowy) / zaawansowany (markdown) – wybór zapamiętany w przeglądarce */
       var mode = "simple"; try { mode = localStorage.getItem("kn_mode") === "adv" ? "adv" : "simple"; } catch (e) {}
-      var wiz = global.ESNKnowledgeWizard ? global.ESNKnowledgeWizard.create({ ta: ta, h: h, parseBlocks: parseBlocks, toast: toast, getWidgets: function () { return widgets; },
+      var wiz = global.ESNKnowledgeWizard ? global.ESNKnowledgeWizard.create({ ta: ta, h: h, parseBlocks: parseBlocks, toast: toast, getWidgets: function () { return widgets; }, templates: (global.ESNKnowledgeDocTemplates || {}).article,
         getImages: function () { return rec ? jfetch("/api/media?owner_type=article&owner_id=" + rec.id) : Promise.resolve([]); },
         onChange: function () { ta.dispatchEvent(new Event("input")); } }) : null;
       if (!wiz) mode = "adv";
@@ -782,6 +785,40 @@
     }).catch(function (e) { errBox(el, e); });
   }
 
+  /* ══ EDYTOR DLA UŻYTKOWNIKÓW (opis projektu): ten sam kreator i renderer, ale tylko bezpieczne bloki ══ */
+  var SAFE_ALLOW = ["md", "code", "summary", "card", "note", "info", "warn", "danger", "ok", "neutral", "details", "pros", "cons", "kv", "stats", "progress", "def", "steps", "timeline", "checklist", "flow", "er", "sequence", "tabs"];
+  function mountEditor(slot, o) {
+    o = o || {};
+    slot.textContent = "";
+    var max = o.max || 100000, dirty = false;
+    var ta = h("textarea", { "class": "text-input kn-md", spellcheck: "true", "aria-label": "Treść opisu (markdown z blokami)", rows: 12 }); ta.value = o.value || "";
+    var preview = h("div", { "class": "kn-body kn-preview" }), counter = h("span", { "class": "kn-meta" });
+    var wiz = global.ESNKnowledgeWizard ? global.ESNKnowledgeWizard.create({ ta: ta, h: h, parseBlocks: parseBlocks, toast: toast, allow: SAFE_ALLOW, getWidgets: function () { return {}; }, templates: (global.ESNKnowledgeDocTemplates || {}).project,
+      getImages: o.getImages, onChange: function () { ta.dispatchEvent(new Event("input")); } }) : null;
+    var tbar = h("div", { "class": "kn-snips", role: "toolbar", "aria-label": "Wstaw blok" }, SNIPPETS.filter(function (s) { return !/^:::(figure|widget)/.test(s[1]); }).map(function (s) {
+      return h("button", { type: "button", "class": "kn-snip", text: s[0], onclick: function () {
+        var st = ta.selectionStart, en = ta.selectionEnd, pre = ta.value.slice(0, st), need = pre && !/\n\n$/.test(pre) ? (/\n$/.test(pre) ? "\n" : "\n\n") : "";
+        ta.value = pre + need + s[1] + ta.value.slice(en); ta.focus(); ta.dispatchEvent(new Event("input")); } });
+    }));
+    var mode = "simple"; try { if (localStorage.getItem("kn_mode") === "adv") mode = "adv"; } catch (e) {}
+    if (!wiz) mode = "adv";
+    var bar = h("div", { "class": "kn-modebar", role: "group", "aria-label": "Tryb edycji" }), mb = {};
+    function setMode(m) {
+      mode = m; try { localStorage.setItem("kn_mode", m); } catch (e) {}
+      Object.keys(mb).forEach(function (k) { mb[k].setAttribute("aria-pressed", String(k === m)); });
+      tbar.style.display = ta.style.display = m === "adv" ? "" : "none";
+      if (wiz) { wiz.el.style.display = m === "simple" ? "" : "none"; if (m === "simple") wiz.refresh(); }
+    }
+    if (wiz) [["simple", "Prosty (bloki)"], ["adv", "Zaawansowany (markdown)"]].forEach(function (m) { mb[m[0]] = h("button", { type: "button", "class": "kn-mode", text: m[1], onclick: function () { setMode(m[0]); } }); bar.appendChild(mb[m[0]]); });
+    var t = null;
+    function draw() { renderBody(preview, ta.value, {}, { safe: true }); counter.textContent = ta.value.length + " / " + max + " znaków"; counter.style.color = ta.value.length > max ? "#f85149" : ""; }
+    ta.addEventListener("input", function () { dirty = true; clearTimeout(t); t = setTimeout(draw, 350); if (o.onChange) o.onChange(); });
+    slot.appendChild(h("div", { "class": "kn-fld" }, [h("span", { text: "Opis projektu (artykuł z blokami: ramki, kroki, tabele, diagramy, kod…)" }), wiz ? bar : null, tbar,
+      h("div", { "class": "kn-split" }, [h("div", { "class": "kn-edhost" }, [wiz ? wiz.el : null, ta]), h("div", {}, [h("div", { "class": "kn-pv-label", text: "Podgląd na żywo" }), preview])]), counter]));
+    setMode(mode); draw();
+    return { getValue: function () { return ta.value; }, setValue: function (v) { ta.value = v || ""; if (mode === "simple" && wiz) wiz.refresh(); draw(); }, isDirty: function () { return dirty; }, tooLong: function () { return ta.value.length > max; } };
+  }
+
   /* ══ ROUTER ═══════════════════════════════════════════════════════════ */
   function route() {
     var el = R(); if (!el) return;
@@ -798,5 +835,5 @@
     return renderArticle(el, parts[0]);
   }
 
-  global.ESNKnowledge = { enter: route, renderBody: renderBody, parseBlocks: parseBlocks };
+  global.ESNKnowledge = { enter: route, renderBody: renderBody, parseBlocks: parseBlocks, mountEditor: mountEditor };
 })(window);

@@ -19,6 +19,7 @@
       "1. **+ Nowa treść** → wybierz *Typ* (artykuł / lekcja kursu / niezbędnik) i *Poziom*.\n" +
       "2. Wpisz **Tytuł**, krótki **Opis** (widać go na liście) i do 8 **tagów**.\n" +
       "3. Wybierz tryb nad polem treści: **Prosty (bloki)** – dodajesz bloki z listy (ramki, tabele, kroki, diagramy, kod, widget), wypełniasz pola formularza i zmieniasz kolejność strzałkami, a markdown powstaje sam; **Zaawansowany** – piszesz markdown ręcznie, przyciski wstawiają gotowe bloki. Tryby można przełączać bez utraty treści (wybór jest zapamiętany).\n" +
+      "   W trybie prostym obok przycisków dodawania jest lista **Wstaw szablon…** (np. „Lekcja (wzór)”, „Poradnik krok po kroku”). Do pustej treści szablon wchodzi w całości, do istniejącej – dopisuje się na końcu. Zmień teksty w blokach i usuń zbędne. Szablony są w pliku `knowledge-templates.js` (obiekt `ESNKnowledgeDocTemplates`).\n" +
       "4. **Zapisz** (tworzy szkic). Dopiero po zapisie możesz wgrywać **obrazy**.\n" +
       "5. Sprawdź podgląd, także na telefonie. Potem **Wyślij do przeglądu**.\n" +
       "6. Lekcja kursu: wybierz *Kurs* i *Pozycję* (kolejność lekcji; kursy zakłada administrator w zakładce „Kursy”).\n") },

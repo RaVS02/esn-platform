@@ -17,10 +17,13 @@ Kolejność jest orientacyjna, każdy etap jest oddawany małymi krokami: funkcj
 - Wiedza v9: kreator blokowy (tryb prosty/zaawansowany), wyszukiwanie, filtry i sortowanie listy treści, kod jak w projektach,
   wspólny styl kontrolek w widgetach.
 
+- Wiedza v10: edytor opisu projektu dla użytkowników (bezpieczny tryb), druga partia z archiwum (kurs „Czas, przerwania i próbkowanie”).
+- Wiedza v11: trzecia partia z archiwum (kurs „Bufory i przepływ danych”), szablony opisu projektu i lekcji („Wstaw szablon…”).
+
 ## Następne kroki (uzgodniona kolejność)
-1. v10: edytor opisu projektu dla użytkowników (ten sam renderer, tylko bezpieczne bloki, bez SVG i widgetów).
-2. Kolejne partie treści z archiwum (przerwania, struktury pamięci, bufory, protokoły…).
-3. Mermaid lokalnie jako opcja dodatkowa (jeśli własne diagramy nie wystarczą). Kolejne partie z archiwum.
+1. Kolejne partie treści z archiwum (czytanie pinów i mapowanie, izolacja galwaniczna, typy danych, wielordzeniowość/RTOS, watchdog, protokoły I2C/SPI/UART, CRC, kontrola przepływu, łączność bezprzewodowa).
+2. Szablony dla opisów podzespołów oraz ścieżki tematyczne / powiązane treści.
+3. Mermaid lokalnie jako opcja dodatkowa (jeśli własne diagramy nie wystarczą).
 
 ## Etap 2: treści i narzędzia
 - Migracja pozostałych sekcji archiwum do Wiedzy wraz z przeglądem merytorycznym i stylistycznym (kursy: pamięć i RTOS,

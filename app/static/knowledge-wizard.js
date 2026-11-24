@@ -58,6 +58,8 @@
 
   function create(o) {
     var h = o.h, ta = o.ta, blocks = [];
+    var allow = o.allow || null;   // ograniczenie listy dostępnych bloków (np. dla użytkowników)
+    function allowed(k) { return !allow || allow.indexOf(k) >= 0; }
     var el = h("div", { "class": "kn-wiz" }), list = h("div", { "class": "kn-wiz-list" }), add = h("div", { "class": "kn-wiz-add" });
     el.appendChild(list); el.appendChild(add);
 
@@ -174,8 +176,8 @@
       if (d.kind === "widget") { var n = Object.keys(o.getWidgets()); b.wname = n[0] || ""; b.wh = "320"; }
       return b;
     }
-    var pick = h("select", { "class": "sort-select", "aria-label": "Typ nowego bloku" }, GROUPS.map(function (g) {
-      return h("optgroup", { label: g }, Object.keys(DEFS).filter(function (k) { return DEFS[k].group === g; }).map(function (k) { return h("option", { value: k, text: DEFS[k].label }); }));
+    var pick = h("select", { "class": "sort-select", "aria-label": "Typ nowego bloku" }, GROUPS.filter(function (g) { return Object.keys(DEFS).some(function (k) { return DEFS[k].group === g && allowed(k); }); }).map(function (g) {
+      return h("optgroup", { label: g }, Object.keys(DEFS).filter(function (k) { return DEFS[k].group === g && allowed(k); }).map(function (k) { return h("option", { value: k, text: DEFS[k].label }); }));
     }));
     add.appendChild(h("span", { "class": "kn-meta", text: "Dodaj blok:" })); add.appendChild(pick);
     add.appendChild(h("button", { type: "button", "class": "btn-action primary", text: "+ Dodaj", onclick: function () { blocks.push(newBlock(pick.value)); draw(); push(); list.lastChild && list.lastChild.scrollIntoView({ block: "nearest" }); } }));
@@ -188,6 +190,18 @@
       }).catch(function (e) { o.toast(e.message, "error"); });
     } }));
 
+    if (o.templates && o.templates.length) {
+      var tsel = h("select", { "class": "sort-select", "aria-label": "Szablon treści" }, [h("option", { value: "", text: "Wstaw szablon…" })].concat(o.templates.map(function (t, i) { return h("option", { value: String(i), text: t.name + " – " + t.desc }); })));
+      tsel.addEventListener("change", function () {
+        if (tsel.value === "") return;
+        var t = o.templates[+tsel.value]; tsel.value = "";
+        var empty = !blocks.length || (blocks.length === 1 && blocks[0].name === "md" && !blocks[0].text.trim());
+        var nb = parse(t.body).filter(function (b) { return allowed(b.name); });
+        blocks = empty ? nb : blocks.concat(nb); draw(); push();
+        o.toast(empty ? "Wstawiono szablon „" + t.name + "”. Zmień teksty w blokach." : "Dopisano szablon „" + t.name + "” na końcu treści.", "success");
+      });
+      add.appendChild(tsel);
+    }
     return { el: el, refresh: function () { blocks = parse(ta.value); if (!blocks.length) blocks = [{ name: "md", text: "" }]; draw(); } };
   }
 

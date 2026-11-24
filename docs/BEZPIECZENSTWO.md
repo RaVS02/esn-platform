@@ -51,6 +51,8 @@ może się pomylić, a konto może zostać przejęte):
   wgrywania mają admin oraz redaktor-autor danej treści, pliki znikają razem z treścią,
 - nowe bloki i diagramy (v8) budowane są przez DOM/SVG API z `textContent`; tekst pochodzący od autora nigdy nie trafia do
   `innerHTML` poza markdownem (DOMPurify); liczba elementów diagramów jest ograniczona,
+- opis projektu pisany przez użytkowników (v10): tylko markdown i bezpieczne bloki, renderowane w trybie `safe` (bez SVG i widgetów),
+  przez DOMPurify; obrazy tylko z `/static/media/`; limit 100 tys. znaków sprawdzany na serwerze,
 - archiwum (Niezbędnik v1) jest poza publicznym HTML i serwowane tylko adminowi (`/api/archiwum`, zaufany plik serwera),
 - bloki kodu nigdy nie przechodzą przez `innerHTML` poza wynikiem `highlight.js` (który escapuje),
 - serwer waliduje typ, poziom, długości, liczbę i nazwy widgetów, a role sprawdza przy każdym wywołaniu.

@@ -76,6 +76,34 @@ akceptacji. Poniżej miejsca, które warto sprawdzić. Pozycje oznaczone ❗ to 
   - Dodano wzory na sprawność i moc strat LDO oraz kalkulator.
   - Do sprawdzenia przez Ciebie: wartości limitów USB i prądów zależą od konkretnej płytki.
 
+## Partia v10: Czas, przerwania i próbkowanie (zmiany względem archiwum)
+- **Czas bez blokowania:** „Nigdy delay() w produkcji” złagodzono (delay jest w porządku w setup() i prostych szkicach); usunięto
+  błędny fragment „prevTime += now”; „złota zasada RTOS” przemianowano na technikę stałego kroku (odpowiednik vTaskDelayUntil w RTOS);
+  dodano wyjaśnienie, czemu odejmowanie na liczbach bez znaku jest odporne na przepełnienie, ostrzeżenie o „nadrabianiu” po
+  zatrzymaniu pętli, uwagę o dokładności zegara oraz symulator dryfu.
+- **ISR – ważna korekta:** w archiwum `analogRead()` był wywoływany wewnątrz ISR, co przeczyło zasadzie „tylko najszybsze
+  instrukcje” (na AVR ok. 100 µs, a na ESP32 funkcje Arduino nie nadają się do ISR). Przykład zmieniono na wzorzec „flaga w ISR,
+  odczyt w pętli”. Zdanie „niemal zerowy jitter” zastąpiono „mały i przewidywalny”.
+- Dodano: `millis()` nie rośnie wewnątrz ISR (AVR), atomowość odczytu zmiennych 16/32-bitowych na AVR i `noInterrupts()`,
+  wersję dla ESP32 (`IRAM_ATTR`, API timera z rdzenia Arduino-ESP32 3.x; w 2.x wywołania są inne – do sprawdzenia przez Ciebie),
+  diagram sekwencji i quiz.
+
+## Partia v11: Bufory i przepływ danych (zmiany względem archiwum)
+- **Bufor kołowy – korekta:** archiwalny kod `bufPush/bufPop` nie sprawdzał przepełnienia ani pustego bufora i nie odróżniał
+  stanów „pusty” i „pełny” (`head == tail`). Nowa wersja zwraca `bool`, rezygnuje z jednego miejsca (pełny: `(head+1)&MASK == tail`),
+  ma `volatile` na indeksach i komentarz o zasadzie jednego producenta i jednego konsumenta (ISR + `loop()`), a także
+  o publikowaniu indeksu dopiero po zapisie danych. Dodano porównanie: odrzucić nowe czy nadpisać najstarsze.
+- **Modulo a maska:** wyjaśniono, że `& (N-1)` działa tylko dla rozmiaru będącego potęgą dwójki (kompilator często sam to optymalizuje).
+- **Ping-pong – korekta:** „100% gwarancji braku kolizji” zastąpiono dokładniejszym opisem: rozdzielenie odczytu i zapisu
+  usuwa konflikt dostępu, ale nie chroni przed spóźnionym CPU (czas przetwarzania < czas napełnienia drugiego bufora, `N/fs`).
+  Dodano kalkulator budżetu czasu.
+- **DMA:** archiwum pisało „dostępne w ESP32, STM32”. Dodano, że nie ma go w ATmega328P (Arduino Uno), przykład circular DMA
+  dla STM32 HAL (połówki bufora), opis idei dla ESP32 (tryb ciągły ADC; nazwy funkcji zależą od wersji – do sprawdzenia przez Ciebie)
+  oraz wersję programową dla Uno. Uwaga o cache DMA w STM32F7/H7 (zaawansowane).
+- Dodano symulator bufora kołowego (head/tail, tryby przepełnienia), diagram przepływu, kroki, diagram sekwencji i quiz.
+- **Do sprawdzenia przez Ciebie:** przykład STM32 jest szkicem (nazwy callbacków HAL, konfiguracja DMA w CubeMX);
+  zdanie o ESP32 nie podaje konkretnych funkcji celowo.
+
 ## Uwagi ogólne
 - Cudzysłowy: w nowych treściach używam polskich „…”. W archiwum są proste "…".
 - Terminologia: proponuję słowniczek (bufor, ramka, próbka, przerwanie) i trzymanie się jednego tłumaczenia.

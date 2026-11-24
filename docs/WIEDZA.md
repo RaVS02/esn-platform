@@ -86,6 +86,16 @@ Widget działa w **izolowanej ramce** `<iframe sandbox="allow-scripts" srcdoc=�
 Widget ma ciemne tło strony wewnątrz ramki; kolory podaj wprost (np. `#0e1117`, `#56e1fd`). Przykład: widget ADC w artykule
 „ADC — przetworniki analogowo-cyfrowe i rozdzielczość”.
 
+### Opis projektu w edytorze (v10)
+W oknie dodawania/edycji projektu jest sekcja **„Opis projektu (artykuł z blokami…)”** – ten sam kreator (tryb prosty/zaawansowany)
+i podgląd na żywo, ale **bez SVG i widgetów** (zostają dla redakcji Wiedzy). Dostępne: tekst, kod, ramki (notatka, uwaga,
+krytyczne, szara…), parametry, statystyki, paski, kroki, oś czasu, definicje, lista kontrolna, zwijana sekcja, zakładki,
+diagramy flow/er/sequence oraz obrazy wgrane do projektu. Treść zapisuje się w polu `projects.full_content_md` (limit 100 tys.
+znaków, błąd 413 powyżej) i jest wyświetlana w widoku projektu **nad** ewentualnym plikiem .md (plik .md nadal działa).
+Renderer działa w trybie `safe` (`ESNKnowledge.renderBody(el, text, {}, {safe:true})`): bloki `figure`/`widget` pokazują
+komunikat „Blok niedostępny”, obrazy tylko z `/static/media/`, całość przez DOMPurify. Klient niewysyłający tego pola (stara
+wersja formularza) nie kasuje istniejącego opisu. Użycie w innym miejscu: `ESNKnowledge.mountEditor(slot, {value, getImages})`.
+
 ### Kreator blokowy i lista treści (v9)
 - Nad polem treści w edytorze są dwa tryby: **Prosty (bloki)** i **Zaawansowany (markdown)**. W prostym treść to lista kart-bloków:
   dodajesz blok z listy (tekst, kod, ramki, parametry, statystyki, kroki, oś czasu, paski postępu, definicje, lista kontrolna,
@@ -127,6 +137,12 @@ Plik `app/static/knowledge-templates.js` zawiera gotowe widgety (pusty, dzielnik
 kodu, wypełnienie PWM). W edytorze wybierasz szablon, wpisujesz nazwę i klikasz „+ Dodaj widget” – blok `:::widget` wstawia się
 sam. Nowy szablon dodajesz jako kolejny wpis w tablicy (id, name, desc, height, code).
 
+### Szablony treści
+`ESNKnowledgeDocTemplates` (w `knowledge-templates.js`): `project` (Dokumentacja projektu, Instrukcja budowy, Dziennik prac, Krótki opis;
+tylko bloki bezpieczne) i `article` (Lekcja (wzór), Porównanie rozwiązań, Poradnik krok po kroku). W trybie prostym lista
+„Wstaw szablon…” (opcja `templates` kreatora) wstawia szablon do pustej treści albo dopisuje go na końcu; bloki spoza listy
+dozwolonych są pomijane. Nowy szablon to wpis `{id, name, desc, body}`.
+
 ### Instrukcja w panelu redakcji
 Zakładka „Instrukcja” (`#knowledge/redakcja/instrukcja`, dostępna dla redaktorów i admina) zawiera opis przepływu pracy,
 działające na żywo przykłady każdego bloku, zasady obrazów, SVG i widgetów (z podglądem wszystkich szablonów), przykładowy
@@ -163,8 +179,10 @@ przekierowuje do Wiedzy. Gdy wszystko zostanie przeniesione, usuń plik, endpoin
 ## Partie treści z archiwum
 Przenoszone sekcje trafiają do bazy **jako propozycje „Do przeglądu”** (nieopublikowane): admin widzi je w „Do zatwierdzenia”,
 czyta, poprawia i zatwierdza albo odrzuca/usuwa. Każda partia importuje się tylko raz (tabela `knowledge_imports`), więc
-usunięta propozycja nie wraca. Partie są zdefiniowane w `knowledge_service.BATCHES`; pierwsza: `v8-podstawy-sprzetu`
-(kurs „Podstawy sprzętu”: MCU a CPU, częstotliwość taktowania, zasilanie i wspólna masa). `KNOWLEDGE_SEED=0` wyłącza import.
+usunięta propozycja nie wraca. Partie są zdefiniowane w `knowledge_service.BATCHES`; `v8-podstawy-sprzetu`
+(kurs „Podstawy sprzętu”: MCU a CPU, częstotliwość taktowania, zasilanie i wspólna masa) `v10-czas-i-przerwania`
+(kurs „Czas, przerwania i próbkowanie”: millis() i dryf, przerwania ISR) i `v11-bufory`
+(kurs „Bufory i przepływ danych”: bufor kołowy, ping-pong i DMA). `KNOWLEDGE_SEED=0` wyłącza import.
 
 ## Migracja treści z archiwum
 

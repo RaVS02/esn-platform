@@ -50,6 +50,7 @@ class ProjectBase(BaseModel):
     tags: str
     components: Optional[str] = None     # <--- NOWE
     markdown_path: Optional[str] = None  # <--- NOWE
+    full_content_md: Optional[str] = None  # opis/artykuł pisany w edytorze (markdown z bezpiecznymi blokami)
     github_url: Optional[str] = None
     image_main: Optional[str] = None
     image_schematic: Optional[str] = None

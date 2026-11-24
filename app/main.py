@@ -433,6 +433,7 @@ def create_project(
     # 2. Bezpieczne wypakowanie danych (zapobieganie błędowi 'multiple values')
     project_data = project.dict()
     project_data.pop("is_official", None) # <--- TO NAPRAWIA TWÓJ BŁĄD!
+    project_data["full_content_md"] = _clean_project_md(project_data.get("full_content_md"))
     for _f in ("image_main", "image_schematic", "image_gallery_1", "image_gallery_2", "markdown_path", "code_snippet", "code_lang"):
         project_data.pop(_f, None)   # ścieżki plików ustala wyłącznie serwer (system mediów) – nigdy klient
 
@@ -468,6 +469,13 @@ def update_project(
         raise HTTPException(status_code=403, detail="Brak uprawnień do edycji")
 
     update_data = project_update.dict()
+    _fs = getattr(project_update, "model_fields_set", None)
+    if _fs is None:
+        _fs = getattr(project_update, "__fields_set__", set())
+    if "full_content_md" in _fs:
+        update_data["full_content_md"] = _clean_project_md(update_data.get("full_content_md"))
+    else:
+        update_data.pop("full_content_md", None)   # stary klient nie zna tego pola – nie kasujemy opisu
     # Usuwamy is_official z danych wejściowych, aby nie nadpisać go przypadkiem
     update_data.pop("is_official", None) 
     for _f in ("image_main", "image_schematic", "image_gallery_1", "image_gallery_2", "markdown_path", "code_snippet", "code_lang"):
@@ -607,6 +615,19 @@ def submit_contact_form(data: ContactFormInput, db: Session = Depends(get_db)):
 @app.get("/", response_class=HTMLResponse,tags=["Głowny"])
 async def read_root(request: Request):
     return templates.TemplateResponse(request=request, name="index.html", context={"request": request})
+
+
+MAX_PROJECT_MD = 100_000
+
+
+def _clean_project_md(text):
+    """Opis projektu (markdown z blokami). Renderowany po stronie klienta przez DOMPurify; tu tylko limit i znaki sterujące."""
+    if text is None:
+        return None
+    text = str(text).replace("\x00", "")
+    if len(text) > MAX_PROJECT_MD:
+        raise HTTPException(status_code=413, detail=f"Opis projektu jest za długi (max {MAX_PROJECT_MD // 1000} tys. znaków)")
+    return text.strip() or None
 
 
 def require_admin_or_mod(current_user: models.User = Depends(get_current_user)):

@@ -69,5 +69,165 @@
     "  var s=$('s');s.textContent='';var e=document.createElementNS(NS,'path');e.setAttribute('d',path);e.setAttribute('fill','none');e.setAttribute('stroke','#56e1fd');e.setAttribute('stroke-width','2');s.appendChild(e);}\n" +
     "$('d').addEventListener('input',draw);$('vv').addEventListener('change',draw);draw();\n<\/script>" });
 
+
+  /* ── Szablony treści (markdown z blokami) ──
+   * project: opis projektu (tylko bloki bezpieczne dla użytkowników)
+   * article: lekcje i artykuły w panelu redakcji (można też używać bloków zaawansowanych)
+   * Wstawiane przyciskiem „Wstaw szablon” w kreatorze (do pustej treści – zastępuje, do istniejącej – dopisuje na końcu). */
+  function L() { return [].slice.call(arguments).join("\n"); }
+  var F = "```";
+  var D = { project: [], article: [] };
+
+  D.project.push({ id: "dokumentacja", name: "Dokumentacja projektu", desc: "cel, parametry, lista elementów, status", body: L(
+    ":::summary Krótko o projekcie",
+    "- Co to jest i do czego służy (jedno zdanie).",
+    "- Dla kogo / w jakiej sytuacji się przydaje.",
+    "- Stan prac: prototyp / działa / w budowie.",
+    ":::", "",
+    "## Cel i założenia", "",
+    "Opisz, jaki problem rozwiązuje projekt i jakie ma wymagania (zasilanie, rozmiar, koszt, zasięg…).", "",
+    ":::kv",
+    "Mikrokontroler | np. ESP32-WROOM-32",
+    "Zasilanie | np. 5 V z USB",
+    "Komunikacja | np. Wi-Fi, UART",
+    "Czas pracy | np. 8 h na baterii",
+    ":::", "",
+    "## Zasada działania", "",
+    ":::flow Przepływ danych",
+    "(s) Start",
+    "[a] Odczyt czujnika",
+    "[b] Przetwarzanie",
+    "[c] Wysłanie wyniku",
+    "s -> a", "a -> b", "b -> c",
+    ":::", "",
+    "## Użyte elementy", "",
+    ":::def",
+    "Czujnik | np. DS18B20 – temperatura, magistrala 1-Wire",
+    "Moduł | np. ESP32 DevKit – płytka z Wi-Fi",
+    ":::", "",
+    "## Kod", "",
+    F + "cpp Fragment programu",
+    "void setup() {", "  // konfiguracja", "}", "", "void loop() {", "  // działanie", "}",
+    F, "",
+    ":::note Wnioski i dalsze pomysły",
+    "Co się udało, co poprawić, co dodać w następnej wersji.",
+    ":::") });
+
+  D.project.push({ id: "instrukcja", name: "Instrukcja budowy", desc: "lista kontrolna, kroki, uwagi", body: L(
+    ":::summary Co zbudujesz",
+    "Jedno-dwa zdania o efekcie końcowym i czasie potrzebnym na wykonanie.",
+    ":::", "",
+    "## Przed rozpoczęciem", "",
+    ":::checklist",
+    "- [ ] Element 1 (ilość)",
+    "- [ ] Element 2 (ilość)",
+    "- [ ] Narzędzia: lutownica, multimetr",
+    ":::", "",
+    ":::warn Bezpieczeństwo",
+    "Wypisz zagrożenia: wysokie napięcie, gorąca lutownica, akumulatory Li-Ion.",
+    ":::", "",
+    "## Montaż", "",
+    ":::steps Kolejne kroki",
+    "Przygotuj elementy | Sprawdź, czy masz wszystko z listy",
+    "Połącz układ | Wg schematu, najpierw zasilanie, potem sygnały",
+    "Wgraj program | Wybierz płytkę i port, kliknij Wgraj",
+    "Przetestuj | Sprawdź napięcia i działanie",
+    ":::", "",
+    "## Połączenia", "",
+    ":::kv",
+    "Czujnik OUT | GPIO 34",
+    "Dioda LED | GPIO 2 przez rezystor 330 Ω",
+    ":::", "",
+    ":::details Najczęstsze problemy",
+    "- Nie działa wgrywanie: sprawdź kabel USB (musi przesyłać dane) i wybrany port.",
+    "- Dziwne odczyty: sprawdź wspólną masę.",
+    ":::") });
+
+  D.project.push({ id: "dziennik", name: "Dziennik prac", desc: "oś czasu postępów i pomiarów", body: L(
+    ":::summary Stan na dziś",
+    "Krótko: co już działa i co jest następne.",
+    ":::", "",
+    ":::progress",
+    "Sprzęt | 60 | prototyp na płytce stykowej | green",
+    "Oprogramowanie | 40 | działa odczyt, brak wysyłki | orange",
+    "Dokumentacja | 20 | szkic | accent",
+    ":::", "",
+    ":::timeline Dziennik",
+    "2026-01-05 | Pomysł | Wybór elementów i założenia",
+    "2026-01-12 | Pierwszy prototyp | Odczyt czujnika działa",
+    "2026-01-20 | Problem | Zakłócenia na zasilaniu – dodany kondensator",
+    ":::", "",
+    ":::pros CO DZIAŁA",
+    "- odczyt czujnika",
+    ":::", "",
+    ":::cons DO POPRAWY",
+    "- brak obudowy",
+    ":::") });
+
+  D.project.push({ id: "krotki", name: "Krótki opis", desc: "podsumowanie + parametry", body: L(
+    ":::summary Opis",
+    "- Co robi projekt.",
+    "- Najważniejsza cecha.",
+    ":::", "",
+    ":::stats",
+    "Elementy | 5 | sztuk | accent",
+    "Koszt | 40 | zł | green",
+    ":::") });
+
+  D.article.push({ id: "lekcja", name: "Lekcja (wzór)", desc: "podsumowanie, wyjaśnienie, przykład, quiz", body: L(
+    ":::summary Szybkie podsumowanie",
+    "- Najważniejsza myśl lekcji.",
+    "- Drugi kluczowy punkt.",
+    "- Czego się nauczysz.",
+    ":::", "",
+    "## Idea", "",
+    "Wyjaśnij zagadnienie prostym językiem, najpierw „po co”, potem „jak”.", "",
+    ":::def",
+    "Pojęcie | Definicja jednym zdaniem",
+    ":::", "",
+    "## Jak to działa", "",
+    ":::flow Schemat działania",
+    "(s) Start", "[a] Krok pierwszy", "{b} Warunek?", "[c] Krok drugi", "(e) Koniec",
+    "s -> a", "a -> b", "b -> c : tak", "b -> a : nie", "c -> e",
+    ":::", "",
+    "## Przykład", "",
+    ":::tabs",
+    "=== Arduino",
+    F + "cpp Przykład",
+    "void setup() {}", "void loop() {}",
+    F,
+    "=== MicroPython",
+    F + "python Przykład",
+    "print('hello')",
+    F,
+    ":::", "",
+    ":::warn Typowy błąd",
+    "Opisz pułapkę, w którą wpada początkujący.",
+    ":::", "",
+    ":::checklist",
+    "- [ ] Co sprawdzić przed zastosowaniem",
+    ":::", "",
+    ":::neutral Quiz (opcjonalnie)",
+    "Dodaj widget z szablonu „Quiz” w sekcji Widgety i wstaw go blokiem widget.",
+    ":::") });
+
+  D.article.push({ id: "porownanie", name: "Porównanie rozwiązań", desc: "tabela, plusy i minusy, wybór", body: L(
+    ":::summary Który wybrać",
+    "- Rozwiązanie A: kiedy.",
+    "- Rozwiązanie B: kiedy.",
+    ":::", "",
+    "| Cecha | A | B |", "|---|---|---|", "| Koszt | niski | średni |", "| Złożoność | mała | duża |", "",
+    ":::pros A: ZALETY", "- prostota", ":::", "",
+    ":::cons A: WADY", "- ograniczenia", ":::", "",
+    ":::note Rekomendacja", "Dla początkujących zaczynaj od A, a do B przejdź, gdy zabraknie możliwości.", ":::") });
+
+  D.article.push({ id: "poradnik", name: "Poradnik krok po kroku", desc: "wymagania, kroki, rozwiązywanie problemów", body: L(
+    ":::summary Cel poradnika", "Co będzie działać na końcu.", ":::", "",
+    ":::checklist", "- [ ] Potrzebny element", "- [ ] Potrzebne oprogramowanie", ":::", "",
+    ":::steps Procedura", "Krok pierwszy | opis", "Krok drugi | opis", "Krok trzeci | opis", ":::", "",
+    ":::details Rozwiązywanie problemów", "- Objaw → przyczyna → rozwiązanie", ":::") });
+
+  global.ESNKnowledgeDocTemplates = D;
+
   global.ESNKnowledgeTemplates = T;
 })(window);

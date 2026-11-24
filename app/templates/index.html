@@ -19,12 +19,12 @@
 <script src="{{ url_for('static', path='/vendor/arduino.min.js') }}?v=11.12.0"></script>
 <link rel="stylesheet" href="{{ url_for('static', path='/vendor/vs2015.min.css') }}?v=11.12.0">
 <script src="{{ url_for('static', path='/content.js') }}?v=2"></script>
-<link rel="stylesheet" href="{{ url_for('static', path='/knowledge.css') }}?v=7">
-<script src="{{ url_for('static', path='/knowledge-templates.js') }}?v=1"></script>
-<script src="{{ url_for('static', path='/knowledge-guide.js') }}?v=1"></script>
+<link rel="stylesheet" href="{{ url_for('static', path='/knowledge.css') }}?v=8">
+<script src="{{ url_for('static', path='/knowledge-templates.js') }}?v=2"></script>
+<script src="{{ url_for('static', path='/knowledge-guide.js') }}?v=2"></script>
 <script src="{{ url_for('static', path='/knowledge-blocks.js') }}?v=1"></script>
-<script src="{{ url_for('static', path='/knowledge-wizard.js') }}?v=1"></script>
-<script src="{{ url_for('static', path='/knowledge.js') }}?v=6"></script>
+<script src="{{ url_for('static', path='/knowledge-wizard.js') }}?v=3"></script>
+<script src="{{ url_for('static', path='/knowledge.js') }}?v=8"></script>
 
 </head>
 <body>
@@ -544,6 +544,7 @@
       <div id="p-code-editor"></div>
 
       <div id="p-media-manager"></div>
+      <div id="p-article-editor" style="margin-top: 15px;"></div>
       <div id="p-res-manager"></div>
 
       <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border2);">
@@ -952,7 +953,8 @@ function openFullProjectView(slug) {
 
     const codeSection = '<div id="project-parts-slot"></div><div id="project-code-slot"></div><div id="project-res-slot"></div>';
 
-    const markdownSection = p.markdown_path ? `<div id="markdown-container-${p.id}" class="markdown-body"><p style="color: var(--text3);">Ładowanie pełnej dokumentacji...</p></div>` : '';
+    const articleSection = p.full_content_md ? `<div id="project-article-${p.id}" class="kn-body kn-proj-article" style="margin-bottom:30px"></div>` : '';
+    const markdownSection = articleSection + (p.markdown_path ? `<div id="markdown-container-${p.id}" class="markdown-body"><p style="color: var(--text3);">Ładowanie pełnej dokumentacji...</p></div>` : '');
 
     // --- WSTRZYKNIĘCIE DO WIDOKU - NOWY HEADER W STYLU PANELU CZUJNIKÓW ---
     document.getElementById('full-view-content').innerHTML = `
@@ -999,6 +1001,9 @@ function openFullProjectView(slug) {
     ESNContent.codeView(document.getElementById('project-code-slot'), 'project', p.id, { fallback: { lang: p.code_lang, code: p.code_snippet } });
     ESNContent.resourcesView(document.getElementById('project-res-slot'), 'project', p.id);
 
+    if (p.full_content_md && window.ESNKnowledge) {
+        ESNKnowledge.renderBody(document.getElementById(`project-article-${p.id}`), p.full_content_md, {}, { safe: true });
+    }
     if (p.markdown_path) {
         const mdContainer = document.getElementById(`markdown-container-${p.id}`);
         fetch('/static/' + p.markdown_path)
@@ -1200,6 +1205,15 @@ function mountProjectExtras(projectId) {
     projCode = ESNContent.codeEditor(document.getElementById('p-code-editor'), { ownerType: 'project', ownerId: projectId });
     projRes = ESNContent.resourcesManager(document.getElementById('p-res-manager'), { ownerType: 'project', ownerId: projectId, canFiles: true });
 }
+let projArticle = null;   // edytor opisu projektu (blokowy, bezpieczny) – knowledge.js
+function mountProjectArticle(value, projectId) {
+    const slot = document.getElementById('p-article-editor');
+    if (!slot || !window.ESNKnowledge || !ESNKnowledge.mountEditor) { projArticle = null; return; }
+    projArticle = ESNKnowledge.mountEditor(slot, {
+        value: value || '',
+        getImages: () => projectId ? fetch('/api/media?owner_type=project&owner_id=' + projectId).then(r => r.json()) : Promise.resolve([])
+    });
+}
 function destroyProjectExtras() {
     [projParts, projCode, projRes].forEach(c => { if (c) c.destroy(); });
     projParts = projCode = projRes = null;
@@ -1244,9 +1258,10 @@ function editProject(slug) {
     if (projMedia) projMedia.destroy();
     projMedia = ESNMedia.manager(document.getElementById('p-media-manager'), { ownerType: 'project', ownerId: p.id, roles: ['main', 'schematic', 'gallery'] });
     mountProjectExtras(p.id);
+    mountProjectArticle(p.full_content_md || '', p.id);
 
     document.querySelector('#projectModal h2').innerText = "Edytuj Projekt";
-    document.querySelector('#projectModal button.primary').innerText = "Zapisz zmiany";
+    document.querySelector('#projectModal button[onclick="submitProject()"]').innerText = "Zapisz zmiany";
     document.getElementById('projectModal').style.display = 'flex';
 }
 
@@ -1258,7 +1273,7 @@ function openProjectModal() {
     
     // Przywracamy domyślne napisy w modalu
     document.querySelector('#projectModal h2').innerText = "Nowy Projekt";
-    document.querySelector('#projectModal button.primary').innerText = "Wyślij projekt do bazy";
+    document.querySelector('#projectModal button[onclick="submitProject()"]').innerText = "Wyślij projekt do bazy";
     
     // Czyścimy wszystkie pola tekstowe
     document.querySelectorAll('#projectModal input, #projectModal textarea').forEach(i => i.value = "");
@@ -1279,6 +1294,7 @@ function openProjectModal() {
     // Nowy projekt: zdjęcia czekają w przeglądarce i wgrają się po pierwszym zapisie
     projMedia = ESNMedia.manager(document.getElementById('p-media-manager'), { ownerType: 'project', ownerId: null, roles: ['main', 'schematic', 'gallery'] });
     mountProjectExtras(null);
+    mountProjectArticle('', null);
 
     // Na koniec pokazujemy modal
     document.getElementById('projectModal').style.display = 'flex';
@@ -1286,12 +1302,13 @@ function openProjectModal() {
 
 function closeProjectModal() {
     if (projMedia) { projMedia.destroy(); projMedia = null; }
+    projArticle = null; const _as = document.getElementById('p-article-editor'); if (_as) _as.textContent = '';
     destroyProjectExtras();
     editingProjectId = null;
     editingProjectData = null;
     document.getElementById('projectModal').style.display = 'none';
     document.querySelector('#projectModal h2').innerText = "Nowy Projekt";
-    document.querySelector('#projectModal button.primary').innerText = "Wyślij projekt do bazy";
+    document.querySelector('#projectModal button[onclick="submitProject()"]').innerText = "Wyślij projekt do bazy";
     document.querySelectorAll('#projectModal input, #projectModal textarea').forEach(i => i.value = "");
     
     // Ukrywamy przyciski usuwania
@@ -1345,6 +1362,10 @@ async function submitProject() {
         technical_notes: document.getElementById('p-notes').value || null,
         status: document.getElementById('p-status').value
     };
+    if (projArticle) {
+        if (projArticle.tooLong()) return toast('Opis projektu jest za długi (max 100 000 znaków)', 'error');
+        projectData.full_content_md = projArticle.getValue();
+    }
 
     // Ścieżki zdjęć i pliku .md ustala serwer (system mediów) – nie wysyłamy ich w JSON.
 

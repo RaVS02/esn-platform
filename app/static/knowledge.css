@@ -203,3 +203,6 @@
 .kn-wiz-head { font: 600 11px var(--mono); color: var(--text3); } .kn-wiz-check { grid-template-columns: 22px 1fr 34px; }
 .kn-wiz-add { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding-top: 4px; }
 @media (max-width: 700px) { .kn-wiz-row:not(.kn-wiz-check) { grid-template-columns: 1fr 34px !important; } .kn-wiz-head { display: none; } }
+
+/* pogrubienie w treści ramek ma być zwykłym wyróżnieniem w tekście (styl archiwum robi z <strong> etykietę blokową) */
+.kn-body .callout strong { display: inline; font-family: inherit; font-size: inherit; letter-spacing: normal; text-transform: none; margin: 0; font-weight: 700; }

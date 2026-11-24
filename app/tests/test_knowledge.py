@@ -363,3 +363,60 @@ def test_editor_list_has_search_fields(users):
     rows = client.get("/api/knowledge/editor/items", headers=users["admin"]["h"]).json()
     row = [x for x in rows if x["title"] == TAG + " pola"][0]
     assert row["summary"] == "opis szukany" and row["tags"] == ["alfa"]
+
+
+# ───────────────────────── v10: opis projektu (full_content_md) ─────────────────────────
+def test_project_article_field(users):
+    h = users["user"]["h"]
+    base = {"title": TAG + " projekt", "short_desc": "s", "tags": "t"}
+    r = client.post("/api/projects", headers=h, json={**base, "full_content_md": ":::note Tytuł\nTreść\n:::"})
+    assert r.status_code in (200, 201), r.text
+    pid = r.json()["id"]
+    try:
+        got = [p for p in client.get("/api/projects").json() if p["id"] == pid][0]
+        assert got["full_content_md"].startswith(":::note")
+        # klient bez tego pola nie kasuje opisu
+        assert client.put(f"/api/projects/{pid}", headers=h, json={**base, "short_desc": "zmiana"}).status_code == 200
+        assert [p for p in client.get("/api/projects").json() if p["id"] == pid][0]["full_content_md"]
+        # jawne wyczyszczenie działa, za długi tekst jest odrzucany
+        assert client.put(f"/api/projects/{pid}", headers=h, json={**base, "full_content_md": ""}).status_code == 200
+        assert [p for p in client.get("/api/projects").json() if p["id"] == pid][0]["full_content_md"] is None
+        assert client.put(f"/api/projects/{pid}", headers=h, json={**base, "full_content_md": "a" * 100_001}).status_code == 413
+    finally:
+        db = SessionLocal()
+        db.query(models.Project).filter(models.Project.id == pid).delete()
+        db.commit()
+        db.close()
+
+
+def test_batches_are_consistent():
+    """Każda partia z archiwum: poprawne poziomy, widgety istnieją i mieszczą się w limitach, bloki ::: są domknięte."""
+    import importlib
+    import re
+    import knowledge_service as ks
+    for bid, modname in ks.BATCHES:
+        mod = importlib.import_module(modname)
+        cslugs = {c["slug"] for c in mod.COURSES}
+        for a in mod.ARTICLES:
+            assert a["level"] in ks.LEVELS and a["course"] in cslugs, (bid, a["slug"])
+            assert len(a["body"]) < ks.LIM["body"] and len(a["title"]) <= ks.LIM["title"] and len(a["summary"]) <= ks.LIM["summary"]
+            used = set(re.findall(r"^:::widget (\S+)", a["body"], re.M))
+            assert used == set(a["widgets"]), (a["slug"], used, set(a["widgets"]))
+            assert len(a["widgets"]) <= 8 and sum(len(v) for v in a["widgets"].values()) <= 200_000
+            assert all(len(v) <= 60_000 and "<script src" not in v and "http" not in v.replace("http://www.w3.org/2000/svg", "") for v in a["widgets"].values())
+            # bloki: otwarcie ":::nazwa", zamknięcie ":::" (poza ogrodzeniami ```)
+            depth, fence = 0, False
+            for ln in a["body"].split("\n"):
+                if ln.startswith("```"):
+                    fence = not fence
+                    continue
+                if fence:
+                    continue
+                if re.match(r"^:::\S", ln):
+                    assert depth == 0, (a["slug"], "zagnieżdżony blok", ln)
+                    if not ln.startswith(":::widget"):
+                        depth = 1
+                    continue
+                if ln.strip() == ":::":
+                    depth = 0
+            assert depth == 0 and not fence, a["slug"]
