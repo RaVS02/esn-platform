@@ -117,6 +117,40 @@ akceptacji. Poniżej miejsca, które warto sprawdzić. Pozycje oznaczone ❗ to 
   jeśli watchdog jest już uruchomiony przez system) oraz piny/ADC w przykładzie FreeRTOS.
 - Część „DMA” z sekcji o niezależności sprzętowej jest już w lekcji „Ping-pong i DMA” (v11), więc nie powielono jej.
 
+## Partia v13: Interfejsy i protokoły, Sygnał i bezpieczeństwo pomiarów (zmiany względem archiwum)
+- **Protokoły (UART/I2C/SPI/I2S):** tabela z archiwum zachowana, rozbudowana o schemat doboru, wady i zalety I2C, uwagę o poziomach
+  napięć (konwerter dla I2C musi obsługiwać otwarty dren). Osobne lekcje z animacjami: ramka I2C (START, adres, R/W, ACK, dane, STOP),
+  kalkulator rezystorów podciągających (Rmin z prądu 3 mA, Rmax z czasu narastania wg specyfikacji I2C) i skaner adresów;
+  SPI jako dwa rejestry przesuwne, tryby CPOL/CPHA i przykład odczytu rejestru.
+- **Izolacja galwaniczna:** dodano wyraźne zastrzeżenie, że to materiał edukacyjny, a nie instrukcja budowy wyrobu medycznego
+  (IEC 60601-1, zasilanie bateryjne, izolator USB). Sformułowania „99% energii” i „zbija do 3,3 V” złagodzono (wartości zależą od elementów
+  i impulsu). Dodano izolatory cyfrowe obok optoizolatorów oraz animację kaskady ochrony (wartości poglądowe).
+- **Kondycjonowanie sygnału:** dodano symulator CMRR (przed i po wzmacniaczu różnicowym), kalkulator filtru RC z charakterystyką,
+  uwagę, że 0,5 Hz dotyczy monitorowania (EKG diagnostyczne ok. 0,05 Hz), rolę filtru anty-aliasingowego i listę kontrolną odsprzęgania.
+- **Do sprawdzenia przez Ciebie:** domyślne piny I2C ESP32 (21/22 dla klasycznego DevKit), wartości przykładowe filtrów
+  oraz poprawność tez medycznych przed publikacją (materiał nie zastępuje norm).
+- Sekcja „Typy pinów i poziomy logiczne” (s17) jest już w bazie z pilota, więc nie powielono jej.
+
+## Poprawki widgetów v12–v13 (wprowadzone w v14)
+- Animacje automatyczne (ramka I2C, SPI „Auto”, kaskada ochrony, stos „Rekurencja”, kolejka producent–konsument, ping-pong) mają listę
+  „Tempo animacji” (wolno / normalnie / szybko), domyślnie wolno. Wcześniej działały zbyt szybko, żeby zdążyć przeczytać opisy.
+- Ramka I2C i kaskada ochrony przewijają się poziomo na wąskich ekranach zamiast ściskać napisy. Poprawiono ucinanie napisów
+  (etykieta „szczyt” stosu, ostatnia wartość osi w filtrze RC).
+
+## Partia v14: Transmisja danych w praktyce (zmiany względem archiwum)
+- **Pakietowanie:** liczby przeliczone z uwzględnieniem bajtu CRC w ramce (80 % i 17 % zamiast 78 % i 15 %); dodano kalkulator narzutu,
+  opóźnienia N/fs i wymaganego łącza oraz uwagę o kolejności bajtów (little-endian).
+- **CRC:** funkcja `calcCRC8` w archiwum robiła tylko XOR, więc nie była CRC. Lekcja wyjaśnia różnicę, podaje prawdziwe CRC-8 (wielomian 0x07)
+  w C++ i Pythonie, a interaktywne demo pokazuje, że XOR nie wykrywa dwóch przekłamań w tej samej kolumnie. CRC liczone jest także
+  z nagłówkiem. Detekcja luk (seq modulo 256) opisana wraz z ograniczeniem i uzupełnianiem braków interpolacją.
+- **Kontrola przepływu:** symulator (bez kontroli, XON/XOFF, RTS/CTS, ACK) z opóźnieniem sygnału i progiem z histerezą.
+  Złagodzono „złotą regułę” o nieopóźnianiu sygnału medycznego: to wybór projektowy dla podglądu na żywo, a przy zapisie offline można
+  retransmitować i porządkować według znacznika czasu.
+- **Łączność bezprzewodowa:** schemat wyboru, symulator MQTT z filtrami `+` i `#`, poziomy QoS, retained, uwaga o TLS i porcie 1883.
+  Poprawiono: UDP nie ma retransmisji, ale Wi-Fi tak (jitter); Bluetooth Classic nie jest dostępny w każdym układzie (np. nie w C3/S3);
+  zasada rdzenia 0 dla stosu Wi-Fi jako domyślne zachowanie, a nie reguła bezwzględna.
+- **Do sprawdzenia przez Ciebie:** przykład PubSubClient (adres brokera, zależność od biblioteki) oraz zgodność wersji bibliotek.
+
 ## Uwagi ogólne
 - Cudzysłowy: w nowych treściach używam polskich „…”. W archiwum są proste "…".
 - Terminologia: proponuję słowniczek (bufor, ramka, próbka, przerwanie) i trzymanie się jednego tłumaczenia.

@@ -12,6 +12,7 @@ BTN = ("<style>button{background:#161b22;color:#e6edf3;border:1px solid #30363d;
 W_QUEUE = WIDGET_BASE + BTN + """<div><label>Producent (zadanie czujnika): <b class="acc" id="pv">500</b> próbek/s</label><input type="range" id="p" min="50" max="2000" step="50" value="500">
 <label>Konsument (zadanie komunikacji): <b class="acc" id="cv">400</b> próbek/s</label><input type="range" id="c" min="50" max="2000" step="50" value="400">
 <label>Rozmiar kolejki: <b class="acc" id="qv">32</b></label><input type="range" id="q" min="8" max="64" step="8" value="32">
+<label>Tempo animacji</label><select id="sp"><option value="3">wolno</option><option value="1.7">normalnie</option><option value="1">szybko</option></select>
 <button id="go">Start</button><button id="rs">Reset</button>
 <div class="cells" id="cells"></div>
 <div class="out">W kolejce: <b id="n">0</b> · przesłano: <b class="ok" id="d">0</b> · utracono: <b class="bad" id="l">0</b><div class="bar"><i id="b"></i></div><div id="m" style="margin-top:8px">Naciśnij Start.</div></div></div>
@@ -27,7 +28,8 @@ function draw(){$('pv').textContent=$('p').value;$('cv').textContent=$('c').valu
  if(lost>0){m.textContent='Kolejka się przepełniła: xQueueSend z timeoutem 0 zwraca błąd i próbka przepada.';m.className='bad'}
  else if(p>cc){m.textContent='Producent jest szybszy od konsumenta, więc kolejka urośnie i w końcu się zapełni.';m.className='warn'}
  else{m.textContent='Konsument nadąża: kolejka zostaje krótka.';m.className='ok'}}
-function tick(){ap+=(+$('p').value)*0.05;ac+=(+$('c').value)*0.05;
+function sf(){return 1/(+$('sp').value)}
+function tick(){ap+=(+$('p').value)*0.05*sf();ac+=(+$('c').value)*0.05*sf();
  while(ap>=1){ap-=1;if(n<size())n++;else lost++}
  while(ac>=1){ac-=1;if(n>0){n--;done++}}
  draw()}
@@ -83,7 +85,7 @@ $('go').addEventListener('click',sim);$('d').addEventListener('input',sim);sim()
 </script>"""
 
 # ── stos LIFO ──
-W_STACK = WIDGET_BASE + BTN + """<div><button id="push">Push</button><button id="pop">Pop</button><button id="rec">Rekurencja (wywołuj funkcję w funkcji)</button><button id="rs">Wyczyść</button>
+W_STACK = WIDGET_BASE + BTN + """<div><label>Tempo animacji</label><select id="sp"><option value="3">wolno</option><option value="1.7">normalnie</option><option value="1">szybko</option></select><br><button id="push">Push</button><button id="pop">Pop</button><button id="rec">Rekurencja (wywołuj funkcję w funkcji)</button><button id="rs">Wyczyść</button>
 <svg id="s" viewBox="0 0 300 190" width="100%" role="img" aria-label="Stos LIFO"></svg>
 <div class="out" id="m">Stos pusty. Pojemność: 6 elementów.</div></div>
 <script>
@@ -94,18 +96,19 @@ function msg(t,c){$('m').textContent=t;$('m').className='out '+(c||'')}
 function draw(){var s=$('s');s.textContent='';s.appendChild(el('path',{d:'M90 10 L90 180 L210 180 L210 10',fill:'none',stroke:'#30363d','stroke-width':3}));
  for(var i=0;i<st.length;i++){var y=180-(i+1)*27;var top=i===st.length-1;s.appendChild(el('rect',{x:96,y:y,width:108,height:24,rx:5,fill:top?'#0e3a4a':'#161b22',stroke:top?'#56e1fd':'#30363d'}));
   var t=el('text',{x:150,y:y+16,fill:top?'#e6edf3':'#9fb0c3','font-size':'12','text-anchor':'middle'});t.textContent=st[i];s.appendChild(t)}
- var l=el('text',{x:222,y:20,fill:'#ff8c00','font-size':'11'});l.textContent='szczyt: '+(st.length?st[st.length-1]:'-');s.appendChild(l);}
+ var l=el('text',{x:296,y:14,fill:'#ff8c00','font-size':'11','text-anchor':'end'});l.textContent='szczyt: '+(st.length?st[st.length-1]:'-');s.appendChild(l);}
 function push(v){if(st.length>=CAP){msg('STACK OVERFLOW: brak miejsca. W mikrokontrolerze to zwykle zawieszenie lub restart.','bad');clearInterval(timer);return false}st.push(v);msg('Push '+v+'. Ostatni wszedł, pierwszy wyjdzie.','ok');draw();return true}
 $('push').addEventListener('click',function(){push('Dane #'+cnt++)});
 $('pop').addEventListener('click',function(){clearInterval(timer);if(!st.length){msg('Stos pusty: nie ma czego zdjąć (underflow).','bad');return}var v=st.pop();msg('Pop: zdjęto '+v+' (zawsze element z wierzchu).','ok');draw()});
 $('rs').addEventListener('click',function(){clearInterval(timer);st=[];cnt=1;msg('Stos pusty. Pojemność: 6 elementów.');draw()});
-$('rec').addEventListener('click',function(){clearInterval(timer);var d=st.length;timer=setInterval(function(){d++;if(!push('f() wywołanie '+d)){}},450)});
+$('rec').addEventListener('click',function(){clearInterval(timer);var d=st.length;timer=setInterval(function(){d++;if(!push('f() wywołanie '+d)){}},300*(+$('sp').value))});
 draw();
 </script>"""
 
 # ── animacja ping-pong ──
 W_PPANIM = WIDGET_BASE + BTN + """<div><label>Szybkość zapisu (sprzęt/DMA): <b class="acc" id="wv">8</b> próbek/s</label><input type="range" id="w" min="2" max="20" value="8">
 <label>Szybkość przetwarzania (CPU): <b class="acc" id="rv">10</b> próbek/s</label><input type="range" id="r" min="2" max="20" value="10">
+<label>Tempo animacji</label><select id="sp"><option value="3">wolno</option><option value="1.7">normalnie</option><option value="1">szybko</option></select>
 <button id="go">Start</button><button id="rs">Reset</button>
 <div>Bufor A <span id="ra" class="acc"></span><div class="cells" id="ca"></div></div><div>Bufor B <span id="rb" class="acc"></span><div class="cells" id="cb"></div></div>
 <div class="out">Zamian: <b class="ok" id="sw">0</b> · przeciążeń (CPU nie zdążył): <b class="bad" id="ov">0</b> · utraconych próbek: <b class="bad" id="ls">0</b><div id="m" style="margin-top:6px"></div></div></div>
@@ -119,7 +122,7 @@ function draw(){$('wv').textContent=$('w').value;$('rv').textContent=$('r').valu
  $('ra').textContent=wr==='A'?'(zapis, zielony)':'(odczyt CPU, pomarańczowy)';$('rb').textContent=wr==='B'?'(zapis, zielony)':'(odczyt CPU, pomarańczowy)';
  $('sw').textContent=swaps;$('ov').textContent=over;$('ls').textContent=lost;
  var w=+$('w').value,r=+$('r').value;$('m').textContent=r>=w?'CPU przetwarza szybciej niż sprzęt zapisuje, więc ping-pong działa bez strat.':'CPU jest wolniejszy niż napływ danych: będą przeciążenia i utrata próbek.';$('m').className=r>=w?'ok':'bad'}
-function tick(){aw+=(+$('w').value)*0.1;ar+=(+$('r').value)*0.1;
+function tick(){var k=1/(+$('sp').value);aw+=(+$('w').value)*0.1*k;ar+=(+$('r').value)*0.1*k;
  while(aw>=1){aw-=1;cw++;
   if(cw>=N){if(cr>0){over++;lost+=cr}swaps++;cr=N;cw=0;wr=wr==='A'?'B':'A'}}
  while(ar>=1){ar-=1;if(cr>0)cr--}

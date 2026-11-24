@@ -182,8 +182,9 @@ czyta, poprawia i zatwierdza albo odrzuca/usuwa. Każda partia importuje się ty
 usunięta propozycja nie wraca. Partie są zdefiniowane w `knowledge_service.BATCHES`; `v8-podstawy-sprzetu`
 (kurs „Podstawy sprzętu”: MCU a CPU, częstotliwość taktowania, zasilanie i wspólna masa) `v10-czas-i-przerwania`
 (kurs „Czas, przerwania i próbkowanie”: millis() i dryf, przerwania ISR) `v11-bufory`
-(kurs „Bufory i przepływ danych”: bufor kołowy, ping-pong i DMA) i `v12-rtos-animacje` (animacje: jitter, stos, ping-pong;
-kurs „Wielozadaniowość i niezawodność”: FreeRTOS i watchdog). `KNOWLEDGE_SEED=0` wyłącza import.
+(kurs „Bufory i przepływ danych”: bufor kołowy, ping-pong i DMA) `v12-rtos-animacje` (animacje: jitter, stos, ping-pong;
+kurs „Wielozadaniowość i niezawodność”: FreeRTOS i watchdog) `v13-protokoly-sygnal` (kursy „Interfejsy i protokoły” oraz
+„Sygnał i bezpieczeństwo pomiarów”) i `v14-transmisja` (kurs „Transmisja danych w praktyce”). `KNOWLEDGE_SEED=0` wyłącza import.
 
 ## Migracja treści z archiwum
 
