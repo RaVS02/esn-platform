@@ -19,9 +19,10 @@ Kolejność jest orientacyjna, każdy etap jest oddawany małymi krokami: funkcj
 
 - Wiedza v10: edytor opisu projektu dla użytkowników (bezpieczny tryb), druga partia z archiwum (kurs „Czas, przerwania i próbkowanie”).
 - Wiedza v11: trzecia partia z archiwum (kurs „Bufory i przepływ danych”), szablony opisu projektu i lekcji („Wstaw szablon…”).
+- Wiedza v12: animacje uzupełniające kursy (jitter, stos LIFO, ping-pong), nowy kurs „Wielozadaniowość i niezawodność” (FreeRTOS, watchdog).
 
 ## Następne kroki (uzgodniona kolejność)
-1. Kolejne partie treści z archiwum (czytanie pinów i mapowanie, izolacja galwaniczna, typy danych, wielordzeniowość/RTOS, watchdog, protokoły I2C/SPI/UART, CRC, kontrola przepływu, łączność bezprzewodowa).
+1. Kolejne partie treści z archiwum (czytanie pinów i mapowanie, izolacja galwaniczna, typy danych, protokoły I2C/SPI/UART, pakietowanie i CRC, kontrola przepływu, łączność bezprzewodowa); wybór sekcji i animacji uzgadniamy z użytkownikiem.
 2. Szablony dla opisów podzespołów oraz ścieżki tematyczne / powiązane treści.
 3. Mermaid lokalnie jako opcja dodatkowa (jeśli własne diagramy nie wystarczą).
 

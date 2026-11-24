@@ -181,8 +181,9 @@ Przenoszone sekcje trafiają do bazy **jako propozycje „Do przeglądu”** (ni
 czyta, poprawia i zatwierdza albo odrzuca/usuwa. Każda partia importuje się tylko raz (tabela `knowledge_imports`), więc
 usunięta propozycja nie wraca. Partie są zdefiniowane w `knowledge_service.BATCHES`; `v8-podstawy-sprzetu`
 (kurs „Podstawy sprzętu”: MCU a CPU, częstotliwość taktowania, zasilanie i wspólna masa) `v10-czas-i-przerwania`
-(kurs „Czas, przerwania i próbkowanie”: millis() i dryf, przerwania ISR) i `v11-bufory`
-(kurs „Bufory i przepływ danych”: bufor kołowy, ping-pong i DMA). `KNOWLEDGE_SEED=0` wyłącza import.
+(kurs „Czas, przerwania i próbkowanie”: millis() i dryf, przerwania ISR) `v11-bufory`
+(kurs „Bufory i przepływ danych”: bufor kołowy, ping-pong i DMA) i `v12-rtos-animacje` (animacje: jitter, stos, ping-pong;
+kurs „Wielozadaniowość i niezawodność”: FreeRTOS i watchdog). `KNOWLEDGE_SEED=0` wyłącza import.
 
 ## Migracja treści z archiwum
 

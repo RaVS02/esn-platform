@@ -104,6 +104,19 @@ akceptacji. Poniżej miejsca, które warto sprawdzić. Pozycje oznaczone ❗ to 
 - **Do sprawdzenia przez Ciebie:** przykład STM32 jest szkicem (nazwy callbacków HAL, konfiguracja DMA w CubeMX);
   zdanie o ESP32 nie podaje konkretnych funkcji celowo.
 
+## Partia v12: animacje i kurs „Wielozadaniowość i niezawodność” (zmiany względem archiwum)
+- **Polling a przerwanie:** statyczny schemat z archiwum („Jitter ≈ 0, absolutna precyzja”) zastąpiono interaktywną symulacją.
+  Zdanie o zerowym jitterze złagodzono: opóźnienie przerwania to mikrosekundy (inne ISR, sekcje bez przerwań, cache ESP32).
+- **Stos LIFO i ping-pong:** archiwalne rysunki zamieniono na animacje (stos z przepełnieniem i rekurencją, ping-pong z licznikiem
+  przeciążeń i utraconych próbek). Dodano uwagę o stosie wywołań i stosach zadań FreeRTOS.
+- **FreeRTOS/ESP32:** zasada „rdzeń 0 – sieć, rdzeń 1 – czujniki” opisana jako dobra praktyka, nie wymóg; dodano: stos zadania w bajtach
+  (ESP32), obsługę pełnej kolejki, wersje `…FromISR`, układy jednordzeniowe (C3, S2), mutex, odwrócenie priorytetów. Symulator kolejki producent–konsument.
+- **Watchdog:** „odcinając zasilanie” poprawiono na „reset układu”. Archiwalne `esp_task_wdt_init(3, true)` działa tylko w Arduino-ESP32 2.x;
+  dodano wariant 3.x/IDF 5 (struktura konfiguracji) i AVR (`wdt_enable`). Dodano zasady, gdzie wolno „kopać”, oraz symulator.
+- **Do sprawdzenia przez Ciebie:** nazwy funkcji watchdoga w zainstalowanej wersji rdzenia ESP32 (w 3.x użyj `esp_task_wdt_reconfigure`,
+  jeśli watchdog jest już uruchomiony przez system) oraz piny/ADC w przykładzie FreeRTOS.
+- Część „DMA” z sekcji o niezależności sprzętowej jest już w lekcji „Ping-pong i DMA” (v11), więc nie powielono jej.
+
 ## Uwagi ogólne
 - Cudzysłowy: w nowych treściach używam polskich „…”. W archiwum są proste "…".
 - Terminologia: proponuję słowniczek (bufor, ramka, próbka, przerwanie) i trzymanie się jednego tłumaczenia.
