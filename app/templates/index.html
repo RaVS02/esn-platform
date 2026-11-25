@@ -2191,8 +2191,14 @@ const auth = {
 
     // 4. WYLOGOWANIE
     logout: function() {
-        localStorage.removeItem('token');
-        location.reload();
+        try { localStorage.removeItem('token'); } catch (e) { /* tryb prywatny */ }
+        // Ciasteczko sesji (httponly) może usunąć tylko serwer – bez tego magazyn zostawałby otwarty po wylogowaniu.
+        const done = () => {
+            // zdejmij #profile itp. z adresu, żeby po przeładowaniu nie wrócić do widoku wymagającego logowania
+            try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* ignoruj */ }
+            location.reload();
+        };
+        fetch('/api/logout', { method: 'POST', credentials: 'same-origin' }).catch(() => {}).then(done);
     }
 };
 

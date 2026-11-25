@@ -238,3 +238,10 @@ def test_server_offline_falls_back_to_gemini(monkeypatch):
     monkeypatch.setattr(ai_service, "_post", flaky)
     r = ask(make_user())
     assert r.status_code == 200 and r.json()["reply"] == "odp-gemini" and "zapasowy" in r.json()["provider"]
+
+
+def test_logout_clears_session_cookie():
+    r = client.post("/api/logout")
+    assert r.status_code == 200
+    sc = r.headers.get("set-cookie", "")
+    assert "esn_access_token=" in sc and ("Max-Age=0" in sc or "expires=" in sc.lower())

@@ -230,6 +230,13 @@ def login(form_data: schemas.UserCreate, response: Response, db: Session = Depen
     
     return {"access_token": token, "token_type": "bearer"}
 
+
+@app.post("/api/logout", tags=["Konta i Uwierzytelnianie (JWT)"])
+def logout(response: Response):
+    """Wylogowanie: usuwa ciasteczko sesji (używane m.in. przez magazyn). Token w localStorage czyści przeglądarka."""
+    response.delete_cookie(key="esn_access_token", path="/", httponly=True, samesite="lax")
+    return {"ok": True}
+
 # ==========================================
 # ZARZĄDZANIE KONTEM (PROFIL I BEZPIECZEŃSTWO)
 # ==========================================
