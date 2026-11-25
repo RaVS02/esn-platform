@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Boolean, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Boolean, Date, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from sqlalchemy import JSON
@@ -33,6 +33,14 @@ class User(Base):
 
     #sciezka do bazy magazynu dla usera
     inventory_db_path = Column(String, nullable=True)
+
+    # Asystent AI: dzienny licznik zapytań z klucza systemowego oraz własny klucz użytkownika (BYOK, zaszyfrowany)
+    ai_requests_today = Column(Integer, default=0, nullable=False, server_default="0")
+    last_ai_request_date = Column(Date, nullable=True)
+    ai_provider = Column(String(20), nullable=True)      # gemini | openai | anthropic | openrouter | groq
+    ai_model = Column(String(80), nullable=True)         # pusty = model domyślny dostawcy
+    ai_key_enc = Column(Text, nullable=True)             # klucz zaszyfrowany (Fernet), nigdy nie wraca do przeglądarki
+    ai_key_hint = Column(String(12), nullable=True)      # np. „…a1b2” – tylko do wyświetlenia
 class Project(Base):
     __tablename__ = "projects"
     

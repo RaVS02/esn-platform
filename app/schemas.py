@@ -120,3 +120,21 @@ class OfficialComponentResponse(OfficialComponentBase):
     
     class Config:
         from_attributes = True
+
+# ==========================================
+# ASYSTENT AI
+# ==========================================
+class AISettingsUpdate(BaseModel):
+    provider: str
+    model: Optional[str] = None
+    api_key: Optional[str] = None      # puste = zostaw zapisany klucz (zmiana tylko dostawcy/modelu)
+
+
+class AIChatMessage(BaseModel):
+    role: str
+    content: str
+
+
+class AICompleteRequest(BaseModel):
+    system: str = ""
+    messages: List[AIChatMessage]

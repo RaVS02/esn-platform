@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <meta name="color-scheme" content="dark light">
 <script src="/magazyn/static/theme.js?v=3"></script>
+<script src="/magazyn/static/ai-local.js?v=1"></script>
 <link rel="stylesheet" href="/magazyn/static/magazyn.css?v=1.5">
 </head>
 <body>
@@ -144,6 +145,7 @@
 
   <div class="ai-session-bar">
     <span class="ai-session-info" id="ai-session-info">Sesja #1 · 0 wiad.</span>
+    <a class="ai-new-session" href="/#profile" title="Własny klucz API lub model lokalny (Ollama)" style="text-decoration:none">⚙ Ustawienia</a>
     <button class="ai-new-session" onclick="newAISession()" title="Wyczyść historię i zacznij od nowa">⟳ Nowa sesja</button>
   </div>
 
@@ -1237,12 +1239,25 @@ function toggleAI(){
   document.getElementById('ai-toggle-btn').classList.toggle('open');
 }
 
+function setAIBadge(d){
+  const badge=document.getElementById('ai-provider-badge');
+  if(!d||d.limit===undefined) return;
+  badge.textContent = d.limit===null ? 'AI ∞' : `AI ${d.remaining}/${d.limit}`;
+  badge.title = d.limit===null ? 'Bez dziennego limitu' : 'Pozostało zapytań dzisiaj (klucz platformy). Własny klucz lub model lokalny: Profil → Asystent AI';
+}
+
 async function loadAIProvider(){
+  const label=document.getElementById('ai-provider-label'), badge=document.getElementById('ai-provider-badge');
+  const L=window.ESNAILocal&&ESNAILocal.get();
+  if(L&&L.enabled){
+    label.textContent='Model lokalny · '+(L.model||'brak nazwy modelu');
+    badge.textContent='LOKALNY'; badge.title='Zapytania idą z tej przeglądarki do Twojego komputera';
+    return;
+  }
   try{
     const d=await api('/api/ai/provider');
-    const ok=d.configured;
-    document.getElementById('ai-provider-label').textContent=ok?d.name:`${d.name} · LMSTUDIO/GEMINI`;
-    document.getElementById('ai-provider-badge').textContent=d.provider.toUpperCase();
+    label.textContent=d.configured?d.name:'AI niedostępne – dodaj własny klucz w Profilu (portal)';
+    setAIBadge(d);
   }catch(e){}
 }
 
@@ -1279,17 +1294,27 @@ async function sendAI(){
 
   const loader=aiAppend('assistant','Analizuję stan magazynu...',true);
   try{
-    const r=await fetch('/magazyn/api/ai/chat',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({message:msg,history:S.aiHistory.slice(-12)})});
-    const d=await r.json();
-    loader.remove();
-    if(d.error){ aiAppend('assistant','❌ '+d.error); }
-    else{
-      aiAppend('assistant',d.reply);
-      S.aiHistory.push({role:'assistant',content:d.reply}); S.aiMsgCount++;
-      updateSessionInfo();
+    const L=window.ESNAILocal&&ESNAILocal.get();
+    let reply;
+    if(L&&L.enabled){
+      // model lokalny: kontekst z magazynu, wywołanie bezpośrednio z przeglądarki (serwer nie widzi pytania)
+      const ctx=await api('/api/ai/context');
+      reply=await ESNAILocal.chat(ctx.system,S.aiHistory);
+    }else{
+      const r=await fetch('/magazyn/api/ai/chat',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({message:msg,history:S.aiHistory.slice(-12)})});
+      const d=await r.json();
+      if(d.error) throw new Error(d.error);
+      reply=d.reply; setAIBadge(d);
     }
-  }catch(e){ loader.remove(); aiAppend('assistant','❌ Błąd połączenia z AI'); }
+    loader.remove();
+    aiAppend('assistant',reply);
+    S.aiHistory.push({role:'assistant',content:reply}); S.aiMsgCount++;
+    updateSessionInfo();
+  }catch(e){
+    loader.remove(); aiAppend('assistant','❌ '+(e.message||'Błąd połączenia z AI'));
+    S.aiHistory.pop(); S.aiMsgCount--; updateSessionInfo();     // nieudane pytanie nie zostaje w historii
+  }
   btn.disabled=false; input.focus();
 }
 

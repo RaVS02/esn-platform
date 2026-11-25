@@ -17,6 +17,7 @@ from pydantic import BaseModel
 import models, schemas, utils, auth
 from database import engine, get_db, SessionLocal
 import media_service
+import ai_service
 import content_service
 import knowledge_service
 from fastapi.responses import JSONResponse
@@ -28,6 +29,10 @@ models.Base.metadata.create_all(bind=engine)
 from sqlalchemy import text as _sql_text
 with engine.begin() as _conn:
     _conn.execute(_sql_text("ALTER TABLE official_components ADD COLUMN IF NOT EXISTS pinout JSON"))
+    # Asystent AI (limity dzienne + własny klucz)
+    for _ddl in ("ai_requests_today INTEGER NOT NULL DEFAULT 0", "last_ai_request_date DATE", "ai_provider VARCHAR(20)",
+                 "ai_model VARCHAR(80)", "ai_key_enc TEXT", "ai_key_hint VARCHAR(12)"):
+        _conn.execute(_sql_text("ALTER TABLE users ADD COLUMN IF NOT EXISTS " + _ddl))
 
 app = FastAPI(title="ESN Platform API")
 
@@ -231,6 +236,72 @@ def login(form_data: schemas.UserCreate, response: Response, db: Session = Depen
 @app.get("/api/users/me", response_model=schemas.UserResponse,tags=["Konta i Uwierzytelnianie (JWT)"])
 def get_my_profile(current_user: models.User = Depends(get_current_user)):
     return current_user
+
+# ==========================================
+# ASYSTENT AI (limity, własny klucz, bramka dla portalu i magazynu)
+# ==========================================
+def _ai_err(e: "ai_service.AIError"):
+    return HTTPException(status_code=e.status if 400 <= e.status < 600 else 502, detail=e.message)
+
+
+@app.get("/api/ai/status", tags=["Asystent AI"])
+def ai_status(current_user: models.User = Depends(get_current_user)):
+    """Limit dzienny, wykorzystanie i ustawienia własnego klucza (bez samego klucza)."""
+    return {**ai_service.status(current_user),
+            "providers": {k: {"name": v["name"], "model": v["model"]} for k, v in ai_service.PROVIDERS.items()},
+            "system_name": ai_service.system_config()["name"]}
+
+
+@app.put("/api/users/me/ai-settings", tags=["Asystent AI"])
+def ai_save_settings(data: schemas.AISettingsUpdate, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if data.provider not in ai_service.PROVIDERS:
+        raise HTTPException(status_code=400, detail="Nieznany dostawca AI.")
+    model = (data.model or "").strip()
+    if model and not ai_service.MODEL_RE.match(model):
+        raise HTTPException(status_code=400, detail="Nazwa modelu może zawierać tylko litery, cyfry oraz . _ : / -")
+    key = (data.api_key or "").strip()
+    if key:
+        if not ai_service.KEY_RE.match(key):
+            raise HTTPException(status_code=400, detail="Klucz wygląda niepoprawnie (8–300 znaków, bez spacji).")
+        current_user.ai_key_enc = ai_service.encrypt_key(key)
+        current_user.ai_key_hint = ai_service.key_hint(key)
+    elif not current_user.ai_key_enc:
+        raise HTTPException(status_code=400, detail="Podaj klucz API.")
+    current_user.ai_provider = data.provider
+    current_user.ai_model = model or None
+    db.commit()
+    return ai_service.status(current_user)
+
+
+@app.delete("/api/users/me/ai-settings", tags=["Asystent AI"])
+def ai_delete_settings(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    current_user.ai_key_enc = current_user.ai_provider = current_user.ai_model = current_user.ai_key_hint = None
+    db.commit()
+    return ai_service.status(current_user)
+
+
+@app.post("/api/ai/complete", tags=["Asystent AI"])
+def ai_complete(data: schemas.AICompleteRequest, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Bramka AI dla modułów platformy (np. magazynu). Klucz: własny użytkownika albo systemowy z dziennym limitem."""
+    try:
+        return ai_service.complete(db, current_user, data.system, [m.model_dump() for m in data.messages])
+    except ai_service.AIError as e:
+        raise _ai_err(e)
+
+
+@app.post("/api/ai/test", tags=["Asystent AI"])
+def ai_test(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Próbne zapytanie własnym kluczem (sprawdza klucz i model). Nie zużywa limitu systemowego."""
+    if not (current_user.ai_key_enc and current_user.ai_provider in ai_service.PROVIDERS):
+        raise HTTPException(status_code=400, detail="Najpierw zapisz własny klucz API.")
+    try:
+        ai_service.check_cooldown(current_user.id)
+        r = ai_service.call_user_provider(current_user.ai_provider, ai_service.decrypt_key(current_user.ai_key_enc),
+                                          current_user.ai_model, "Odpowiadaj jednym słowem.", [{"role": "user", "content": "Napisz: OK"}])
+    except ai_service.AIError as e:
+        raise _ai_err(e)
+    return {"ok": True, "reply": r[:80]}
+
 
 @app.post("/api/users/me/request-code",tags=["Konta i Uwierzytelnianie (JWT)"])
 def request_action_code(

@@ -24,11 +24,13 @@ Kolejność jest orientacyjna, każdy etap jest oddawany małymi krokami: funkcj
 - Wiedza v14: kurs „Transmisja danych w praktyce” (batching, CRC, kontrola przepływu, Wi-Fi/BLE/MQTT); widgety z wyborem tempa animacji.
 - Wiedza v15: kurs „Dane i liczby w pamięci”. Zawartość archiwum została w całości przeniesiona do bazy (po Twoim przeglądzie można usunąć plik, endpoint i widok).
 - Motyw jasny/ciemny, etap 1 (v16): paleta jasna, przełącznik (auto/jasny/ciemny), poprawka podglądu edytora Wiedzy. Szczegóły: `docs/MOTYW.md`.
+- Motyw: poprawki czytelności w jasnym motywie, jasny motyw kodu, nowa czcionka nagłówków (v18–v21). Serwer zaktualizowany do v21, magazyn przebudowany.
+- Asystent AI (v22): jedna bramka w portalu, dzienny limit, własny klucz API (BYOK) i model lokalny z przeglądarki (Ollama/LM Studio). Szczegóły: `docs/AI.md`.
 - Motyw, etap 2 (v17): widgety (paleta `--w-*` + postMessage), magazyn, galeria pinoutów (kontrast DAP/pinów), czcionka nagłówków Space Grotesk.
 
 ## Następne kroki (uzgodniona kolejność)
 1. Edytor schematów: jasny motyw i wspólny zestaw ikon (z magazynem) przy integracji z platformą.
-2. Limity AI i własny klucz API (BYOK).
+2. (zrobione v22) Limity AI i własny klucz API (BYOK).
 3. Poprawki mobilne (RWD), szerokość markdown, czcionki emoji.
 4. Tłumaczenie PL/EN (mechanizm `t('klucz')` → główne ekrany → moduły → treści z polem języka).
 5. Przebudowa magazynu na serwerze, kalkulatory w Narzędziach, integracja edytora schematów, nowe tematy Wiedzy (ADC, PWM, tranzystory, debugowanie, uśpienie, LED), ścieżki tematyczne.

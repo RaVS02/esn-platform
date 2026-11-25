@@ -1,19 +1,21 @@
 # Lista zadań ESN Platform - Roadmap
 
 ## Moduł Bot AI (Priorytet: Wysoki)
-*Sekcja skupiona na zabezpieczeniu kosztów i rozwoju asystenta.*
+*Szczegóły i konfiguracja: `docs/AI.md`.*
 
-### Zabezpieczenie limitów w bazie danych (models.py & app.py)
-- [ ] Dodać kolumnę `ai_requests_today` (Integer, default=0) do modelu User.
-- [ ] Dodać kolumnę `last_ai_request_date` (Date, default=today) do modelu User.
-- [ ] Wdrożyć Rate Limiter: Dodać sprawdzanie daty w endpoint `ai_chat` (jeśli nowa doba -> reset licznika).
-- [ ] Blokować zapytania dla roli `user`, gdy licznik osiągnie 10-15 zapytań/doba.
-- [ ] Zwiększać licznik po każdej udanej odpowiedzi od API Gemini.
+### Limity i własny klucz (zrobione w v22)
+- [X] Licznik dzienny w bazie (`ai_requests_today`, `last_ai_request_date`), atomowa rezerwacja, zwrot przy błędzie dostawcy.
+- [X] Limit 15/dobę dla roli `user` (`AI_DAILY_LIMIT_USER`), admin bez limitu.
+- [X] Własny klucz API (Gemini, OpenAI, Claude, OpenRouter, Groq), szyfrowany; UI w Profilu; własny klucz znosi limit.
+- [X] Model lokalny (Ollama / LM Studio) wywoływany z przeglądarki użytkownika.
+- [X] Jedna bramka w portalu; magazyn korzysta z niej (usunięto zduplikowane pytanie w historii).
 
-### System BYOK (Bring Your Own Key)
-- [ ] Dodać pole `personal_gemini_key` w bazie (zaszyfrowane).
-- [ ] Stworzyć UI w Profilu Użytkownika do wklejania własnego klucza API.
-- [ ] Zmodyfikować `ai_chat`, aby priorytetowo używał klucza użytkownika (omijając limity systemowe).
+### Do zrobienia
+- [ ] Ollama jako dostawca serwerowy w `.env` (`AI_PROVIDER=openai_compat`) – ustawić na serwerze produkcyjnym.
+- [ ] Poziomy limitów (np. konto wspierające) w `ai_service.daily_limit()`; ewentualny panel admina z zużyciem.
+- [ ] Link z magazynu do karty komponentu na platformie (pole `catalog_id` w komponencie magazynu) i użycie go w odpowiedziach AI.
+- [ ] Asystent w portalu (Wiedza/Katalog) przez tę samą bramkę.
+- [ ] Przeniesienie licznika cooldown z pamięci procesu do bazy (gdy będzie więcej niż jeden worker).
 
 ## Interfejs i Responsywność (Priorytet: Średni)
 *Poprawa wyglądu na urządzeniach mobilnych, naprawa błędów UI i ustandaryzowanie wyglądu.*

@@ -83,3 +83,12 @@ def test_widget_palette_complete():
         text = open(f, encoding="utf-8").read()
         for hx in set(h.lower() for h in re.findall(r"#[0-9a-fA-F]{6}\b", text)):
             assert hx in known, (f, hx)
+
+
+def test_ai_local_copy_identical_and_included():
+    """ai-local.js (model lokalny) ma kopię w magazynie; oba szablony go ładują."""
+    mag = STATIC.parent / "esn_magazyn"
+    assert (mag / "static" / "ai-local.js").read_text(encoding="utf-8") == (STATIC / "ai-local.js").read_text(encoding="utf-8")
+    assert "ai-local.js" in (mag / "templates" / "index.html").read_text(encoding="utf-8")
+    portal = (STATIC.parent / "templates" / "index.html").read_text(encoding="utf-8")
+    assert "ai-local.js" in portal and "ai-settings.js" in portal and 'id="ai-settings-card"' in portal

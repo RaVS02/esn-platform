@@ -34,11 +34,6 @@ ALGORITHM  = "HS256"
 # URL portalu – do przekierowań przy braku sesji
 PORTAL_URL = os.environ.get('PORTAL_URL', 'http://localhost')
 
-# AI
-AI_PROVIDER       = os.environ.get('AI_PROVIDER', 'gemini').lower()
-GEMINI_API_KEY    = os.environ.get('GEMINI_API_KEY', '')
-ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
-
 # Szablon, który mówi Swaggerowi, pod jakim adresem naprawdę żyje aplikacja
 swagger_template = {
     "swagger": "2.0",
@@ -1139,81 +1134,41 @@ Twoje zadania:
 Bądź konkretny i praktyczny."""
 
 
-def _call_gemini(system, messages, user_msg):
-    contents = [
-        {'role': 'user', 'parts': [{'text': system}]},
-        {'role': 'model', 'parts': [{'text': 'Rozumiem, jestem gotowy.'}]},
-    ]
-    for h in messages[-10:]:
-        contents.append({'role': 'user' if h['role'] == 'user' else 'model',
-                         'parts': [{'text': h['content']}]})
-    contents.append({'role': 'user', 'parts': [{'text': user_msg}]})
-
-    models = ['gemini-2.0-flash','gemini-2.0-flash-lite','gemini-2.5-flash','gemini-2.5-flash-lite']
-    last_err = None
-    
-    for model in models:
-        try:
-            r = requests.post(
-                f'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent',
-                headers={'x-goog-api-key': GEMINI_API_KEY, 'Content-Type': 'application/json'},
-                json={'contents': contents, 'generationConfig': {'maxOutputTokens': 4096, 'temperature': 0.7}},
-                timeout=30,
-            )
-            r.raise_for_status()
-            return r.json()['candidates'][0]['content']['parts'][0]['text']
-        except requests.exceptions.HTTPError as e:
-            if e.response.status_code in (404, 429, 503):
-                last_err = e
-                continue
-            raise
-            
-    raise last_err
+# ─── AI: bramka w portalu (limity, własny klucz, dostawcy) ────────────────────────────────────────
+# Magazyn buduje tylko kontekst (stan magazynu); wybór klucza, limit dzienny i wywołanie dostawcy robi portal.
+# Model lokalny (Ollama/LM Studio) wywołuje przeglądarka bezpośrednio – magazyn daje jej tylko kontekst (/api/ai/context).
+PORTAL_INTERNAL_URL = os.environ.get('PORTAL_INTERNAL_URL', 'http://web:8000').rstrip('/')
 
 
-def _call_anthropic(system, messages, user_msg):
-    msgs = [{'role': h['role'], 'content': h['content']} for h in messages[-10:]]
-    msgs.append({'role': 'user', 'content': user_msg})
-    r = requests.post(
-        'https://api.anthropic.com/v1/messages',
-        headers={'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01',
-                 'content-type': 'application/json'},
-        json={'model': 'claude-sonnet-4-20250514', 'max_tokens': 1024,
-              'system': system, 'messages': msgs},
-        timeout=30,
-    )
-    r.raise_for_status()
-    return r.json()['content'][0]['text']
+def _portal(path, method='GET', payload=None):
+    token = request.cookies.get('esn_access_token')
+    return requests.request(method, PORTAL_INTERNAL_URL + path, json=payload, timeout=(3, 70),
+                            headers={'Authorization': 'Bearer ' + (token or '')})
 
-def _call_lmstudio(system, messages, user_msg):
-    LM_STUDIO_URL = os.environ.get('LM_STUDIO_URL', 'http://192.168.0.108:1234/v1/chat/completions')
-    lm_msgs = [{'role': 'system', 'content': system}]
-    
-    for h in messages[-6:]:
-        lm_msgs.append({'role': h['role'], 'content': h['content']})
-        
-    lm_msgs.append({'role': 'user', 'content': user_msg})
 
+def _portal_error(r):
     try:
-        r = requests.post(
-            LM_STUDIO_URL,
-            json={
-                "model": "local-model",
-                "messages": lm_msgs,
-                "temperature": 0.7,
-                "stream": False
-            },
-            timeout=(2, 120)
-        )
-        r.raise_for_status()
-        return r.json()['choices'][0]['message']['content']
-    
-    except requests.exceptions.RequestException as e:
-        raise Exception(f"Błąd połączenia z LM Studio (czy na pewno dziala serwer na PC?): {e}")
+        msg = r.json().get('detail') or r.text[:200]
+    except ValueError:
+        msg = r.text[:200]
+    if r.status_code in (401, 403):
+        msg = 'Sesja wygasła lub konto jest zablokowane – zaloguj się ponownie w portalu.'
+    return jsonify({'error': msg if isinstance(msg, str) else 'Błąd asystenta AI'}), (r.status_code if r.status_code < 600 else 500)
 
 
-ai_cooldowns = {}
-AI_COOLDOWN_SECONDS = 10
+@app.route('/api/ai/context')
+def ai_context():
+    """
+    Kontekst systemowy z aktualnym stanem magazynu (dla modelu lokalnego wywoływanego z przeglądarki)
+    ---
+    tags:
+      - Sztuczna Inteligencja
+    responses:
+      200:
+        description: Gotowy prompt systemowy
+    """
+    return jsonify({'system': SYSTEM_PROMPT.format(inventory=_build_context())})
+
 
 @app.route('/api/ai/chat', methods=['POST'])
 def ai_chat():
@@ -1246,85 +1201,55 @@ def ai_chat():
                     type: string
     responses:
       200:
-        description: Odpowiedź wygenerowana przez wybranego dostawcę AI
-      400:
-        description: Brak wymaganych kluczy API dla wybranego dostawcy
+        description: Odpowiedź asystenta oraz stan limitu
       429:
-        description: Przekroczenie limitów zapytań API dostawcy
-      500:
-        description: Blad wewnętrzny serwera lub problem z komunikacją sieciową
+        description: Dzienny limit zapytań wyczerpany albo zbyt częste zapytania
+      503:
+        description: Asystent nie jest skonfigurowany na serwerze
     """
-    if AI_PROVIDER == 'gemini' and not GEMINI_API_KEY:
-        return jsonify({'error': 'Brak GEMINI_API_KEY'}), 400
-    if AI_PROVIDER == 'anthropic' and not ANTHROPIC_API_KEY:
-        return jsonify({'error': 'Brak ANTHROPIC_API_KEY'}), 400
-
-    d = request.json
-    user_msg = str(d.get('message', ''))[:1000] 
-    
-    raw_history = d.get('history', [])
-    MAX_HISTORY_TURNS = 10  
-    MAX_CHAR_PER_MSG = 1000 
-    
+    d = request.get_json(silent=True) or {}
+    user_msg = str(d.get('message', ''))[:1000].strip()
+    if not user_msg:
+        return jsonify({'error': 'Pusta wiadomość.'}), 400
     history = []
-    for msg in raw_history[-MAX_HISTORY_TURNS:]:
-        content = str(msg.get('content', ''))[:MAX_CHAR_PER_MSG]
-        history.append({'role': msg.get('role'), 'content': content})
-
-    system = SYSTEM_PROMPT.format(inventory=_build_context())
-
+    for msg in (d.get('history') or [])[-10:]:
+        if isinstance(msg, dict):
+            history.append({'role': msg.get('role'), 'content': str(msg.get('content', ''))[:1000]})
+    # przeglądarka dołącza bieżące pytanie także do historii – nie wysyłamy go dwa razy
+    if history and history[-1]['role'] == 'user' and history[-1]['content'].strip() == user_msg:
+        history.pop()
+    history.append({'role': 'user', 'content': user_msg})
     try:
-        if AI_PROVIDER == 'lmstudio':
-            try:
-                reply = _call_lmstudio(system, history, user_msg)
-                provider_used = 'LM Studio (Twoj RTX 4070)'
-            except Exception as e:
-                print(f"Serwer LM Studio niedostępny ({e}). Przełączam na darmowe Gemini...")
-                reply = _call_gemini(system, history, user_msg)
-                provider_used = 'Google Gemini (Fallback - PC offline)'
-                
-        elif AI_PROVIDER == 'anthropic':
-            reply = _call_anthropic(system, history, user_msg)
-            provider_used = 'Anthropic Claude'
-            
-        else:
-            reply = _call_gemini(system, history, user_msg)
-            provider_used = 'Google Gemini'
-            
-        return jsonify({'reply': reply, 'provider': provider_used})
-    
-    except requests.exceptions.HTTPError as e:
-        error_msg = e.response.text[:200]
-        try:
-             error_json = e.response.json()
-             if "error" in error_json and "message" in error_json["error"]:
-                 error_msg = error_json["error"]["message"]
-        except ValueError:
-             pass
-        
-        if e.response.status_code == 429:
-            return jsonify({'error': 'Przekroczono limit API u dostawcy. Odczekaj dłuższą chwilę.'}), 429
-            
-        return jsonify({'error': f'Błąd HTTP {e.response.status_code}: {error_msg}'}), 500
-    
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        r = _portal('/api/ai/complete', 'POST', {'system': SYSTEM_PROMPT.format(inventory=_build_context()), 'messages': history})
+    except requests.exceptions.RequestException:
+        return jsonify({'error': 'Brak połączenia z serwerem portalu. Spróbuj za chwilę.'}), 502
+    if r.status_code != 200:
+        return _portal_error(r)
+    return jsonify(r.json())
+
 
 @app.route('/api/ai/provider')
 def ai_provider():
     """
-    Sprawdzenie bieżącej konfiguracji oraz aktywnego dostawcy AI
+    Stan asystenta AI dla zalogowanego użytkownika (limit, własny klucz)
     ---
     tags:
       - Sztuczna Inteligencja
     responses:
       200:
-        description: Nazwa i stan konfiguracji dostawcy
+        description: Nazwa dostawcy, limit i liczba pozostałych zapytań
     """
-    names = {'gemini': 'Google Gemini 2.0 Flash', 'anthropic': 'Anthropic Claude Sonnet'}
-    key   = GEMINI_API_KEY if AI_PROVIDER == 'gemini' else ANTHROPIC_API_KEY
-    return jsonify({'provider': AI_PROVIDER, 'name': names.get(AI_PROVIDER, AI_PROVIDER),
-                    'configured': bool(key)})
+    try:
+        r = _portal('/api/ai/status')
+    except requests.exceptions.RequestException:
+        return jsonify({'configured': False, 'name': 'Portal niedostępny', 'own_key': False})
+    if r.status_code != 200:
+        return _portal_error(r)
+    j = r.json()
+    own = j.get('own_key')
+    name = ((j.get('providers') or {}).get(j.get('own_provider')) or {}).get('name', '') if own else j.get('system_name', 'Asystent ESN')
+    return jsonify({'configured': bool(own or j.get('server_configured')), 'name': name + (' (Twój klucz)' if own else ''),
+                    'own_key': own, 'limit': j.get('limit'), 'used': j.get('used'), 'remaining': j.get('remaining')})
 
 # ─── START ────────────────────────────────────────────────────────────────────
 if __name__ == '__main__':

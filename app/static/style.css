@@ -1184,3 +1184,28 @@ pre { padding: 18px 20px; overflow-x: auto; font-family: var(--mono); font-size:
 .theme-toggle { background: transparent; border: 1px solid var(--border2); color: var(--text2); width: 34px; height: 34px; margin: 0 8px 0 12px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex: none; font-size: 14px; transition: color .2s, border-color .2s, background .2s; }
 .theme-toggle:hover { color: var(--accent); border-color: var(--accent); background: rgba(var(--accent-rgb),0.08); }
 .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+
+/* ── Ustawienia asystenta AI (Profil) ─────────────────────────────────────────────────────────────── */
+.ai-set-card { background: var(--card); border: 1px solid var(--border); padding: 25px; border-radius: 12px; }
+.ai-set-title { font-family: var(--mono); color: var(--accent); margin-bottom: 8px; }
+.ai-set-note { font-size: 12.5px; color: var(--text2); line-height: 1.55; margin: 6px 0 12px; }
+.ai-set-usage { font-size: 13px; color: var(--text); margin: 4px 0 8px; }
+.ai-set-bar { height: 6px; border-radius: 3px; background: var(--bg3); overflow: hidden; margin-bottom: 14px; }
+.ai-set-bar-fill { height: 100%; background: var(--accent); border-radius: 3px; }
+.ai-set-sec { border-top: 1px solid var(--border); margin-top: 18px; padding-top: 16px; }
+.ai-set-sec h4 { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--text2); margin-bottom: 10px; }
+.ai-set-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ai-set-field { display: block; margin-bottom: 10px; }
+.ai-set-field > span { display: block; font-size: 11px; color: var(--text3); font-family: var(--mono); margin-bottom: 5px; }
+.ai-set-field .text-input { width: 100%; box-sizing: border-box; }
+.ai-set-check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text); margin-bottom: 12px; cursor: pointer; }
+.ai-set-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+.ai-set-danger { border-color: var(--red); color: var(--red-t, var(--red)); }
+.ai-set-msg { font-size: 12.5px; margin-top: 10px; min-height: 1em; color: var(--text2); }
+.ai-set-msg.ok { color: var(--green-t, var(--green)); }
+.ai-set-msg.err { color: var(--red-t, var(--red)); }
+.ai-set-how { font-size: 12.5px; color: var(--text2); margin: 0 0 12px; }
+.ai-set-how summary { cursor: pointer; color: var(--accent); }
+.ai-set-how p { margin-top: 8px; line-height: 1.6; }
+@media (max-width: 600px) { .ai-set-grid { grid-template-columns: 1fr; } }
