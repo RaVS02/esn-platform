@@ -80,21 +80,37 @@
     if (!quiet) { try { document.dispatchEvent(new CustomEvent("esn-lang", { detail: { lang: code } })); } catch (e) { /* stare przeglądarki */ } }
   }
 
+  // Przełącznik: przycisk z kodem języka + własne menu (spójny wygląd w motywach, pełne nazwy języków, obsługa klawiatury)
   function mountSwitch(host) {
     if (!host) return;
     host.textContent = "";
     var langs = list();
     if (langs.length < 2) return; // jeden język – przełącznik niepotrzebny
-    var sel = document.createElement("select");
-    sel.className = "lang-select";
-    sel.setAttribute("data-i18n-attr", "aria-label:lang.label;title:lang.label");
-    sel.setAttribute("aria-label", t("lang.label")); sel.title = t("lang.label");
+    function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+    var btn = el("button", "lang-btn", lang().toUpperCase() + " \u25BE"), menu = el("div", "lang-menu"), items = [];
+    btn.type = "button"; btn.setAttribute("aria-haspopup", "listbox"); btn.setAttribute("aria-expanded", "false");
+    btn.setAttribute("data-i18n-attr", "aria-label:lang.label;title:lang.label");
+    btn.setAttribute("aria-label", t("lang.label")); btn.title = t("lang.label");
+    menu.setAttribute("role", "listbox"); menu.hidden = true;
+    function close(focusBtn) { menu.hidden = true; btn.setAttribute("aria-expanded", "false"); if (focusBtn) btn.focus(); }
+    function open() { menu.hidden = false; btn.setAttribute("aria-expanded", "true"); var cur = items.filter(function (i) { return i.dataset.code === lang(); })[0] || items[0]; cur.focus(); }
     langs.forEach(function (l) {
-      var o = document.createElement("option"); o.value = l.code; o.textContent = l.code.toUpperCase(); o.title = l.name; sel.appendChild(o);
+      var it = el("button", "lang-opt" + (l.code === lang() ? " on" : ""), l.name);
+      it.type = "button"; it.dataset.code = l.code; it.setAttribute("role", "option"); it.setAttribute("aria-selected", String(l.code === lang()));
+      it.insertBefore(el("b", "lang-code", l.code.toUpperCase()), it.firstChild);
+      it.addEventListener("click", function () { close(false); if (l.code !== lang()) set(l.code); });
+      items.push(it); menu.appendChild(it);
     });
-    sel.value = lang();
-    sel.addEventListener("change", function () { set(sel.value); });
-    host.appendChild(sel);
+    btn.addEventListener("click", function () { if (menu.hidden) open(); else close(false); });
+    menu.addEventListener("keydown", function (e) {
+      var i = items.indexOf(document.activeElement);
+      if (e.key === "ArrowDown") { e.preventDefault(); items[(i + 1) % items.length].focus(); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); items[(i - 1 + items.length) % items.length].focus(); }
+      else if (e.key === "Escape") { e.preventDefault(); close(true); }
+      else if (e.key === "Tab") close(false);
+    });
+    document.addEventListener("click", function (e) { if (!host.contains(e.target)) close(false); });
+    host.appendChild(btn); host.appendChild(menu);
   }
 
   function missing(code) {

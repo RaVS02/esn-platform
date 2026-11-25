@@ -1175,10 +1175,17 @@ pre { padding: 18px 20px; overflow-x: auto; font-family: var(--mono); font-size:
 
 /* ─── PRZEŁĄCZNIK MOTYWU ─── */
 .lang-switch { display: inline-flex; align-items: center; flex: none; margin-left: auto; }
-.lang-select { background: transparent; border: 1px solid var(--border2); color: var(--text2); height: 34px; padding: 0 8px; border-radius: 8px; font-family: var(--mono); font-size: 12px; font-weight: 600; cursor: pointer; transition: color .2s, border-color .2s; }
-.lang-select:hover { color: var(--accent); border-color: var(--accent); }
-.lang-select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.lang-select option { background: var(--card); color: var(--text); }
+.lang-switch { position: relative; }
+.lang-btn { background: transparent; border: 1px solid var(--border2); color: var(--text2); height: 34px; padding: 0 10px; border-radius: 8px; font-family: var(--mono); font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: color .2s, border-color .2s; }
+.lang-btn:hover, .lang-btn[aria-expanded="true"] { color: var(--accent); border-color: var(--accent); }
+.lang-btn:focus-visible, .lang-opt:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.lang-menu { position: absolute; right: 0; top: calc(100% + 8px); min-width: 160px; background: var(--card); border: 1px solid var(--border2); border-radius: 10px; padding: 4px; box-shadow: 0 12px 32px rgba(0,0,0,.35); z-index: 400; }
+.lang-menu[hidden] { display: none; }
+.lang-opt { display: flex; align-items: center; gap: 10px; width: 100%; background: none; border: 0; border-radius: 7px; padding: 9px 10px; color: var(--text); font-family: var(--sans, inherit); font-size: 14px; text-align: left; cursor: pointer; }
+.lang-opt .lang-code { font-family: var(--mono); font-size: 11px; color: var(--text3); min-width: 22px; }
+.lang-opt:hover, .lang-opt:focus { background: rgba(var(--accent-rgb, 0,229,255), .1); }
+.lang-opt.on { color: var(--accent); }
+.lang-opt.on .lang-code { color: var(--accent); }
 .theme-toggle { background: transparent; border: 1px solid var(--border2); color: var(--text2); width: 34px; height: 34px; margin: 0 8px 0 12px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex: none; font-size: 14px; transition: color .2s, border-color .2s, background .2s; }
 .theme-toggle:hover { color: var(--accent); border-color: var(--accent); background: rgba(var(--accent-rgb),0.08); }
 .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

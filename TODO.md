@@ -59,7 +59,9 @@
 - [ ] Zbudować publiczny panel użytkownika (widoczny dla innych) zawierający: Avatar, Bio oraz listę stworzonych projektów.
 ## Tłumaczenia (i18n)
 - [x] (v26) Rdzeń `i18n.js`, słowniki PL/EN, przełącznik, nawigacja, home, AI w profilu, nawigacja magazynu – `docs/I18N.md`.
-- [ ] Modale logowania/rejestracji, Profil, Katalog, Projekty, Narzędzia, edytor Wiedzy, reszta magazynu.
+- [x] (v27) Projekty, Katalog, Narzędzia, Profil, Kontakt, logowanie/rejestracja, stopka, komunikaty.
+- [ ] Edytor Wiedzy (kreator, przewodnik, szablony), reszta magazynu, `ai-local.js`, komunikaty API (kody błędów).
+- [ ] Etykiety znanych kategorii/zastosowań katalogu (dane z bazy) z zachowaniem filtrów.
 - [ ] Treści z polem `lang` (artykuły, kursy, projekty, podzespoły).
 - [ ] Język w koncie użytkownika.
 - [ ] Kolejne języki (ES, DE) po ustabilizowaniu słowników.
