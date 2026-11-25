@@ -1,0 +1,529 @@
+diff -ruN a/TODO.md b/TODO.md
+--- a/TODO.md	2026-11-25 23:58:07.586367608 +0100
++++ b/TODO.md	2026-11-25 23:58:07.587763718 +0100
+@@ -22,12 +22,9 @@
+ *Poprawa wyglądu na urządzeniach mobilnych, naprawa błędów UI i ustandaryzowanie wyglądu.*
+ 
+ ### Optymalizacja Mobilna (RWD)
+-- [ ] Naprawić logowanie/wylogowywanie na telefonach (rozwiązanie problemu z brakiem dostępu do Magazynu).
+-- [ ] Dodać blok `@media (max-width: 768px)` na końcu pliku stylów.
+-- [ ] Zmienić układ `projects-layout` na urządzeniach mobilnych: jedna kolumna, Sidebar przeniesiony na górę.
+-- [ ] Przystosować siatki kafelków do jednej kolumny (`grid-template-columns: 1fr`).
+-- [ ] Magazyn: Poprawić wyświetlanie tabel i list komponentów na telefonie.
+-- [ ] Magazyn: Umożliwić poziome przewijanie paska nawigacji.
++- [x] (v25) Portal i magazyn: dolny pasek zakładek, menu konta, szuflada kategorii, panele na pełny ekran – `docs/MOBILE.md`.
++- [ ] Sprawdzić na prawdziwych telefonach (iOS Safari, Android Chrome) i zebrać uwagi.
++- [ ] Wartości `art4`/`art5` w audycie (brak widocznego h1/h2) – obejrzeć ręcznie.
+ 
+ ### Estetyka i Style
+ - [ ] Ustandaryzować emotikony (`style.css`): Dodać `font-family` dla emoji (Apple Color Emoji, Segoe UI Emoji).
+diff -ruN a/app/esn_magazyn/static/mobile.css b/app/esn_magazyn/static/mobile.css
+--- a/app/esn_magazyn/static/mobile.css	1970-01-01 01:00:00.000000000 +0100
++++ b/app/esn_magazyn/static/mobile.css	2026-11-25 23:58:07.593525120 +0100
+@@ -0,0 +1,94 @@
++/* ESN Magazyn – układ mobilny (≤820 px). Spójny z portalem (app/static/mobile.css): dolny pasek zakładek,
++ * panel boczny jako wysuwana szuflada, panele szczegółów i AI na pełny ekran, cele dotyku ≥40 px, czcionki ≥11 px.
++ * Kolory wyłącznie ze zmiennych motywu. Desktop bez zmian. */
++
++.tabbar, .sb-backdrop { display: none; }
++
++@media (max-width: 820px) {
++  body { padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
++  body:has(.detail-panel.open), body:has(.ai-panel.open), body:has(.sidebar.open), body:has(.modal-overlay.open) { overflow: hidden; }
++
++  /* ── górny pasek ── */
++  #navbar { height: 52px; }
++  .nav-logo { padding: 0 14px; border-right: none; font-size: 15px; }
++  .nav-links, .ai-toggle-btn { display: none; }
++  .nav-right { padding: 0 10px; gap: 8px; }
++  .nav-badge { font-size: 11px; }
++  #navbar .theme-toggle { width: 40px; height: 40px; margin: 0; }
++  .app-shell { padding-top: 52px; }
++
++  /* ── dolny pasek zakładek ── */
++  .tabbar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 100; height: calc(60px + env(safe-area-inset-bottom, 0px));
++    padding-bottom: env(safe-area-inset-bottom, 0px); background: rgba(var(--bg-rgb), .96); backdrop-filter: blur(10px); border-top: 1px solid var(--border); }
++  .tab-item { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; position: relative; text-decoration: none;
++    background: none; border: 0; padding: 0 2px; color: var(--text3); font-family: var(--mono); font-size: 11px; line-height: 1; cursor: pointer; -webkit-tap-highlight-color: transparent; }
++  .tab-item svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
++  .tab-item span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
++  .tab-item.active { color: var(--accent); }
++  .tab-item.active::before { content: ''; position: absolute; top: 0; left: 26%; right: 26%; height: 2px; border-radius: 0 0 2px 2px; background: var(--accent); }
++  .tab-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; }
++
++  /* ── panel boczny jako szuflada ── */
++  .sidebar { top: 52px; bottom: calc(60px + env(safe-area-inset-bottom, 0px)); width: min(280px, 82vw); z-index: 110; transform: translateX(-102%);
++    transition: transform .25s cubic-bezier(.4, 0, .2, 1); box-shadow: none; }
++  .sidebar.open { transform: translateX(0); box-shadow: 8px 0 32px rgba(0, 0, 0, .35); }
++  .sidebar-btn { min-height: 44px; font-size: 12px; }
++  .sidebar-label { font-size: 11px; }
++  .sb-backdrop { position: fixed; inset: 52px 0 calc(60px + env(safe-area-inset-bottom, 0px)) 0; z-index: 105; background: rgba(0, 0, 0, .5); }
++  .sb-backdrop.open { display: block; }
++  .main { margin-left: 0; min-width: 0; }
++
++  /* ── treść ── */
++  .inv-hero { padding: 20px 16px 16px; gap: 12px; }
++  .inv-title { font-size: 22px; }
++  .inv-hero .btn-action { width: 100%; justify-content: center; }
++  .hero-tag { font-size: 11px; }
++  .stats-bar { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
++  .stat-cell { padding: 10px 14px; border-bottom: 1px solid var(--border); }
++  .stat-label { font-size: 11px; }
++  .toolbar { padding: 10px 16px; }
++  .search-wrap { flex: 1 1 100%; max-width: none; min-width: 0; }
++  .search-wrap input { min-height: 44px; font-size: 16px; }
++  .filter-bar { flex-wrap: nowrap; overflow-x: auto; padding: 10px 16px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
++  .filter-bar::-webkit-scrollbar { display: none; }
++  .chip-btn { white-space: nowrap; min-height: 36px; padding: 6px 14px; flex: none; }
++  .content-area { padding: 14px 16px; }
++  .comp-grid { grid-template-columns: 1fr; }
++  .comp-quick-actions { opacity: 1; }
++  .comp-name { font-size: 14px; }
++  .comp-symbol, .tag, .low-badge, .pill, .qty-of { font-size: 11px; }
++  .btn-action { min-height: 40px; min-width: 40px; font-size: 12px !important; }
++  .ai-subtitle, .section-title, .detail-panel td, .detail-panel th { font-size: 11px !important; }
++  #dp-avail-input, .detail-panel input[type=number] { min-height: 40px; min-width: 64px; font-size: 16px; }
++  .adj-btn { min-width: 44px; min-height: 40px; }
++  .proj-desc-small, .proj-comp-table th { font-size: 11px; }
++  .project-row-header { padding: 14px 16px; min-height: 52px; }
++
++  /* ── panele na pełny ekran ── */
++  .detail-panel, .ai-panel { top: 0; width: 100%; height: 100vh; height: 100dvh; max-width: none; border-left: none; z-index: 150; }
++  .detail-panel { right: -100%; }
++  .ai-panel { right: -100%; z-index: 155; }
++  .detail-panel.open, .ai-panel.open { right: 0; }
++  .close-x { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
++  .ai-session-bar { flex-wrap: wrap; gap: 6px 10px; }
++  .ai-session-info, .ai-new-session, .ai-quick-btn { font-size: 11px; }
++  .ai-new-session, .ai-quick-btn { min-height: 36px; display: inline-flex; align-items: center; }
++  .ai-quick-row { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
++  .ai-quick-row::-webkit-scrollbar { display: none; }
++  .ai-quick-btn { flex: none; white-space: nowrap; }
++  .ai-msg { max-width: 100%; font-size: 14px; }
++  .ai-input-area { padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px)); }
++  .ai-textarea { font-size: 16px; min-height: 44px; }
++  .ai-send { min-width: 44px; min-height: 44px; }
++
++  /* ── formularze i okna ── */
++  .modal-overlay { z-index: 200; }
++  .modal { width: calc(100% - 20px); max-height: 92vh; max-height: 92dvh; padding: 18px; }
++  .form-control, .form-group input, .form-group select, .form-group textarea { font-size: 16px; min-height: 44px; }
++  .form-label { font-size: 11px; }
++
++  .site-footer { padding: 32px 16px 16px; }
++  .site-footer a { display: inline-flex; align-items: center; min-height: 40px; }
++}
++
++@media (hover: none) { .comp-quick-actions { opacity: 1; } }
+diff -ruN a/app/esn_magazyn/templates/index.html b/app/esn_magazyn/templates/index.html
+--- a/app/esn_magazyn/templates/index.html	2026-11-25 23:58:07.597539589 +0100
++++ b/app/esn_magazyn/templates/index.html	2026-11-25 23:58:07.601497743 +0100
+@@ -11,6 +11,7 @@
+ <script src="/magazyn/static/theme.js?v=3"></script>
+ <script src="/magazyn/static/ai-local.js?v=1"></script>
+ <link rel="stylesheet" href="/magazyn/static/magazyn.css?v=1.5">
++<link rel="stylesheet" href="/magazyn/static/mobile.css?v=1">
+ </head>
+ <body>
+ 
+@@ -29,11 +30,21 @@
+   </div>
+ </nav>
+ 
++<!-- DOLNY PASEK ZAKŁADEK (telefon) -->
++<nav class="tabbar" id="tabbar" aria-label="Nawigacja magazynu">
++  <a class="tab-item" href="/" id="tab-portal"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg><span>Portal</span></a>
++  <button type="button" class="tab-item active" id="tab-components" data-view="components" onclick="switchView('components')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10H7z"/><path d="M9 3v4M15 3v4M9 17v4M15 17v4M3 9h4M3 15h4M17 9h4M17 15h4"/></svg><span>Komponenty</span></button>
++  <button type="button" class="tab-item" id="tab-projects" data-view="projects" onclick="switchView('projects')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg><span>Projekty</span></button>
++  <button type="button" class="tab-item" id="tab-cats" onclick="toggleSidebar()" aria-controls="sidebar" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg><span>Kategorie</span></button>
++  <button type="button" class="tab-item" id="tab-ai" onclick="toggleAI()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8L12 3z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15z"/></svg><span>AI</span></button>
++</nav>
++<div class="sb-backdrop" id="sb-backdrop" onclick="toggleSidebar(false)"></div>
++
+ <!-- APP -->
+ <div class="app-shell">
+ 
+   <!-- SIDEBAR -->
+-  <aside class="sidebar">
++  <aside class="sidebar" id="sidebar">
+     <div class="sidebar-section">
+       <span class="sidebar-label">Widok</span>
+       <button class="sidebar-btn active" id="sb-components" onclick="switchView('components',this,'sb')">
+@@ -1121,9 +1132,23 @@
+   document.querySelectorAll('.sidebar-btn[id^="sb-view"], #sb-components, #sb-projects').forEach(b=>b.classList.remove('active'));
+   document.getElementById(`nav-${view}`)?.classList.add('active');
+   document.getElementById(`sb-${view}`)?.classList.add('active');
++  document.querySelectorAll('.tab-item[data-view]').forEach(t=>t.classList.toggle('active',t.dataset.view===view));
++  toggleSidebar(false);
+   if(view==='projects') loadProjects();
+ }
+ 
++// Panel boczny jako szuflada (telefon); na desktopie zawsze widoczny
++function toggleSidebar(force){
++  const sb=document.getElementById('sidebar'), bd=document.getElementById('sb-backdrop'), tab=document.getElementById('tab-cats');
++  const open = typeof force==='boolean' ? force : !sb.classList.contains('open');
++  sb.classList.toggle('open',open); bd.classList.toggle('open',open);
++  if(tab){ tab.classList.toggle('active',open); tab.setAttribute('aria-expanded',String(open)); }
++}
++document.getElementById('sidebar').addEventListener('click',e=>{
++  if(e.target.closest('.sidebar-btn') && window.matchMedia('(max-width: 820px)').matches) setTimeout(()=>toggleSidebar(false),0);
++});
++document.addEventListener('keydown',e=>{ if(e.key==='Escape') toggleSidebar(false); });
++
+ function filterCat(catId, btn) {
+   S.filterCat=catId;
+   renderCatFilters(); renderCatSidebar();
+@@ -1238,8 +1263,10 @@
+ 
+ // ── AI ────────────────────────────────────────────────────────────
+ function toggleAI(){
+-  document.getElementById('ai-panel').classList.toggle('open');
+-  document.getElementById('ai-toggle-btn').classList.toggle('open');
++  const open=document.getElementById('ai-panel').classList.toggle('open');
++  document.getElementById('ai-toggle-btn').classList.toggle('open',open);
++  document.getElementById('tab-ai')?.classList.toggle('active',open);
++  if(open) toggleSidebar(false);
+ }
+ 
+ function setAIBadge(d){
+diff -ruN a/app/static/mobile.css b/app/static/mobile.css
+--- a/app/static/mobile.css	1970-01-01 01:00:00.000000000 +0100
++++ b/app/static/mobile.css	2026-11-25 23:58:07.607760779 +0100
+@@ -0,0 +1,92 @@
++/* ESN – układ mobilny portalu.
++ * Zasady: kolory tylko ze zmiennych motywu (jasny/ciemny), reguły wyłącznie dla ekranów ≤820 px (desktop bez zmian),
++ * cele dotyku ≥40 px, czcionki ≥11 px, treść odsunięta od pasków, uwzględnione safe-area (iPhone).
++ * Dolny pasek zakładek zastępuje linki nawigacji; konto (Magazyn / Profil / Wyloguj) jest w menu z górnego paska.
++ * Ładowany jako ostatni arkusz, więc nadpisuje wcześniejsze reguły (w tym te z !important w style.css).
++ */
++
++/* Elementy mobilne są niewidoczne na desktopie */
++.tabbar, .nav-acc-btn, .nav-acc-menu { display: none; }
++
++@media (max-width: 820px) {
++  body { padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
++
++  /* ── górny pasek: logo | motyw | konto ── */
++  #navbar { height: 52px; padding: 0; }
++  .nav-logo { padding: 0 14px; border-right: none; font-size: 15px; }
++  .nav-links { display: none; }
++  #navbar .theme-toggle { margin: 0 6px 0 auto; width: 40px; height: 40px; }
++  .nav-auth { padding: 0 10px 0 0; }
++  .nav-desk { display: none !important; }
++  #navAuth > .btn-action { min-height: 40px; padding: 0 14px; font-size: 12px; white-space: nowrap; }
++
++  .nav-acc-btn { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; padding: 0; overflow: hidden;
++    background: var(--bg2); border: 1px solid var(--border2); color: var(--accent); font-family: var(--display); font-weight: 700; font-size: 15px; cursor: pointer; }
++  .nav-acc-btn img { width: 100%; height: 100%; object-fit: cover; display: block; }
++  .nav-acc-btn[hidden], .nav-acc-btn [hidden] { display: none; }
++  .nav-acc-btn:focus-visible, .tab-item:focus-visible, .nav-acc-menu a:focus-visible, .nav-acc-menu button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
++  .nav-acc-menu { position: fixed; top: 56px; right: 8px; z-index: 120; min-width: 220px; padding: 6px; border-radius: 12px; flex-direction: column; gap: 2px;
++    background: var(--card); border: 1px solid var(--border2); box-shadow: 0 12px 32px rgba(0,0,0,.28); }
++  .nav-acc-menu.open { display: flex; }
++  .nav-acc-user { display: flex; flex-direction: column; padding: 8px 12px 10px; border-bottom: 1px solid var(--border); margin-bottom: 4px; color: var(--text); font-size: 14px; line-height: 1.3; }
++  .nav-acc-user span { font-family: var(--mono); font-size: 11px; color: var(--accent); margin-top: 2px; }
++  .nav-acc-menu a, .nav-acc-menu button { display: flex; align-items: center; width: 100%; min-height: 44px; padding: 0 12px; border: 0; border-radius: 8px; background: none;
++    color: var(--text); font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; text-decoration: none; text-align: left; cursor: pointer; }
++  .nav-acc-menu a:hover, .nav-acc-menu button:hover { background: rgba(var(--accent-rgb), .08); color: var(--accent); }
++  .nav-acc-menu .nav-acc-out { color: var(--red-t, var(--red)); }
++
++  /* ── dolny pasek zakładek ── */
++  .tabbar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 100; height: calc(60px + env(safe-area-inset-bottom, 0px));
++    padding-bottom: env(safe-area-inset-bottom, 0px); background: rgba(var(--bg-rgb), .96); backdrop-filter: blur(10px); border-top: 1px solid var(--border); }
++  .tab-item { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; position: relative;
++    background: none; border: 0; padding: 0 2px; color: var(--text3); font-family: var(--mono); font-size: 11px; line-height: 1; cursor: pointer; -webkit-tap-highlight-color: transparent; }
++  .tab-item svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
++  .tab-item span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
++  .tab-item.active { color: var(--accent); }
++  .tab-item.active::before { content: ''; position: absolute; top: 0; left: 26%; right: 26%; height: 2px; border-radius: 0 0 2px 2px; background: var(--accent); }
++
++  /* powiadomienia nad dolnym paskiem */
++  .toast { left: 12px; right: 12px; bottom: calc(72px + env(safe-area-inset-bottom, 0px)); max-width: none; }
++
++  /* ── treść odsunięta od górnego paska (52 px) ── */
++  .hero { padding: 76px 18px 28px; }
++  #view-home .hero { padding-top: 84px !important; }
++  .hero-sub { font-size: 15px; margin-bottom: 28px; }
++  .kn-top { padding-top: 76px; }
++
++  /* ── cele dotyku i czcionki ── */
++  .btn-action { min-height: 40px; font-size: 12px; }
++  .chip-btn { min-height: 36px; padding: 6px 12px; font-size: 11px; }
++  .filter-summary { min-height: 44px; display: flex; align-items: center; gap: 8px; }
++  .filter-summary[data-count]:not([data-count=""])::after { content: attr(data-count); margin-left: auto; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px;
++    display: inline-flex; align-items: center; justify-content: center; background: rgba(var(--accent-rgb), .15); color: var(--accent); font-size: 11px; }
++  .filter-group-label, .badge, .tag { font-size: 11px; }
++  .site-footer a { display: inline-flex; align-items: center; min-height: 40px; }
++  .site-footer .footer-links, .site-footer .footer-content { gap: 12px; }
++
++  .kn-back { min-height: 40px; padding: 0 12px; display: inline-flex; align-items: center; }
++  .esn-copy, .copy-btn { min-height: 36px; padding: 0 12px; }
++  .ai-set-how summary { min-height: 40px; display: flex; align-items: center; }
++  /* drobne czcionki ustawione stylem inline (9–10 px) podnosimy do 11 px; SVG (rysunki skalowane viewBox) zostają bez zmian */
++  div[style*="font-size:10px"], div[style*="font-size: 10px"], p[style*="font-size:10px"], p[style*="font-size: 10px"], span[style*="font-size:10px"], span[style*="font-size: 10px"],
++  div[style*="font-size:9px"], div[style*="font-size: 9px"], span[style*="font-size:9px"], span[style*="font-size: 9px"],
++  button[style*="font-size:10px"], button[style*="font-size: 10px"], a[style*="font-size:10px"], a[style*="font-size: 10px"] { font-size: 11px !important; }
++  .btn-action { font-size: 12px !important; }
++  .badge, .tag, span.badge, span.tag { font-size: 11px !important; }
++
++  /* ── tabele w treści: poziome przewijanie z cieniami na krawędziach ── */
++  .kn-table-wrap { background-color: var(--card);
++    background-image: linear-gradient(to right, var(--card) 30%, rgba(var(--card-rgb), 0)), linear-gradient(to right, rgba(var(--card-rgb), 0), var(--card) 70%),
++      radial-gradient(farthest-side at 0 50%, rgba(var(--text-rgb), .22), transparent), radial-gradient(farthest-side at 100% 50%, rgba(var(--text-rgb), .22), transparent);
++    background-position: 0 0, 100% 0, 0 0, 100% 0; background-repeat: no-repeat; background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
++    background-attachment: local, local, scroll, scroll; }
++
++  /* ── karta komponentu ── */
++  .cat-title { font-size: 26px !important; letter-spacing: -.5px !important; overflow-wrap: anywhere; margin-bottom: 12px !important; }
++  .cat-title span { font-size: 16px !important; }
++  .cat-hero-top, .cat-badges, .cat-tags { flex-wrap: wrap; }
++  .cat-hero-top { gap: 10px; margin-bottom: 16px !important; }
++  .cat-info { padding: 16px !important; gap: 24px !important; }
++  .cat-admin { flex-direction: column; }
++  .cat-admin .btn-action { width: 100%; justify-content: center; }
++}
+diff -ruN a/app/static/style.css b/app/static/style.css
+--- a/app/static/style.css	2026-11-25 23:58:07.613512868 +0100
++++ b/app/static/style.css	2026-11-25 23:58:07.614831248 +0100
+@@ -1145,15 +1145,8 @@
+         max-width: 100vw !important;
+     }
+ 
+-    /* 4. Nawigacja centralna */
+-    #navbar {
+-        flex-direction: column !important;
+-        height: auto !important;
+-        padding: 10px 0 !important;
+-    }
+-    .nav-logo { border-right: none !important; margin-bottom: 5px !important; justify-content: center !important; }
+-    .nav-links { flex-wrap: wrap !important; justify-content: center !important; gap: 8px !important; }
+-    
++    /* 4. Nawigacja na telefonie: patrz static/mobile.css (górny pasek + dolny pasek zakładek) */
++
+     /* 5. Poziome przewijanie kodu i tabel (bez psucia ekranu) */
+     pre, .comp-table, .markdown-body table {
+         max-width: 100vw !important;
+diff -ruN a/app/templates/index.html b/app/templates/index.html
+--- a/app/templates/index.html	2026-11-25 23:58:07.620669055 +0100
++++ b/app/templates/index.html	2026-11-25 23:58:07.622168563 +0100
+@@ -9,7 +9,7 @@
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+-<link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=2.22">
++<link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=2.23">
+ <link rel="stylesheet" href="{{ url_for('static', path='/pinout.css') }}?v=5">
+ <script src="{{ url_for('static', path='/vendor/marked.umd.js') }}?v=18.2.1"></script>
+ <script src="{{ url_for('static', path='/vendor/purify.min.js') }}?v=3.4.18"></script>
+@@ -24,6 +24,7 @@
+ <link rel="stylesheet" href="{{ url_for('static', path='/vendor/vs2015.min.css') }}?v=11.12.0">
+ <script src="{{ url_for('static', path='/content.js') }}?v=2"></script>
+ <link rel="stylesheet" href="{{ url_for('static', path='/knowledge.css') }}?v=13">
++<link rel="stylesheet" href="{{ url_for('static', path='/mobile.css') }}?v=1">
+ <script src="{{ url_for('static', path='/knowledge-templates.js') }}?v=2"></script>
+ <script src="{{ url_for('static', path='/knowledge-guide.js') }}?v=2"></script>
+ <script src="{{ url_for('static', path='/knowledge-blocks.js') }}?v=1"></script>
+@@ -55,6 +56,14 @@
+   
+ </nav>
+ 
++<nav class="tabbar" id="tabbar" aria-label="Nawigacja główna">
++  <button type="button" class="tab-item active" data-target="home" onclick="app.navigate('home')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg><span>Home</span></button>
++  <button type="button" class="tab-item" data-target="knowledge" onclick="app.navigate('knowledge')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg><span>Wiedza</span></button>
++  <button type="button" class="tab-item" data-target="projects" onclick="app.navigate('projects')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg><span>Projekty</span></button>
++  <button type="button" class="tab-item" data-target="components" onclick="app.navigate('components')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10H7z"/><path d="M9 3v4M15 3v4M9 17v4M15 17v4M3 9h4M3 15h4M17 9h4M17 15h4"/></svg><span>Katalog</span></button>
++  <button type="button" class="tab-item" data-target="tools" onclick="app.navigate('tools')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.1L3 17.7 6.3 21l6.3-6.3a4 4 0 0 0 5.1-5.4l-2.6 2.6-2.4-.6-.6-2.4 2.6-2.6z"/></svg><span>Narzędzia</span></button>
++</nav>
++
+ <div id="view-home" class="app-view active">
+   <section class="hero" style="text-align: center; padding-top: 160px;">
+     <div class="hero-tag" style="justify-content: center;">Platforma Edukacyjna</div>
+@@ -623,6 +632,12 @@
+         link.classList.remove('active');
+       }
+     });
++    document.querySelectorAll('.tab-item').forEach(t => {
++      const navId = (targetId === 'theory') ? 'knowledge' : targetId;
++      t.classList.toggle('active', t.getAttribute('data-target') === navId);
++      if (t.getAttribute('data-target') === navId) t.setAttribute('aria-current', 'page'); else t.removeAttribute('aria-current');
++    });
++    if (typeof navAccClose === 'function') navAccClose();
+     if (updateHistory) {
+         history.pushState({ view: targetId }, "", "#" + targetId);
+     }
+@@ -903,7 +918,7 @@
+     if (isAdmin) showControls = true;
+ 
+     const controlButtonsHtml = showControls ? `
+-        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border); display: flex; gap: 15px;">
++        <div class="cat-admin" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border); display: flex; gap: 15px;">
+             <button class="btn-action" onclick="editProject('${p.slug}')">✎ Edytuj Projekt</button>
+             <button class="btn-action" style="border-color:var(--red); color:var(--red);" onclick="deleteProject('${p.id}'); closeFullProjectView();">🗑 Usuń Projekt</button>
+         </div>
+@@ -959,7 +974,7 @@
+     let infoGrid = '';
+     if (descSection || notesSection) {
+         infoGrid = `
+-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; align-items: start; margin-bottom: 40px; background: var(--bg2); padding: 24px; border-radius: 12px;">
++        <div class="cat-info" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 40px; align-items: start; margin-bottom: 40px; background: var(--bg2); padding: 24px; border-radius: 12px;">
+             ${descSection}
+             ${notesSection}
+         </div>`;
+@@ -978,7 +993,7 @@
+                 ${p.github_url ? `<a href="${safeUrl(p.github_url)}" target="_blank" rel="noopener noreferrer" class="btn-action primary" style="font-size: 11px; padding: 4px 10px;">[ github_repo ]</a>` : ''}
+             </div>
+             
+-            <h1 style="font-size: 42px; color: var(--text); font-family: var(--mono); font-weight: 700; letter-spacing: -1px; margin-bottom: 20px;">${esc(p.title)}</h1>
++            <h1 class="cat-title" style="font-size: 42px; color: var(--text); font-family: var(--mono); font-weight: 700; letter-spacing: -1px; margin-bottom: 20px;">${esc(p.title)}</h1>
+             
+             <div style="display:flex; gap:40px; border-top: 1px solid var(--border2); padding-top: 20px;">
+                 <div>
+@@ -1000,7 +1015,7 @@
+         
+         <div id="project-gallery-slot"></div>
+         
+-        <div style="display:flex; gap:10px; margin-bottom: 30px;">${tagsHtml}</div>
++        <div class="cat-tags" style="display:flex; gap:10px; margin-bottom: 30px;">${tagsHtml}</div>
+         
+         ${infoGrid}
+         
+@@ -1578,13 +1593,13 @@
+     const dsBtn = item.datasheet_url ? `<a href="${safeUrl(item.datasheet_url)}" target="_blank" rel="noopener noreferrer" class="btn-action primary" style="font-size: 11px; padding: 4px 10px;">[ Datasheet ]</a>` : '';
+ 
+     document.getElementById('catalog-full-content').innerHTML = `
+-        <div style="background: var(--card); padding: 10px; border-radius: 16px; margin-bottom: 30px;">
+-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px;">
+-                <div style="display:flex; gap:10px;">${catBadge} ${appsHtml}</div>
++        <div class="cat-hero" style="background: var(--card); padding: 10px; border-radius: 16px; margin-bottom: 30px;">
++            <div class="cat-hero-top" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px;">
++                <div class="cat-badges" style="display:flex; gap:10px;">${catBadge} ${appsHtml}</div>
+                 ${dsBtn}
+             </div>
+             
+-            <h1 style="font-size: 42px; color: var(--text); font-family: var(--mono); font-weight: 700; letter-spacing: -1px; margin-bottom: 20px;">
++            <h1 class="cat-title" style="font-size: 42px; color: var(--text); font-family: var(--mono); font-weight: 700; letter-spacing: -1px; margin-bottom: 20px;">
+                 ${esc(item.name)} <span style="font-size:24px; color:var(--text3); font-weight:400">${item.symbol ? `(${esc(item.symbol)})` : ''}</span>
+             </h1>
+         </div>
+@@ -2226,7 +2241,16 @@
+ 
+             // Budujemy pasek nawigacji
+             document.getElementById('navAuth').innerHTML = `
+-                <div style="display:flex; align-items:center; gap:0px; height: 100%;">
++                <button type="button" class="nav-acc-btn" id="navAccBtn" aria-haspopup="true" aria-expanded="false" aria-controls="navAccMenu" aria-label="Konto ${esc(login)}" onclick="navAccToggle(event)">
++                    <img id="nav-avatar-img-m" alt="" hidden><span id="nav-acc-initial">${esc((login || '?').charAt(0).toUpperCase())}</span>
++                </button>
++                <div class="nav-acc-menu" id="navAccMenu" role="menu">
++                    <div class="nav-acc-user"><strong>${esc(login)}</strong><span>${rola}</span></div>
++                    <a role="menuitem" href="/magazyn/">Magazyn</a>
++                    <button type="button" role="menuitem" onclick="navAccGo('profile')">Profil</button>
++                    <button type="button" role="menuitem" class="nav-acc-out" onclick="auth.logout()">Wyloguj</button>
++                </div>
++                <div class="nav-desk" style="display:flex; align-items:center; gap:0px; height: 100%;">
+                     
+                     <a class="nav-link nav-profile" href="/magazyn/" >Magazyn</a>
+                     
+@@ -2377,6 +2401,8 @@
+         navImg.style.display = 'block';
+         navPlaceholder.style.display = 'none';
+     }
++    const navImgM = document.getElementById('nav-avatar-img-m'), navInit = document.getElementById('nav-acc-initial');
++    if (navImgM) { navImgM.src = fullUrl; navImgM.hidden = false; if (navInit) navInit.hidden = true; }
+ }
+ 
+ async function loadProfileData() {
+@@ -2593,6 +2619,36 @@
+     modal.style.display = 'flex';
+   });
+ }
++// ── Menu konta (telefon) ──
++function navAccClose() {
++    const m = document.getElementById('navAccMenu'), b = document.getElementById('navAccBtn');
++    if (m) m.classList.remove('open');
++    if (b) b.setAttribute('aria-expanded', 'false');
++}
++function navAccToggle(ev) {
++    if (ev) ev.stopPropagation();
++    const m = document.getElementById('navAccMenu'), b = document.getElementById('navAccBtn');
++    if (!m || !b) return;
++    const open = !m.classList.contains('open');
++    m.classList.toggle('open', open);
++    b.setAttribute('aria-expanded', String(open));
++}
++function navAccGo(view) { navAccClose(); app.navigate(view); if (view === 'profile') loadProfileData(); }
++document.addEventListener('click', (e) => { const m = document.getElementById('navAccMenu'); if (m && m.classList.contains('open') && !m.contains(e.target)) navAccClose(); });
++document.addEventListener('keydown', (e) => { if (e.key === 'Escape') navAccClose(); });
++
++// ── Filtry: na telefonie zwinięte na starcie, a w nagłówku licznik aktywnych ──
++function updateFilterBadges() {
++    document.querySelectorAll('.filter-details').forEach(d => {
++        const n = d.querySelectorAll('.chip-btn.active').length, sm = d.querySelector('.filter-summary');
++        if (sm) sm.setAttribute('data-count', n ? String(n) : '');
++    });
++}
++document.addEventListener('click', (e) => { if (e.target.closest && e.target.closest('.filter-details')) setTimeout(updateFilterBadges, 0); });
++if (window.matchMedia && window.matchMedia('(max-width: 820px)').matches) {
++    document.querySelectorAll('.filter-details').forEach(d => d.removeAttribute('open'));
++}
++
+ // Obsługa przycisku wstecz/dalej w przeglądarce
+ window.onpopstate = function(event) {
+     if (event.state && event.state.view) {
+diff -ruN a/app/tests/test_mobile.py b/app/tests/test_mobile.py
+--- a/app/tests/test_mobile.py	1970-01-01 01:00:00.000000000 +0100
++++ b/app/tests/test_mobile.py	2026-11-25 23:58:07.627426557 +0100
+@@ -0,0 +1,26 @@
++"""Okablowanie układu mobilnego (portal i magazyn)."""
++from pathlib import Path
++
++APP = Path(__file__).resolve().parent.parent
++
++
++def _r(p):
++    return (APP / p).read_text(encoding="utf-8")
++
++
++def test_portal_mobile_wiring():
++    html = _r("templates/index.html")
++    assert "/mobile.css" in html
++    assert html.index("style.css") < html.index("mobile.css")
++    assert 'id="tabbar"' in html and "navAccBtn" in html
++    css = _r("static/mobile.css")
++    assert "max-width: 820px" in css and ".tabbar" in css
++
++
++def test_magazyn_mobile_wiring():
++    html = _r("esn_magazyn/templates/index.html")
++    assert "mobile.css" in html and html.index("magazyn.css") < html.index("mobile.css")
++    for needle in ('id="tabbar"', 'id="sidebar"', 'id="sb-backdrop"', "function toggleSidebar"):
++        assert needle in html
++    css = _r("esn_magazyn/static/mobile.css")
++    assert "max-width: 820px" in css and ".sb-backdrop" in css
+diff -ruN a/docs/MOBILE.md b/docs/MOBILE.md
+--- a/docs/MOBILE.md	1970-01-01 01:00:00.000000000 +0100
++++ b/docs/MOBILE.md	2026-11-25 23:58:07.632458383 +0100
+@@ -0,0 +1,12 @@
++# Układ mobilny (v25)
++
++Zasady (portal `app/static/mobile.css`, magazyn `app/esn_magazyn/static/mobile.css`):
++- Plik ładowany **jako ostatni**, reguły tylko w `@media (max-width: 820px)`; desktop bez zmian.
++- Nawigacja: dolny pasek zakładek `.tabbar` (60 px + safe-area). Portal: Start, Wiedza, Projekty, Komponenty, Narzędzia; konto w menu na górnym pasku (`#navAccBtn`).
++  Magazyn: Portal, Komponenty, Projekty, Kategorie (szuflada `#sidebar` + `#sb-backdrop`), AI.
++- Panele szczegółów i AI w magazynie: pełny ekran (z-index nad paskiem), blokada przewijania tła.
++- Cele dotyku ≥ 40 px, czcionki ≥ 11 px, pola formularzy 16 px (brak zoomu iOS).
++- Kolory wyłącznie ze zmiennych motywu. Filtry katalogu zwijane z licznikiem aktywnych.
++- Zmieniając CSS podbij `?v=` w `<link>`.
++
++Test: `app/tests/test_mobile.py` (okablowanie) + ręcznie Playwright (Pixel 5, 393 px).
+diff -ruN a/docs/PLAN.md b/docs/PLAN.md
+--- a/docs/PLAN.md	2026-11-25 23:58:07.637408084 +0100
++++ b/docs/PLAN.md	2026-11-25 23:58:07.638596189 +0100
+@@ -31,7 +31,7 @@
+ ## Następne kroki (uzgodniona kolejność)
+ 1. Edytor schematów: jasny motyw i wspólny zestaw ikon (z magazynem) przy integracji z platformą.
+ 2. (zrobione v22) Limity AI i własny klucz API (BYOK).
+-3. Poprawki mobilne (RWD), szerokość markdown, czcionki emoji.
++3. (zrobione v25) Mobilne RWD portalu i magazynu – `docs/MOBILE.md`. Zostają: szerokość markdown, czcionki emoji.
+ 4. Tłumaczenie PL/EN (mechanizm `t('klucz')` → główne ekrany → moduły → treści z polem języka).
+ 5. Przebudowa magazynu na serwerze, kalkulatory w Narzędziach, integracja edytora schematów, nowe tematy Wiedzy (ADC, PWM, tranzystory, debugowanie, uśpienie, LED), ścieżki tematyczne.
+ 6. Mermaid lokalnie jako opcja dodatkowa (jeśli własne diagramy nie wystarczą).

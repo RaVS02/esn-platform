@@ -22,12 +22,9 @@
 *Poprawa wyglądu na urządzeniach mobilnych, naprawa błędów UI i ustandaryzowanie wyglądu.*
 
 ### Optymalizacja Mobilna (RWD)
-- [ ] Naprawić logowanie/wylogowywanie na telefonach (rozwiązanie problemu z brakiem dostępu do Magazynu).
-- [ ] Dodać blok `@media (max-width: 768px)` na końcu pliku stylów.
-- [ ] Zmienić układ `projects-layout` na urządzeniach mobilnych: jedna kolumna, Sidebar przeniesiony na górę.
-- [ ] Przystosować siatki kafelków do jednej kolumny (`grid-template-columns: 1fr`).
-- [ ] Magazyn: Poprawić wyświetlanie tabel i list komponentów na telefonie.
-- [ ] Magazyn: Umożliwić poziome przewijanie paska nawigacji.
+- [x] (v25) Portal i magazyn: dolny pasek zakładek, menu konta, szuflada kategorii, panele na pełny ekran – `docs/MOBILE.md`.
+- [ ] Sprawdzić na prawdziwych telefonach (iOS Safari, Android Chrome) i zebrać uwagi.
+- [ ] Wartości `art4`/`art5` w audycie (brak widocznego h1/h2) – obejrzeć ręcznie.
 
 ### Estetyka i Style
 - [ ] Ustandaryzować emotikony (`style.css`): Dodać `font-family` dla emoji (Apple Color Emoji, Segoe UI Emoji).
