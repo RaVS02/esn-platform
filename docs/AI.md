@@ -55,3 +55,9 @@ Lokalny kontekst (stan magazynu) trafia tylko do modelu użytkownika.
 Zbuduj prompt systemowy po swojej stronie i wywołaj `POST /api/ai/complete` z tokenem użytkownika – limity, klucze i dostawcy już działają.
 Teksty interfejsu ustawień są w jednym obiekcie `T` w `static/ai-settings.js` (gotowe pod tłumaczenie PL/EN).
 Testy: `app/tests/test_ai.py` (atrapa dostawcy, bez sieci).
+
+## Link do karty komponentu (v24)
+Komponent magazynu zaimportowany z katalogu platformy ma `catalog_item_id`. W szczegółach komponentu jest przycisk „Karta na platformie”
+(`/#components/<id>`; portal otwiera wtedy pełną kartę z katalogu). Kontekst AI zawiera dla takich komponentów pole `KARTA: [nazwa](/#components/ID)`,
+a odpowiedź modelu jest wyświetlana z klikalnymi linkami **wyłącznie** w tym wzorcu (DOM przez `createElement`/`textContent`, bez `innerHTML`;
+inne linki i HTML zostają zwykłym tekstem).

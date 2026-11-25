@@ -245,3 +245,14 @@ def test_logout_clears_session_cookie():
     assert r.status_code == 200
     sc = r.headers.get("set-cookie", "")
     assert "esn_access_token=" in sc and ("Max-Age=0" in sc or "expires=" in sc.lower())
+
+
+def test_magazyn_catalog_link_wiring():
+    """Link magazyn → karta komponentu: przycisk w szczegółach, wąski wzorzec w odpowiedziach AI, głęboki link w portalu."""
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    mag = open(os.path.join(root, "esn_magazyn", "templates", "index.html"), encoding="utf-8").read()
+    assert 'id="dp-catalog-link"' in mag and "/#components/${Number(c.catalog_item_id)}" in mag
+    assert r"\/#components\/\d{1,9}" in mag and "innerHTML" not in mag[mag.index("function aiFill"):mag.index("function aiAppend")]
+    assert "KARTA: [" in open(os.path.join(root, "esn_magazyn", "app.py"), encoding="utf-8").read()
+    portal = open(os.path.join(root, "templates", "index.html"), encoding="utf-8").read()
+    assert "openCatalogFromHash" in portal and r"components\/\d+$" in portal

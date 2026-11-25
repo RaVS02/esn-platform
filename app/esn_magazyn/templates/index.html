@@ -714,7 +714,10 @@ async function openDetail(id) {
       ${formatSpecsToTable(c.specs)}
     </div>` : ''}
     ${(c.tags||[]).length?`<div class="detail-section"><div class="section-title">Tagi</div><div class="comp-tags">${c.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div></div>`:''}
-    ${c.datasheet_url?`<div class="detail-section"><a href="${c.datasheet_url}" target="_blank" class="btn-action" ><i class="fa-solid fa-file-pdf"></i> Otwórz datasheet</a></div>`:''}
+    ${(c.datasheet_url || c.catalog_item_id)?`<div class="detail-section" style="display:flex;flex-wrap:wrap;gap:10px">
+      ${c.catalog_item_id?`<a href="/#components/${Number(c.catalog_item_id)}" target="_blank" rel="noopener" class="btn-action" id="dp-catalog-link"><i class="fa-solid fa-microchip"></i> Karta na platformie</a>`:''}
+      ${c.datasheet_url?`<a href="${c.datasheet_url}" target="_blank" class="btn-action" ><i class="fa-solid fa-file-pdf"></i> Otwórz datasheet</a>`:''}
+    </div>`:''}
 
     <div class="detail-section">
       <div class="section-title">Przypisane projekty (${c.projects.length})</div>
@@ -1318,11 +1321,28 @@ async function sendAI(){
   btn.disabled=false; input.focus();
 }
 
+// Tekst odpowiedzi AI + klikalne linki do kart na platformie. Tylko ściśle dopasowany wzorzec [nazwa](/#components/ID);
+// DOM budowany przez textContent/createElement (bez innerHTML), więc odpowiedź modelu nie może wstrzyknąć kodu.
+const AI_LINK_RE=/\[([^\]\n]{1,100})\]\((\/#components\/\d{1,9})\)/g;
+function aiFill(el,text){
+  el.textContent='';
+  let last=0,m;
+  AI_LINK_RE.lastIndex=0;
+  while((m=AI_LINK_RE.exec(text))){
+    if(m.index>last) el.appendChild(document.createTextNode(text.slice(last,m.index)));
+    const a=document.createElement('a');
+    a.href=m[2]; a.target='_blank'; a.rel='noopener'; a.textContent=m[1]+' ↗'; a.className='ai-link';
+    el.appendChild(a);
+    last=m.index+m[0].length;
+  }
+  if(last<text.length) el.appendChild(document.createTextNode(text.slice(last)));
+}
+
 function aiAppend(role, text, loading=false){
   const msgs=document.getElementById('ai-messages');
   const el=document.createElement('div');
   el.className=`ai-msg ${role}${loading?' loading':''}`;
-  el.textContent=text;
+  aiFill(el,text);
   msgs.appendChild(el);
   msgs.scrollTop=msgs.scrollHeight;
   return el;

@@ -1098,6 +1098,8 @@ def _build_context():
             
             cat_name = c.category.name if c.category else "Brak"
             line += f"- Kat: {cat_name}. Zastosowanie: {apps_str}. Tagi: {tags_str}. "
+            if c.catalog_item_id:
+                line += f"KARTA: [{c.name}](/#components/{int(c.catalog_item_id)}). "
             line += f"STAN: {c.quantity_available}/{c.quantity_total} {c.unit}. "
             
             if c.quantity_available <= c.min_stock:
@@ -1130,6 +1132,7 @@ Twoje zadania:
 - Ostrzegaj o niskich stanach i pułapkach komponentów
 - Sugeruj projekty edukacyjne i praktyczne
 - Pomagaj w doborze i sprawdzaj dostępność komponentów
+Gdy wspominasz komponent, przy którym w danych jest pole KARTA, podaj ten link dokładnie w formacie z danych, np. [Nazwa](/#components/12). Nie wymyślaj własnych linków.
 {inventory}
 Bądź konkretny i praktyczny."""
 

@@ -855,6 +855,12 @@ async function openComponentFromProject(id) {
     if (!catalogData.length) await loadCatalog();
     openFullCatalogView(id);
 }
+// Głęboki link z innych modułów (np. magazynu): /#components/<id> otwiera kartę komponentu z katalogu
+async function openCatalogFromHash(id) {
+    if (!catalogData.length) await loadCatalog();
+    if (catalogData.find(x => x.id === id)) openFullCatalogView(id);
+    else if (typeof toast === 'function') toast('Nie znaleziono komponentu w katalogu (mógł zostać usunięty).', 'error');
+}
 async function openProjectFromComponent(slug) {
     closeFullCatalogView();
     app.navigate('projects');
@@ -2611,6 +2617,7 @@ window.addEventListener('load', () => {
         // adresy podstron, np. #knowledge/slug – zachowujemy cały adres, widok sam go odczyta
         history.replaceState({ view: hash }, "", "#" + hashRaw);
         app.navigate(hash, false);
+        if (hash === 'components' && /^components\/\d+$/.test(hashRaw)) openCatalogFromHash(parseInt(hashRaw.split('/')[1], 10));
     }
     else if (hash && document.getElementById('view-' + hash)) {
         app.navigate(hash);

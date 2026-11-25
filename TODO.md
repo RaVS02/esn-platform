@@ -13,7 +13,8 @@
 ### Do zrobienia
 - [ ] Ollama jako dostawca serwerowy w `.env` (`AI_PROVIDER=openai_compat`) – ustawić na serwerze produkcyjnym.
 - [ ] Poziomy limitów (np. konto wspierające) w `ai_service.daily_limit()`; ewentualny panel admina z zużyciem.
-- [ ] Link z magazynu do karty komponentu na platformie (pole `catalog_id` w komponencie magazynu) i użycie go w odpowiedziach AI.
+- [X] Link z magazynu do karty komponentu na platformie (`catalog_item_id`, `/#components/ID`) i klikalne linki w odpowiedziach AI (v24).
+- [ ] Narzędzia dla asystenta (wywoływanie funkcji): wyszukiwanie w katalogu komponentów i w Wiedzy; później opcjonalne wyszukiwanie w sieci przez serwer (limit na użytkownika, filtr adresów wewnętrznych; lokalny model nie ma wtedy pełnej prywatności).
 - [ ] Asystent w portalu (Wiedza/Katalog) przez tę samą bramkę.
 - [ ] Przeniesienie licznika cooldown z pamięci procesu do bazy (gdy będzie więcej niż jeden worker).
 
