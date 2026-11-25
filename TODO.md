@@ -57,3 +57,9 @@
 - [ ] Wdrożyć moduł Bloga.
 - [ ] Stworzyć wyszukiwarkę użytkowników.
 - [ ] Zbudować publiczny panel użytkownika (widoczny dla innych) zawierający: Avatar, Bio oraz listę stworzonych projektów.
+## Tłumaczenia (i18n)
+- [x] (v26) Rdzeń `i18n.js`, słowniki PL/EN, przełącznik, nawigacja, home, AI w profilu, nawigacja magazynu – `docs/I18N.md`.
+- [ ] Modale logowania/rejestracji, Profil, Katalog, Projekty, Narzędzia, edytor Wiedzy, reszta magazynu.
+- [ ] Treści z polem `lang` (artykuły, kursy, projekty, podzespoły).
+- [ ] Język w koncie użytkownika.
+- [ ] Kolejne języki (ES, DE) po ustabilizowaniu słowników.

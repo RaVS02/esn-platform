@@ -1174,6 +1174,11 @@ pre { padding: 18px 20px; overflow-x: auto; font-family: var(--mono); font-size:
 
 
 /* ─── PRZEŁĄCZNIK MOTYWU ─── */
+.lang-switch { display: inline-flex; align-items: center; flex: none; margin-left: auto; }
+.lang-select { background: transparent; border: 1px solid var(--border2); color: var(--text2); height: 34px; padding: 0 8px; border-radius: 8px; font-family: var(--mono); font-size: 12px; font-weight: 600; cursor: pointer; transition: color .2s, border-color .2s; }
+.lang-select:hover { color: var(--accent); border-color: var(--accent); }
+.lang-select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.lang-select option { background: var(--card); color: var(--text); }
 .theme-toggle { background: transparent; border: 1px solid var(--border2); color: var(--text2); width: 34px; height: 34px; margin: 0 8px 0 12px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex: none; font-size: 14px; transition: color .2s, border-color .2s, background .2s; }
 .theme-toggle:hover { color: var(--accent); border-color: var(--accent); background: rgba(var(--accent-rgb),0.08); }
 .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

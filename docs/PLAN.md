@@ -32,7 +32,7 @@ Kolejność jest orientacyjna, każdy etap jest oddawany małymi krokami: funkcj
 1. Edytor schematów: jasny motyw i wspólny zestaw ikon (z magazynem) przy integracji z platformą.
 2. (zrobione v22) Limity AI i własny klucz API (BYOK).
 3. (zrobione v25) Mobilne RWD portalu i magazynu – `docs/MOBILE.md`. Zostają: szerokość markdown, czcionki emoji.
-4. Tłumaczenie PL/EN (mechanizm `t('klucz')` → główne ekrany → moduły → treści z polem języka).
+4. Tłumaczenie PL/EN: (zrobione v26) mechanizm + nawigacja/home/AI – `docs/I18N.md`; dalej kolejne ekrany → moduły → treści z polem języka.
 5. Przebudowa magazynu na serwerze, kalkulatory w Narzędziach, integracja edytora schematów, nowe tematy Wiedzy (ADC, PWM, tranzystory, debugowanie, uśpienie, LED), ścieżki tematyczne.
 6. Mermaid lokalnie jako opcja dodatkowa (jeśli własne diagramy nie wystarczą).
 

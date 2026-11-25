@@ -1,24 +1,12 @@
 /* ESN – ustawienia asystenta AI w Profilu: limit dzienny, własny klucz (chmura), model lokalny (Ollama/LM Studio).
- * Wszystkie teksty w jednym obiekcie T (przygotowane pod tłumaczenie PL/EN). Kolory wyłącznie ze zmiennych CSS.
+ * Teksty przez ESNI18n (klucze ai.*), obiekt T to cienka nakładka. Kolory wyłącznie ze zmiennych CSS.
  */
 (function () {
   "use strict";
-  var T = {
-    title: "Asystent AI", intro: "Domyślnie korzystasz z klucza platformy z dziennym limitem. Własny klucz API lub model lokalny znoszą limit.",
-    usage: "Klucz platformy: wykorzystano {u} z {l} zapytań dzisiaj (limit odnawia się o północy).",
-    usageUnl: "Bez dziennego limitu.", usageOwn: "Używasz własnego klucza: {p}{k}. Bez limitu, koszt po stronie Twojego dostawcy.",
-    serverOff: "Klucz platformy nie jest skonfigurowany – bez własnego klucza asystent nie odpowie.",
-    cloudH: "Własny klucz API (chmura)", provider: "Dostawca", model: "Model (opcjonalnie)", key: "Klucz API",
-    keyPh: "Wklej klucz API", keyKeep: "Zapisany ({h}) – zostaw puste, by nie zmieniać",
-    cloudNote: "Klucz jest szyfrowany na serwerze i nigdy nie jest wyświetlany ponownie. Zapytania idą przez serwer platformy do wybranego dostawcy.",
-    save: "Zapisz", test: "Testuj", remove: "Usuń klucz", saved: "Zapisano ustawienia AI.", removed: "Usunięto własny klucz.",
-    confirmRemove: "Usunąć zapisany klucz API? Wrócisz do dziennego limitu platformy.", testing: "Testuję…", testOk: "Połączenie działa. Odpowiedź: ",
-    localH: "Model lokalny na tym urządzeniu", localOn: "Używaj modelu lokalnego (Ollama, LM Studio…)",
-    localUrl: "Adres serwera", localModel: "Nazwa modelu", localModelPh: "np. llama3.1:8b",
-    localNote: "Zapytania idą bezpośrednio z Twojej przeglądarki do Twojego komputera – serwer platformy ich nie widzi i nie liczy do limitu. Ustawienie dotyczy tylko tego urządzenia.",
-    localHow: "Jak uruchomić", localHowBody: "1) Uruchom Ollamę z modelem (np. „ollama run llama3.1:8b”).  2) Zezwól stronie na dostęp: ustaw zmienną OLLAMA_ORIGINS=https://esn.rs-projects.ovh (albo * na czas prób) i zrestartuj Ollamę.  3) Wpisz adres (domyślnie http://localhost:11434) i nazwę modelu, kliknij „Testuj połączenie”. W LM Studio włącz serwer lokalny i CORS, adres zwykle http://localhost:1234.",
-    localSaved: "Zapisano ustawienia lokalne.", testLocal: "Testuj połączenie", needModel: "Podaj nazwę modelu.", loginNeeded: "Zaloguj się, aby zmienić ustawienia AI."
-  };
+  // Teksty z mechanizmu tłumaczeń (static/i18n/*.js, klucze "ai.*"); T.klucz pobiera tekst w bieżącym języku przy każdym użyciu
+  var T = {};
+  ["title", "intro", "usage", "usageUnl", "usageOwn", "serverOff", "cloudH", "provider", "model", "key", "keyPh", "keyKeep", "cloudNote", "save", "test", "remove", "saved", "removed", "confirmRemove", "testing", "testOk", "localH", "localOn", "localUrl", "localModel", "localModelPh", "localNote", "localHow", "localHowBody", "localSaved", "testLocal", "needModel", "loginNeeded"].forEach(function (k) { Object.defineProperty(T, k, { get: function () { return window.ESNI18n.t("ai." + k); } }); });
+
 
   function h(tag, attrs, kids) {
     var e = document.createElement(tag);
@@ -129,4 +117,5 @@
   }
 
   window.ESNAISettings = { render: render };
+  document.addEventListener("esn-lang", function () { if (document.getElementById("ai-settings-card")) render(); });
 })();

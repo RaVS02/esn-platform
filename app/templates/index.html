@@ -4,12 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="dark light">
-<script src="{{ url_for('static', path='/theme.js') }}?v=3"></script>
+<script src="{{ url_for('static', path='/i18n.js') }}?v=1"></script>
+<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=1"></script>
+<script src="{{ url_for('static', path='/i18n/en.js') }}?v=1"></script>
+<script src="{{ url_for('static', path='/theme.js') }}?v=4"></script>
 <title>Platforma Systemów Wbudowanych</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=2.23">
+<link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=2.24">
 <link rel="stylesheet" href="{{ url_for('static', path='/pinout.css') }}?v=5">
 <script src="{{ url_for('static', path='/vendor/marked.umd.js') }}?v=18.2.1"></script>
 <script src="{{ url_for('static', path='/vendor/purify.min.js') }}?v=3.4.18"></script>
@@ -24,7 +27,7 @@
 <link rel="stylesheet" href="{{ url_for('static', path='/vendor/vs2015.min.css') }}?v=11.12.0">
 <script src="{{ url_for('static', path='/content.js') }}?v=2"></script>
 <link rel="stylesheet" href="{{ url_for('static', path='/knowledge.css') }}?v=13">
-<link rel="stylesheet" href="{{ url_for('static', path='/mobile.css') }}?v=1">
+<link rel="stylesheet" href="{{ url_for('static', path='/mobile.css') }}?v=2">
 <script src="{{ url_for('static', path='/knowledge-templates.js') }}?v=2"></script>
 <script src="{{ url_for('static', path='/knowledge-guide.js') }}?v=2"></script>
 <script src="{{ url_for('static', path='/knowledge-blocks.js') }}?v=1"></script>
@@ -37,63 +40,64 @@
 <nav id="navbar">
   <div class="nav-logo" onclick="app.navigate('home')">ESN<span>/RS</span></div>
   <div class="nav-links">
-    <a class="nav-link active" data-target="home">Home</a>
-    <a class="nav-link" data-target="knowledge">Wiedza</a>
-    <a class="nav-link" data-target="projects">Baza Projektów</a>
-    <a class="nav-link" data-target="components">Katalog Podzespołów</a>
-    <a class="nav-link" data-target="tools">Narzędzia</a>
-    <a class="nav-link" href="/magazyn/" id="nav-inventory" style="display: none;">Magazyn</a>
+    <a class="nav-link active" data-target="home" data-i18n="nav.home">Home</a>
+    <a class="nav-link" data-target="knowledge" data-i18n="nav.knowledge">Wiedza</a>
+    <a class="nav-link" data-target="projects" data-i18n="nav.projects">Baza Projektów</a>
+    <a class="nav-link" data-target="components" data-i18n="nav.components">Katalog Podzespołów</a>
+    <a class="nav-link" data-target="tools" data-i18n="nav.tools">Narzędzia</a>
+    <a class="nav-link" href="/magazyn/" id="nav-inventory" style="display: none;" data-i18n="nav.inventory">Magazyn</a>
   </div>
   
 
-  <button type="button" class="theme-toggle" id="themeToggle" aria-label="Motyw"></button>
+  <div class="lang-switch" data-lang-switch></div>
+  <button type="button" class="theme-toggle" id="themeToggle" aria-label="Motyw" data-i18n-attr="aria-label:nav.theme"></button>
 
   <div class="nav-auth" id="navAuth">
     <button class="btn-action primary" onclick="auth.showModal('login')">
-      <span><i class="fa-solid fa-user"></i></span> Zaloguj się
+      <span><i class="fa-solid fa-user"></i></span> <span data-i18n="nav.login">Zaloguj się</span>
     </button>
   </div>
   
 </nav>
 
-<nav class="tabbar" id="tabbar" aria-label="Nawigacja główna">
-  <button type="button" class="tab-item active" data-target="home" onclick="app.navigate('home')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg><span>Home</span></button>
-  <button type="button" class="tab-item" data-target="knowledge" onclick="app.navigate('knowledge')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg><span>Wiedza</span></button>
-  <button type="button" class="tab-item" data-target="projects" onclick="app.navigate('projects')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg><span>Projekty</span></button>
-  <button type="button" class="tab-item" data-target="components" onclick="app.navigate('components')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10H7z"/><path d="M9 3v4M15 3v4M9 17v4M15 17v4M3 9h4M3 15h4M17 9h4M17 15h4"/></svg><span>Katalog</span></button>
-  <button type="button" class="tab-item" data-target="tools" onclick="app.navigate('tools')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.1L3 17.7 6.3 21l6.3-6.3a4 4 0 0 0 5.1-5.4l-2.6 2.6-2.4-.6-.6-2.4 2.6-2.6z"/></svg><span>Narzędzia</span></button>
+<nav class="tabbar" id="tabbar" aria-label="Nawigacja główna" data-i18n-attr="aria-label:nav.main">
+  <button type="button" class="tab-item active" data-target="home" onclick="app.navigate('home')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg><span data-i18n="tab.home">Home</span></button>
+  <button type="button" class="tab-item" data-target="knowledge" onclick="app.navigate('knowledge')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg><span data-i18n="tab.knowledge">Wiedza</span></button>
+  <button type="button" class="tab-item" data-target="projects" onclick="app.navigate('projects')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg><span data-i18n="tab.projects">Projekty</span></button>
+  <button type="button" class="tab-item" data-target="components" onclick="app.navigate('components')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10H7z"/><path d="M9 3v4M15 3v4M9 17v4M15 17v4M3 9h4M3 15h4M17 9h4M17 15h4"/></svg><span data-i18n="tab.components">Katalog</span></button>
+  <button type="button" class="tab-item" data-target="tools" onclick="app.navigate('tools')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.1L3 17.7 6.3 21l6.3-6.3a4 4 0 0 0 5.1-5.4l-2.6 2.6-2.4-.6-.6-2.4 2.6-2.6z"/></svg><span data-i18n="tab.tools">Narzędzia</span></button>
 </nav>
 
 <div id="view-home" class="app-view active">
   <section class="hero" style="text-align: center; padding-top: 160px;">
-    <div class="hero-tag" style="justify-content: center;">Platforma Edukacyjna</div>
-    <h1>Systemy <em>Wbudowane</em></h1>
-    <p class="hero-sub" style="margin: 0 auto 60px;">Kompleksowa platforma do nauki architektury, programowania C/C++ oraz projektowania układów elektronicznych (IoT, RTOS, komunikacja).</p>
+    <div class="hero-tag" style="justify-content: center;" data-i18n="home.tag">Platforma Edukacyjna</div>
+    <h1><span data-i18n="home.title1">Systemy</span> <em data-i18n="home.title2">Wbudowane</em></h1>
+    <p class="hero-sub" style="margin: 0 auto 60px;" data-i18n="home.sub">Kompleksowa platforma do nauki architektury, programowania C/C++ oraz projektowania układów elektronicznych (IoT, RTOS, komunikacja).</p>
     
     <div class="grid-cards" style="max-width: 1000px; margin: 0 auto; text-align: center;">
       <div class="module-card" onclick="app.navigate('knowledge')">
         <div class="module-icon"><i class="fa-solid fa-book-open"></i></div>
-        <h3>Wiedza</h3>
-        <p>Niezbędniki, poradniki, artykuły i kursy: od podstaw po zagadnienia zaawansowane (komunikacja, pamięć, timery, FreeRTOS).</p>
-        <div class="tag">Niezbędniki · Poradniki · Kursy</div>
+        <h3 data-i18n="home.knowledge.title">Wiedza</h3>
+         <p data-i18n="home.knowledge.text">Niezbędniki, poradniki, artykuły i kursy: od podstaw po zagadnienia zaawansowane (komunikacja, pamięć, timery, FreeRTOS).</p>
+        <div class="tag" data-i18n="home.knowledge.tag">Niezbędniki · Poradniki · Kursy</div>
       </div>
       <div class="module-card" onclick="app.navigate('projects')">
         <div class="module-icon"><i class="fa-solid fa-screwdriver-wrench"></i></div>
-        <h3>Baza Projektów</h3>
-        <p>Zrealizowane aplikacje i układy. Kody źródłowe, schematy elektroniczne i szczegółowe opisy.</p>
-        <div class="tag">Praktyka</div>
+        <h3 data-i18n="home.projects.title">Baza Projektów</h3>
+         <p data-i18n="home.projects.text">Zrealizowane aplikacje i układy. Kody źródłowe, schematy elektroniczne i szczegółowe opisy.</p>
+        <div class="tag" data-i18n="home.projects.tag">Praktyka</div>
       </div>
       <div class="module-card" onclick="app.navigate('components')">
         <div class="module-icon"><i class="fa-solid fa-microchip"></i></div>
-        <h3>Katalog Czujników</h3>
-        <p>Specyfikacje, datasheety i przykłady użycia najpopularniejszych podzespołów i modułów.</p>
-        <div class="tag">Datasheets</div>
+        <h3 data-i18n="home.components.title">Katalog Czujników</h3>
+         <p data-i18n="home.components.text">Specyfikacje, datasheety i przykłady użycia najpopularniejszych podzespołów i modułów.</p>
+        <div class="tag" data-i18n="home.components.tag">Datasheets</div>
       </div>
       <div class="module-card" onclick="app.navigate('tools')">
         <div class="module-icon"><i class="fa-solid fa-toolbox"></i></div>
-        <h3>Narzędzia</h3>
-        <p>Kalkulatory i edytor schematów do codziennej pracy z elektroniką.</p>
-        <div class="tag">W rozwoju</div>
+        <h3 data-i18n="home.tools.title">Narzędzia</h3>
+         <p data-i18n="home.tools.text">Kalkulatory i edytor schematów do codziennej pracy z elektroniką.</p>
+        <div class="tag" data-i18n="home.tools.tag">W rozwoju</div>
       </div>
     </div>
   </section>
@@ -2237,24 +2241,24 @@ function checkAuth() {
                 return; // Przerywamy rysowanie menu!
             }
             const login = payload.sub;
-            const rola = payload.role === 'admin' ? ' 🜲 Admin' : ' 𖨆 Użytkownik';
+            const rola = payload.role === 'admin' ? ' 🜲 ' + t('role.admin') : ' 𖨆 ' + t('role.user');
 
             // Budujemy pasek nawigacji
             document.getElementById('navAuth').innerHTML = `
-                <button type="button" class="nav-acc-btn" id="navAccBtn" aria-haspopup="true" aria-expanded="false" aria-controls="navAccMenu" aria-label="Konto ${esc(login)}" onclick="navAccToggle(event)">
+                <button type="button" class="nav-acc-btn" id="navAccBtn" aria-haspopup="true" aria-expanded="false" aria-controls="navAccMenu" aria-label="${esc(t('nav.account', {login}))}" onclick="navAccToggle(event)">
                     <img id="nav-avatar-img-m" alt="" hidden><span id="nav-acc-initial">${esc((login || '?').charAt(0).toUpperCase())}</span>
                 </button>
                 <div class="nav-acc-menu" id="navAccMenu" role="menu">
                     <div class="nav-acc-user"><strong>${esc(login)}</strong><span>${rola}</span></div>
-                    <a role="menuitem" href="/magazyn/">Magazyn</a>
-                    <button type="button" role="menuitem" onclick="navAccGo('profile')">Profil</button>
-                    <button type="button" role="menuitem" class="nav-acc-out" onclick="auth.logout()">Wyloguj</button>
+                    <a role="menuitem" href="/magazyn/">${t('nav.inventory')}</a>
+                    <button type="button" role="menuitem" onclick="navAccGo('profile')">${t('nav.profile')}</button>
+                    <button type="button" role="menuitem" class="nav-acc-out" onclick="auth.logout()">${t('nav.logout')}</button>
                 </div>
                 <div class="nav-desk" style="display:flex; align-items:center; gap:0px; height: 100%;">
                     
-                    <a class="nav-link nav-profile" href="/magazyn/" >Magazyn</a>
+                    <a class="nav-link nav-profile" href="/magazyn/" >${t('nav.inventory')}</a>
                     
-                    <a class="nav-link nav-profile" data-target="profile" onclick="app.navigate('profile'); loadProfileData();">Profil</a>
+                    <a class="nav-link nav-profile" data-target="profile" onclick="app.navigate('profile'); loadProfileData();">${t('nav.profile')}</a>
                     
                     <div style="display:flex; align-items:center; gap:12px; padding-left:15px; border-left:1px solid var(--border); height: 100%;">
                         <img id="nav-avatar-img" src="" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border2); display: none;">
@@ -2266,7 +2270,7 @@ function checkAuth() {
                         </div>
                     </div>
                     
-                    <button class="btn-action btn-logout" onclick="auth.logout()">Wyloguj</button>
+                    <button class="btn-action btn-logout" onclick="auth.logout()">${t('nav.logout')}</button>
                 </div>
             `;
             
@@ -2811,5 +2815,9 @@ window.addEventListener('load', () => {
     <p>Wersja 2.2.0 | <span class="status-dot"></span> System Online</p>
   </div>
 </footer>
+<script>
+// Zmiana języka: widoki budowane w JS są jeszcze częściowo po polsku, więc przeładowujemy stronę (zob. docs/I18N.md)
+document.addEventListener('esn-lang', () => location.reload());
+</script>
 </body>
 </html>

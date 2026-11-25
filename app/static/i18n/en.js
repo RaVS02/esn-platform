@@ -1,0 +1,46 @@
+/* Dictionary: English. Missing keys fall back to Polish (base language). */
+ESNI18n.add("en", {
+  "lang.label": "Language",
+
+  "nav.home": "Home", "nav.knowledge": "Knowledge", "nav.projects": "Projects", "nav.components": "Component Catalog", "nav.tools": "Tools",
+  "nav.inventory": "Inventory", "nav.profile": "Profile", "nav.logout": "Log out", "nav.login": "Log in", "nav.account": "Account {login}",
+  "nav.main": "Main navigation", "nav.theme": "Theme",
+  "tab.home": "Home", "tab.knowledge": "Knowledge", "tab.projects": "Projects", "tab.components": "Catalog", "tab.tools": "Tools",
+  "role.admin": "Admin", "role.user": "User",
+
+  "theme.auto": "Theme: automatic (follows system). Click to choose light.",
+  "theme.light": "Theme: light. Click to choose dark.",
+  "theme.dark": "Theme: dark. Click to return to automatic.",
+
+  "home.tag": "Educational Platform",
+  "home.title1": "Embedded", "home.title2": "Systems",
+  "home.sub": "A comprehensive platform for learning architecture, C/C++ programming and electronic circuit design (IoT, RTOS, communication).",
+  "home.knowledge.title": "Knowledge",
+  "home.knowledge.text": "Essentials, guides, articles and courses: from the basics to advanced topics (communication, memory, timers, FreeRTOS).",
+  "home.knowledge.tag": "Essentials · Guides · Courses",
+  "home.projects.title": "Project Base",
+  "home.projects.text": "Completed applications and circuits. Source code, schematics and detailed write-ups.",
+  "home.projects.tag": "Hands-on",
+  "home.components.title": "Sensor Catalog",
+  "home.components.text": "Specifications, datasheets and usage examples for the most popular components and modules.",
+  "home.components.tag": "Datasheets",
+  "home.tools.title": "Tools",
+  "home.tools.text": "Calculators and a schematic editor for everyday electronics work.",
+  "home.tools.tag": "In development",
+
+  "ai.title": "AI Assistant", "ai.intro": "By default you use the platform key with a daily limit. Your own API key or a local model removes the limit.",
+  "ai.usage": "Platform key: {u} of {l} requests used today (the limit resets at midnight).",
+  "ai.usageUnl": "No daily limit.", "ai.usageOwn": "You are using your own key: {p}{k}. No limit; the cost is on your provider.",
+  "ai.serverOff": "The platform key is not configured – without your own key the assistant will not answer.",
+  "ai.cloudH": "Your own API key (cloud)", "ai.provider": "Provider", "ai.model": "Model (optional)", "ai.key": "API key",
+  "ai.keyPh": "Paste your API key", "ai.keyKeep": "Saved ({h}) – leave empty to keep it",
+  "ai.cloudNote": "The key is encrypted on the server and never shown again. Requests go through the platform server to the chosen provider.",
+  "ai.save": "Save", "ai.test": "Test", "ai.remove": "Remove key", "ai.saved": "AI settings saved.", "ai.removed": "Your own key was removed.",
+  "ai.confirmRemove": "Remove the saved API key? You will return to the platform's daily limit.", "ai.testing": "Testing…", "ai.testOk": "Connection works. Reply: ",
+  "ai.localH": "Local model on this device", "ai.localOn": "Use a local model (Ollama, LM Studio…)",
+  "ai.localUrl": "Server address", "ai.localModel": "Model name", "ai.localModelPh": "e.g. llama3.1:8b",
+  "ai.localNote": "Requests go straight from your browser to your computer – the platform server does not see them and does not count them toward the limit. This setting applies to this device only.",
+  "ai.localHow": "How to set it up",
+  "ai.localHowBody": "1) Start Ollama with a model (e.g. “ollama run llama3.1:8b”).  2) Allow this site to connect: set OLLAMA_ORIGINS=https://esn.rs-projects.ovh (or * while testing) and restart Ollama.  3) Enter the address (default http://localhost:11434) and the model name, then click “Test connection”. In LM Studio enable the local server and CORS; the address is usually http://localhost:1234.",
+  "ai.localSaved": "Local settings saved.", "ai.testLocal": "Test connection", "ai.needModel": "Enter the model name.", "ai.loginNeeded": "Log in to change AI settings."
+}, { name: "English", locale: "en-GB" });

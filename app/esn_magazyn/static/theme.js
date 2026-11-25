@@ -14,11 +14,13 @@
   }
   function effective(mode) { return mode === "auto" ? (mq && mq.matches ? "light" : "dark") : mode; }
 
-  var LABELS = {
+  // Etykiety z mechanizmu tłumaczeń (klucze theme.*); gdy i18n niedostępne – wersja polska
+  var FALLBACK = {
     auto: "Motyw: automatyczny (według systemu). Kliknij, aby wybrać jasny.",
     light: "Motyw: jasny. Kliknij, aby wybrać ciemny.",
     dark: "Motyw: ciemny. Kliknij, aby wrócić do automatycznego."
   };
+  function label(mode) { return window.ESNI18n ? window.ESNI18n.t("theme." + mode) : FALLBACK[mode]; }
   // Ikony SVG (bez zależności od Font Awesome – przełącznik działa też na stronach bez niego)
   var SVG_NS = "http://www.w3.org/2000/svg";
   var ICONS = {
@@ -41,8 +43,8 @@
       svg.appendChild(path);
     });
     b.appendChild(svg);
-    b.title = LABELS[mode];
-    b.setAttribute("aria-label", LABELS[mode]);
+    b.title = label(mode);
+    b.setAttribute("aria-label", label(mode));
   }
 
   function apply(announce) {

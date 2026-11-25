@@ -15,7 +15,9 @@
   #navbar { height: 52px; padding: 0; }
   .nav-logo { padding: 0 14px; border-right: none; font-size: 15px; }
   .nav-links { display: none; }
-  #navbar .theme-toggle { margin: 0 6px 0 auto; width: 40px; height: 40px; }
+  #navbar .lang-switch { margin-left: auto; }
+  #navbar .lang-select { height: 40px; min-width: 52px; font-size: 13px; }
+  #navbar .theme-toggle { margin: 0 6px 0 8px; width: 40px; height: 40px; }
   .nav-auth { padding: 0 10px 0 0; }
   .nav-desk { display: none !important; }
   #navAuth > .btn-action { min-height: 40px; padding: 0 14px; font-size: 12px; white-space: nowrap; }

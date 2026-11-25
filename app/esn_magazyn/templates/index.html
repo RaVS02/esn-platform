@@ -8,10 +8,13 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <meta name="color-scheme" content="dark light">
-<script src="/magazyn/static/theme.js?v=3"></script>
+<script src="/magazyn/static/i18n.js?v=1"></script>
+<script src="/magazyn/static/i18n/pl.js?v=1"></script>
+<script src="/magazyn/static/i18n/en.js?v=1"></script>
+<script src="/magazyn/static/theme.js?v=4"></script>
 <script src="/magazyn/static/ai-local.js?v=1"></script>
-<link rel="stylesheet" href="/magazyn/static/magazyn.css?v=1.5">
-<link rel="stylesheet" href="/magazyn/static/mobile.css?v=1">
+<link rel="stylesheet" href="/magazyn/static/magazyn.css?v=1.6">
+<link rel="stylesheet" href="/magazyn/static/mobile.css?v=2">
 </head>
 <body>
 
@@ -19,24 +22,25 @@
 <nav id="navbar">
   <div class="nav-logo">ESN<span>/RS</span></div>
   <div class="nav-links">
-    <a class="nav-link" href="/" style="text-decoration: none;">← Portal</a>
-    <a class="nav-link active" id="nav-components" onclick="switchView('components',this,'nav')">Komponenty</a>
-    <a class="nav-link" id="nav-projects" onclick="switchView('projects',this,'nav')">Projekty</a>   
+    <a class="nav-link" href="/" style="text-decoration: none;" data-i18n="mag.portal">← Portal</a>
+    <a class="nav-link active" id="nav-components" onclick="switchView('components',this,'nav')" data-i18n="mag.components">Komponenty</a>
+    <a class="nav-link" id="nav-projects" onclick="switchView('projects',this,'nav')" data-i18n="mag.projects">Projekty</a>   
   </div>
   <div class="nav-right">
     <span class="nav-badge" id="ai-provider-badge"></span>
-    <button type="button" class="theme-toggle" id="themeToggle" aria-label="Motyw"></button>
-    <button class="ai-toggle-btn" id="ai-toggle-btn" onclick="toggleAI()"><i class="fa-solid fa-robot"></i> AI Asystent</button>
+    <div class="lang-switch" data-lang-switch></div>
+    <button type="button" class="theme-toggle" id="themeToggle" aria-label="Motyw" data-i18n-attr="aria-label:nav.theme"></button>
+    <button class="ai-toggle-btn" id="ai-toggle-btn" onclick="toggleAI()"><i class="fa-solid fa-robot"></i> <span data-i18n="mag.aiAssistant">AI Asystent</span></button>
   </div>
 </nav>
 
 <!-- DOLNY PASEK ZAKŁADEK (telefon) -->
-<nav class="tabbar" id="tabbar" aria-label="Nawigacja magazynu">
-  <a class="tab-item" href="/" id="tab-portal"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg><span>Portal</span></a>
-  <button type="button" class="tab-item active" id="tab-components" data-view="components" onclick="switchView('components')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10H7z"/><path d="M9 3v4M15 3v4M9 17v4M15 17v4M3 9h4M3 15h4M17 9h4M17 15h4"/></svg><span>Komponenty</span></button>
-  <button type="button" class="tab-item" id="tab-projects" data-view="projects" onclick="switchView('projects')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg><span>Projekty</span></button>
-  <button type="button" class="tab-item" id="tab-cats" onclick="toggleSidebar()" aria-controls="sidebar" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg><span>Kategorie</span></button>
-  <button type="button" class="tab-item" id="tab-ai" onclick="toggleAI()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8L12 3z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15z"/></svg><span>AI</span></button>
+<nav class="tabbar" id="tabbar" aria-label="Nawigacja magazynu" data-i18n-attr="aria-label:nav.main">
+  <a class="tab-item" href="/" id="tab-portal"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg><span data-i18n="mag.portalShort">Portal</span></a>
+  <button type="button" class="tab-item active" id="tab-components" data-view="components" onclick="switchView('components')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10H7z"/><path d="M9 3v4M15 3v4M9 17v4M15 17v4M3 9h4M3 15h4M17 9h4M17 15h4"/></svg><span data-i18n="mag.components">Komponenty</span></button>
+  <button type="button" class="tab-item" id="tab-projects" data-view="projects" onclick="switchView('projects')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg><span data-i18n="mag.projects">Projekty</span></button>
+  <button type="button" class="tab-item" id="tab-cats" onclick="toggleSidebar()" aria-controls="sidebar" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg><span data-i18n="mag.categories">Kategorie</span></button>
+  <button type="button" class="tab-item" id="tab-ai" onclick="toggleAI()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8L12 3z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15z"/></svg><span data-i18n="mag.ai">AI</span></button>
 </nav>
 <div class="sb-backdrop" id="sb-backdrop" onclick="toggleSidebar(false)"></div>
 
@@ -1520,5 +1524,6 @@ init();
         <p>Wersja 2.2.0 | <span class="status-dot"></span> System Online</p>
       </div>
     </footer>
+<script>document.addEventListener('esn-lang', () => location.reload());</script>
 </body>
 </html>

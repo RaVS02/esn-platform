@@ -1,0 +1,46 @@
+/* Słownik: polski (język bazowy – kompletny; pozostałe języki odwołują się do niego, gdy brakuje klucza). */
+ESNI18n.add("pl", {
+  "lang.label": "Język",
+
+  "nav.home": "Home", "nav.knowledge": "Wiedza", "nav.projects": "Baza Projektów", "nav.components": "Katalog Podzespołów", "nav.tools": "Narzędzia",
+  "nav.inventory": "Magazyn", "nav.profile": "Profil", "nav.logout": "Wyloguj", "nav.login": "Zaloguj się", "nav.account": "Konto {login}",
+  "nav.main": "Nawigacja główna", "nav.theme": "Motyw",
+  "tab.home": "Home", "tab.knowledge": "Wiedza", "tab.projects": "Projekty", "tab.components": "Katalog", "tab.tools": "Narzędzia",
+  "role.admin": "Admin", "role.user": "Użytkownik",
+
+  "theme.auto": "Motyw: automatyczny (według systemu). Kliknij, aby wybrać jasny.",
+  "theme.light": "Motyw: jasny. Kliknij, aby wybrać ciemny.",
+  "theme.dark": "Motyw: ciemny. Kliknij, aby wrócić do automatycznego.",
+
+  "home.tag": "Platforma Edukacyjna",
+  "home.title1": "Systemy", "home.title2": "Wbudowane",
+  "home.sub": "Kompleksowa platforma do nauki architektury, programowania C/C++ oraz projektowania układów elektronicznych (IoT, RTOS, komunikacja).",
+  "home.knowledge.title": "Wiedza",
+  "home.knowledge.text": "Niezbędniki, poradniki, artykuły i kursy: od podstaw po zagadnienia zaawansowane (komunikacja, pamięć, timery, FreeRTOS).",
+  "home.knowledge.tag": "Niezbędniki · Poradniki · Kursy",
+  "home.projects.title": "Baza Projektów",
+  "home.projects.text": "Zrealizowane aplikacje i układy. Kody źródłowe, schematy elektroniczne i szczegółowe opisy.",
+  "home.projects.tag": "Praktyka",
+  "home.components.title": "Katalog Czujników",
+  "home.components.text": "Specyfikacje, datasheety i przykłady użycia najpopularniejszych podzespołów i modułów.",
+  "home.components.tag": "Datasheets",
+  "home.tools.title": "Narzędzia",
+  "home.tools.text": "Kalkulatory i edytor schematów do codziennej pracy z elektroniką.",
+  "home.tools.tag": "W rozwoju",
+
+  "ai.title": "Asystent AI", "ai.intro": "Domyślnie korzystasz z klucza platformy z dziennym limitem. Własny klucz API lub model lokalny znoszą limit.",
+  "ai.usage": "Klucz platformy: wykorzystano {u} z {l} zapytań dzisiaj (limit odnawia się o północy).",
+  "ai.usageUnl": "Bez dziennego limitu.", "ai.usageOwn": "Używasz własnego klucza: {p}{k}. Bez limitu, koszt po stronie Twojego dostawcy.",
+  "ai.serverOff": "Klucz platformy nie jest skonfigurowany – bez własnego klucza asystent nie odpowie.",
+  "ai.cloudH": "Własny klucz API (chmura)", "ai.provider": "Dostawca", "ai.model": "Model (opcjonalnie)", "ai.key": "Klucz API",
+  "ai.keyPh": "Wklej klucz API", "ai.keyKeep": "Zapisany ({h}) – zostaw puste, by nie zmieniać",
+  "ai.cloudNote": "Klucz jest szyfrowany na serwerze i nigdy nie jest wyświetlany ponownie. Zapytania idą przez serwer platformy do wybranego dostawcy.",
+  "ai.save": "Zapisz", "ai.test": "Testuj", "ai.remove": "Usuń klucz", "ai.saved": "Zapisano ustawienia AI.", "ai.removed": "Usunięto własny klucz.",
+  "ai.confirmRemove": "Usunąć zapisany klucz API? Wrócisz do dziennego limitu platformy.", "ai.testing": "Testuję…", "ai.testOk": "Połączenie działa. Odpowiedź: ",
+  "ai.localH": "Model lokalny na tym urządzeniu", "ai.localOn": "Używaj modelu lokalnego (Ollama, LM Studio…)",
+  "ai.localUrl": "Adres serwera", "ai.localModel": "Nazwa modelu", "ai.localModelPh": "np. llama3.1:8b",
+  "ai.localNote": "Zapytania idą bezpośrednio z Twojej przeglądarki do Twojego komputera – serwer platformy ich nie widzi i nie liczy do limitu. Ustawienie dotyczy tylko tego urządzenia.",
+  "ai.localHow": "Jak uruchomić",
+  "ai.localHowBody": "1) Uruchom Ollamę z modelem (np. „ollama run llama3.1:8b”).  2) Zezwól stronie na dostęp: ustaw zmienną OLLAMA_ORIGINS=https://esn.rs-projects.ovh (albo * na czas prób) i zrestartuj Ollamę.  3) Wpisz adres (domyślnie http://localhost:11434) i nazwę modelu, kliknij „Testuj połączenie”. W LM Studio włącz serwer lokalny i CORS, adres zwykle http://localhost:1234.",
+  "ai.localSaved": "Zapisano ustawienia lokalne.", "ai.testLocal": "Testuj połączenie", "ai.needModel": "Podaj nazwę modelu.", "ai.loginNeeded": "Zaloguj się, aby zmienić ustawienia AI."
+}, { name: "Polski", locale: "pl-PL" });
