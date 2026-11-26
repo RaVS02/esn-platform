@@ -1144,5 +1144,6 @@ ESNI18n.add("pl", {
   "wr.zduplikowano": "Utworzono kopię schematu",
   "wr.podpieto": "Schemat podpięty do projektu",
   "wr.odpieto": "Schemat odpięty od projektu",
-  "wr.bladOperacji": "Operacja nie powiodła się"
+  "wr.bladOperacji": "Operacja nie powiodła się",
+  "api.czesciPodstawowychNieMozna": "Części podstawowych nie można zmieniać – utwórz własną część"
 }, { name: "Polski", locale: "pl-PL" });

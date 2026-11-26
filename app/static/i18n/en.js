@@ -1144,5 +1144,6 @@ ESNI18n.add("en", {
   "wr.zduplikowano": "Diagram copy created",
   "wr.podpieto": "Diagram attached to the project",
   "wr.odpieto": "Diagram detached from the project",
-  "wr.bladOperacji": "The operation failed"
+  "wr.bladOperacji": "The operation failed",
+  "api.czesciPodstawowychNieMozna": "Basic parts cannot be changed – create your own part"
 }, { name: "English", locale: "en-GB" });

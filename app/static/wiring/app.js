@@ -92,6 +92,7 @@ const TEMPLATE = `
         <input data-r="libQ" data-i18n-ph="search">
         <div class="seg mini" data-r="libSeg">
           <button data-s="all" data-i18n="src.all">Wszystkie</button>
+          <button data-s="basic" data-i18n="src.basic">Podstawowe</button>
           <button data-s="catalog" data-i18n="src.catalog">Katalog</button>
           <button data-s="own" data-i18n="src.own">Własne</button>
         </div>
@@ -210,7 +211,7 @@ const I18N = {
     'undo': 'Cofnij (Ctrl+Z)', 'redo': 'Ponów (Ctrl+Y)', 'modeSimple': 'Uproszczony', 'modeDetail': 'Szczegółowy',
     'wireStyle': 'Styl przewodów', 'wire.curve': 'Przewody: krzywe', 'wire.ortho': 'Przewody: kąty proste', 'wire.straight': 'Przewody: proste',
     'edit': 'Edycja', 'autoLayout': 'Auto-układ', 'fit': 'Dopasuj', 'export': 'Eksport', 'import': 'Import', 'save': 'Zapisz',
-    'search': 'Szukaj części…', 'src.all': 'Wszystkie', 'src.catalog': 'Katalog', 'src.own': 'Własne', 'newPart': 'Nowa część',
+    'search': 'Szukaj części…', 'src.all': 'Wszystkie', 'src.catalog': 'Katalog', 'src.own': 'Własne', 'src.basic': 'Podstawowe', 'badge.basic': 'podstawowa', 'basicPart': 'Część podstawowa – wspólna dla wszystkich; wartość (np. 4k7, 100n) wpiszesz wyżej. Inne piny? Utwórz własną część.', 'newPart': 'Nowa część',
     'dirty': 'niezapisane zmiany', 'saved': 'zapisano',
     'saveErr': 'Nie zapisano: {0}', 'conflict.ask': 'Ktoś zapisał w międzyczasie nowszą wersję tego schematu.\n\nOK – wczytaj nowszą wersję (Twoje zmiany przepadną)\nAnuluj – zapisz swoją wersję jako kopię',
     'conflict.copy': '(kopia)',
@@ -302,7 +303,7 @@ const I18N = {
     'undo': 'Undo (Ctrl+Z)', 'redo': 'Redo (Ctrl+Y)', 'modeSimple': 'Simplified', 'modeDetail': 'Detailed',
     'wireStyle': 'Wire style', 'wire.curve': 'Wires: curved', 'wire.ortho': 'Wires: right angles', 'wire.straight': 'Wires: straight',
     'edit': 'Edit', 'autoLayout': 'Auto layout', 'fit': 'Fit', 'export': 'Export', 'import': 'Import', 'save': 'Save',
-    'search': 'Search parts…', 'src.all': 'All', 'src.catalog': 'Catalog', 'src.own': 'Own', 'newPart': 'New part',
+    'search': 'Search parts…', 'src.all': 'All', 'src.catalog': 'Catalog', 'src.own': 'Own', 'src.basic': 'Basic', 'badge.basic': 'basic', 'basicPart': 'Basic part – shared by everyone; enter its value (e.g. 4k7, 100n) above. Different pins? Create your own part.', 'newPart': 'New part',
     'dirty': 'unsaved changes', 'saved': 'saved',
     'saveErr': 'Not saved: {0}', 'conflict.ask': 'Someone saved a newer version of this schematic in the meantime.\n\nOK – load the newer version (your changes will be lost)\nCancel – save your version as a copy',
     'conflict.copy': '(copy)',
@@ -424,6 +425,8 @@ function applySettings() {
   $('#setIcons').checked = !!SET.icons; $('#setPhotos').checked = !!SET.photos; $('#setFill').checked = !!SET.labelFill;
 }
 const nodeEl = id => $(`#nodes .node[data-id="${id}"]`);
+/* ESN: części z katalogu i podstawowe (source 'builtin', id std-*) są wspólne – nie edytuje się ich w edytorze ani nie eksportuje w JSON */
+const fixedSrc = s => s === 'catalog' || s === 'builtin';
 const nodeEls = () => [...$$('#nodes .node')];
 
 /* Punkt integracji z platformą: przed załadowaniem skryptu można ustawić
@@ -696,8 +699,8 @@ function renderLib() {
   L.items.forEach(p => { if (!by[p.category]) { by[p.category] = []; order.push(p.category); } by[p.category].push(p); });
   let html = order.map(c => `<div class="lcat">${esc(catName(c))}</div>` + by[c].map(p =>
     `<div class="litem" data-add="${esc(p.id)}" style="--c:${CATS[p.category] || CATS.Inne}" title="${esc(loc(p, 'desc') || '')}">
-       <span class="pico lico">${iconSVG(iconKey(p), 17)}</span><div class="nm">${esc(loc(p, 'name'))}<small>${t('pins', p.pins)}${p.source === 'catalog' ? ` · <b class="badge">${t('badge.catalog')}</b>` : ''}</small></div>
-       ${p.source === 'catalog' ? '' : `<button class="ed" data-ed="${esc(p.id)}" title="${esc(t('editPart'))}">✎</button>`}</div>`).join('')).join('');
+       <span class="pico lico">${iconSVG(iconKey(p), 17)}</span><div class="nm">${esc(loc(p, 'name'))}<small>${t('pins', p.pins)}${p.source === 'catalog' ? ` · <b class="badge">${t('badge.catalog')}</b>` : p.source === 'builtin' ? ` · <b class="badge basic">${t('badge.basic')}</b>` : ''}</small></div>
+       ${fixedSrc(p.source) ? '' : `<button class="ed" data-ed="${esc(p.id)}" title="${esc(t('editPart'))}">✎</button>`}</div>`).join('')).join('');
   if (!L.items.length) html = `<div class="muted">${L.busy ? '…' : t('noParts')}</div>`;
   if (L.page < L.pages) html += `<button class="more" data-r="libMore">${t('loadMore')} (${L.items.length}/${L.total})</button>`;
   else if (L.items.length) html += `<div class="muted cnt">${t('shown', L.total)}</div>`;
@@ -1094,7 +1097,7 @@ function renderInsp() {
   const noteInput = l => `<label>${t('note')}<input data-note="${l.id}" value="${esc(noteOf(l))}" placeholder="${esc(t('notePh'))}" ${S.edit ? '' : 'disabled'}></label>`;
 
   if (sel && sel.t === 'node' && nodeById(sel.id)) {
-    const n = nodeById(sel.id), pt = partOf(n), cat = pt?.source === 'catalog';
+    const n = nodeById(sel.id), pt = partOf(n), cat = fixedSrc(pt?.source);
     el.innerHTML = `<h3>${esc(nodeLabel(n))}</h3>
       <div class="muted">${esc(pt ? loc(pt, 'name') : '')} · ${esc(pt ? catName(pt.category) : '')}${pt?.package ? ' · ' + esc(pt.package) : ''}</div>${pt && loc(pt, 'desc') ? `<p>${esc(loc(pt, 'desc'))}</p>` : ''}
       <label>${t('nodeLabel')}<input data-r="iLabel" value="${esc(loc(n, 'label') || '')}" placeholder="${esc(pt ? loc(pt, 'name') : '')}" ${S.edit ? '' : 'disabled'}></label>
@@ -1107,7 +1110,7 @@ function renderInsp() {
         <div><b>${p.num ? esc(p.num) + ' · ' : ''}${esc(p.name)}</b> <small>${busName(T(p.type).bus)}${p.v ? ' ' + esc(p.v) + ' V' : ''}</small>
         <div><small>${esc(loc(p, 'desc') || '')}</small></div>${c.length ? `<div><small>↔ ${c.map(esc).join(', ')}</small></div>` : ''}
         ${p.note ? `<details><summary>${t('details')}</summary><small>${esc(p.note)}</small></details>` : ''}</div></div>`; }).join('')}
-      ${cat ? `<p class="muted">${t('catalogPart')}</p>` : ''}
+      ${cat ? `<p class="muted">${t(pt.source === 'builtin' ? 'basicPart' : 'catalogPart')}</p>` : ''}
       <div class="btns">${cardUrl(pt) ? `<a class="btnlink" href="${esc(cardUrl(pt))}" target="_blank" rel="noopener noreferrer" title="${esc(t('openCardTitle'))}">${esc(t('openCard'))}</a>` : ''}${S.edit ? `<button class="danger" data-r="iDelNode">${t('delNode')}</button>` : ''}${cat ? '' : `<button data-r="iEditPart">${t('editPart')}</button>`}</div>`;
     if (pt) bindValue(n, pt);
     const li = $('#iLabel');
@@ -1696,7 +1699,7 @@ let editingPart = null;
 async function openPart(id) {
   if (id) await ensureParts([id]);
   editingPart = id; const p = id && S.parts[id];
-  if (p && p.source === 'catalog') return;
+  if (p && fixedSrc(p.source)) return;
   $('#dlgTitle').textContent = t(p ? 'part.edit' : 'part.new');
   $('#pName').value = p ? p.name : ''; $('#pCat').value = p ? p.category : 'Inne'; $('#pDesc').value = p ? p.desc || '' : '';
   $('#pIcon').value = p && p.icon ? p.icon : ''; $('#pImage').value = p && p.image ? p.image : '';
@@ -1867,7 +1870,7 @@ function download(blob, name) {
 const fname = ext => ((titleOf(S.p) || 'schemat').replace(/[^\w-]+/g, '_')) + '_' + S.mode + '.' + ext;
 
 function exportJson() {
-  const used = {}; S.p.nodes.forEach(n => { const pt = S.parts[n.part]; if (pt && pt.source !== 'catalog') used[n.part] = pt; });
+  const used = {}; S.p.nodes.forEach(n => { const pt = S.parts[n.part]; if (pt && !fixedSrc(pt.source)) used[n.part] = pt; });
   download(new Blob([JSON.stringify({project: S.p, parts: used}, null, 1)], {type: 'application/json'}), fname('json'));
 }
 
@@ -2038,7 +2041,7 @@ function bomRows() {
   for (const {id, value, refs} of g.values()) {
     const pt = S.parts[id];
     rows.push([i++, pt ? loc(pt, 'name') : id, value, pt ? catName(pt.category) : '', refs.length, refs.join(', '), pt?.package || '',
-               pt ? t(pt.source === 'catalog' ? 'src.catalog' : 'src.own') : '', id, pt?.datasheet || '']);
+               pt ? t(pt.source === 'catalog' ? 'src.catalog' : pt.source === 'builtin' ? 'src.basic' : 'src.own') : '', id, pt?.datasheet || '']);
   }
   return rows;
 }
@@ -2164,7 +2167,15 @@ $('#pdfGo').onclick = () => {
 
 /* Wąski edytor: pasek przewija się w bok (overflow), więc menu otwieramy z pozycją „fixed” liczoną od przycisku – inaczej zostałoby ucięte. */
 function placeMenu(menu, btn) {
-  if (!root.classList.contains('narrow') || menu.hidden) { menu.style.left = menu.style.top = menu.style.right = ''; return; }
+  if (!root.classList.contains('narrow') || menu.hidden) {
+    menu.style.left = menu.style.top = menu.style.right = '';
+    if (menu.hidden) return;
+    /* ESN: pasek się zawija – menu wyrównane do strony, po której mieści się w edytorze (inaczej wychodzi poza lewą/prawą krawędź) */
+    const m = menu.getBoundingClientRect(), b = root.getBoundingClientRect();
+    if (m.left < b.left + 4) Object.assign(menu.style, {left: '0', right: 'auto'});
+    else if (m.right > b.right - 4) Object.assign(menu.style, {left: 'auto', right: '0'});
+    return;
+  }
   const r = btn.getBoundingClientRect(), w = Math.min(300, window.innerWidth - 16);
   Object.assign(menu.style, {top: Math.round(r.bottom + 4) + 'px', left: Math.round(Math.max(8, Math.min(r.left, window.innerWidth - w - 8))) + 'px', right: 'auto'});
 }
@@ -2208,7 +2219,7 @@ $('#fileIn').onchange = async e => {
   const f = e.target.files[0]; if (!f) return;
   try {
     const d = JSON.parse(await f.text());
-    for (const p of Object.values(d.parts || {})) { if (String(p.id).startsWith('cat-')) continue; await api('PUT', '/parts/' + encodeURIComponent(p.id), p); S.parts[p.id] = p; }
+    for (const p of Object.values(d.parts || {})) { if (/^(cat|std)-/.test(String(p.id))) continue; await api('PUT', '/parts/' + encodeURIComponent(p.id), p); S.parts[p.id] = p; }
     const p = await api('POST', '/projects', {...d.project, id: undefined});
     S.dirty = false; await loadProjects(p.id); loadLib(true);
   } catch (err) { alert(t('badFile', err.message)); }

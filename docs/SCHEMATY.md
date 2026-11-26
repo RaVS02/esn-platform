@@ -30,6 +30,17 @@ Kolory magistral i kategorii (`--c`) zostają bez zmian (korzysta z nich eksport
 **Zmiana edytora:** popraw kod w repozytorium edytora, skopiuj `static/app.js` do `app/static/wiring/app.js` (haki `ESN:` są wstecznie zgodne z demo, więc warto je mieć też w repozytorium edytora) i podbij `?v=` w `templates/index.html`.
 `style.css` kopiuj bez bloku `:root{…}` i reguły `body{…}`.
 
+## 2a. Części podstawowe (v41)
+
+`app/wiring_builtin.py` – 26 części wspólnych dla wszystkich (id `std-*`, źródło `builtin`): masa, szyny 3,3 V i 5 V, bateria, zasilanie 12 V, przetwornica 12→5 V,
+regulator AMS1117, bezpiecznik, rezystor, potencjometr, kondensator, cewka, kwarc, dioda, LED, LED z rezystorem, tranzystory NPN/PNP/MOSFET N, przycisk, przełącznik,
+złącza 2- i 4-pin, brzęczyk, serwo, silnik DC (z demo edytora + uzupełnienia; nazwy i opisy PL/EN).
+W bibliotece edytora zakładka **Podstawowe** (oraz w „Wszystkie”), plakietka „podstawowa”, bez edycji (jak katalog; PUT `std-*` → 400), nie trafiają do eksportu JSON.
+Wartości przy węźle: rezystory/potencjometry i kondensatory – liczba + jednostka (4k7 → 4,7 kΩ, 100n → 100 nF, szereg E12); pozostałe – dowolny tekst (np. 16 MHz, 10 µH, 9 V).
+Złożone podzespoły (MCU, moduły, układy) pochodzą z katalogu (pinout + dokumentacja); inne piny → część własna.
+Nowa część podstawowa: dopisz do `BUILTIN_PARTS` (nie zmieniaj id istniejących – są zapisane w schematach); test `test_builtin_parts` sprawdza zgodność z walidacją.
+Identyfikatory pinów mogą zawierać `+`, `/`, `−` itp. (`PIN_RE`; v41 – wcześniej piny typu `+5V` w częściach własnych były gubione przy zapisie).
+
 ## 3. Haki dodane w `app.js` (komentarz `ESN:`)
 
 | Hak | Po co |

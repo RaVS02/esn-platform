@@ -53,8 +53,8 @@
       var u = new URL(url, location.origin), path = u.pathname, d = guestLoad(), m;
       if (method === "GET" && path === "/parts") {
         var src = u.searchParams.get("src") || "all", q = (u.searchParams.get("q") || "").toLowerCase(), page = +u.searchParams.get("page") || 1;
-        var res = src === "own" ? { items: [], total: 0, page: page, pages: 1 } : await req("GET", url.replace(/src=all/, "src=catalog"));
-        if (src !== "catalog" && page === 1) {
+        var res = src === "own" ? { items: [], total: 0, page: page, pages: 1 } : await req("GET", url);   // katalog + części podstawowe z serwera
+        if ((src === "all" || src === "own") && page === 1) {
           var own = Object.keys(d.parts).map(function (k) { return d.parts[k]; }).filter(function (p) {
             return !q || ((p.name || "") + " " + (p.desc || "") + " " + (p.category || "")).toLowerCase().indexOf(q) >= 0;
           }).map(function (p) { return { id: p.id, name: p.name, name_en: p.name_en, category: p.category || "Inne", desc: p.desc || "", desc_en: p.desc_en,
@@ -65,15 +65,15 @@
       }
       if (method === "GET" && path === "/parts/batch") {
         var ids = (u.searchParams.get("ids") || "").split(",").filter(Boolean);
-        var cat = ids.filter(function (i) { return /^cat-/.test(i); });
+        var cat = ids.filter(function (i) { return /^(cat|std)-/.test(i); });
         var out = cat.length ? await req("GET", "/parts/batch?ids=" + encodeURIComponent(cat.join(","))) : [];
-        ids.forEach(function (i) { if (!/^cat-/.test(i) && d.parts[i]) out.push(d.parts[i]); });
+        ids.forEach(function (i) { if (!/^(cat|std)-/.test(i) && d.parts[i]) out.push(d.parts[i]); });
         return out;
       }
       if ((m = path.match(/^\/parts\/(.+)$/))) {
         var pid = decodeURIComponent(m[1]);
-        if (method === "GET") return /^cat-/.test(pid) ? req("GET", url) : d.parts[pid];
-        if (method === "PUT") { if (/^cat-/.test(pid)) throw new Error("catalog"); d.parts[pid] = Object.assign({}, body, { id: pid }); guestSave(d); return d.parts[pid]; }
+        if (method === "GET") return /^(cat|std)-/.test(pid) ? req("GET", url) : d.parts[pid];
+        if (method === "PUT") { if (/^(cat|std)-/.test(pid)) throw new Error("catalog"); d.parts[pid] = Object.assign({}, body, { id: pid }); guestSave(d); return d.parts[pid]; }
       }
       if (path === "/projects") {
         if (method === "GET") return Object.keys(d.projects).map(function (k) { var p = d.projects[k];

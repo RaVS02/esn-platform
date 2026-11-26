@@ -232,3 +232,22 @@ def test_list_fields_link_and_unlink(env):
     db.query(models.ProjectComponent).filter(models.ProjectComponent.project_id == env["proj"]).delete()
     db.commit()
     db.close()
+
+
+def test_builtin_parts(env):
+    import wiring_builtin
+    ids = [p["id"] for p in wiring_builtin.BUILTIN_PARTS]
+    assert len(ids) == len(set(ids)) and all(i.startswith("std-") for i in ids)
+    for p in wiring_builtin.BUILTIN_PARTS:                       # dane zgodne z walidacją części (clean_part)
+        c = wiring_service.clean_part(p["id"], p)
+        assert [x["id"] for x in c["pins"]] == [x["id"] for x in p["pins"]] and c["category"] == p["category"], p["id"]
+        assert p.get("name_en") and all(x.get("desc_en") for x in p["pins"]), p["id"]
+    r = client.get("/api/wiring/parts", params={"src": "basic", "limit": 100}).json()
+    assert r["total"] == len(ids) and all(i["source"] == "builtin" for i in r["items"])
+    assert client.get("/api/wiring/parts", params={"src": "basic", "q": "kondensator"}).json()["items"][0]["id"] == "std-capacitor"
+    assert any(i["id"] == "std-resistor" for i in client.get("/api/wiring/parts", params={"limit": 100}).json()["items"])
+    b = client.get("/api/wiring/parts/batch", params={"ids": "std-resistor,std-gnd"}).json()
+    assert [p["id"] for p in b] == ["std-resistor", "std-gnd"] and b[0]["pins"][0]["type"] == "pass"
+    assert client.put("/api/wiring/parts/std-resistor", headers=env["a"]["h"], json={"name": "x"}).status_code == 400
+    out = wiring_service.clean_wiring({"nodes": [{"id": "n1", "part": "std-resistor", "x": 0, "y": 0, "value": "4.7 kΩ"}]})
+    assert out["nodes"][0]["part"] == "std-resistor" and out["nodes"][0]["value"] == "4.7 kΩ"

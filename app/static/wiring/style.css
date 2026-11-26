@@ -341,3 +341,13 @@
 .sch.light .tnote.sel{box-shadow:inset 3px 0 0 var(--cv,var(--c)),0 0 0 1px var(--accent),0 0 14px rgba(10,126,164,.18)}
 .sch.light dialog{box-shadow:0 20px 50px rgba(20,32,46,.25)}
 .sch.light dialog::backdrop{background:rgba(20,32,46,.45)}
+
+/* ESN: plakietka części podstawowej (v41) */
+.sch .litem small .badge.basic{color:var(--green)}
+/* ESN: 4 zakładki biblioteki (Wszystkie / Podstawowe / Katalog / Własne) – siatka 2×2, żeby mieściły się w wąskim panelu */
+.sch [data-r="libSeg"]{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.sch [data-r="libSeg"] button{border-radius:0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sch [data-r="libSeg"] button:nth-child(1){border-radius:6px 0 0 0}
+.sch [data-r="libSeg"] button:nth-child(2){border-radius:0 6px 0 0}
+.sch [data-r="libSeg"] button:nth-child(3){border-radius:0 0 0 6px}
+.sch [data-r="libSeg"] button:nth-child(4){border-radius:0 0 6px 0}

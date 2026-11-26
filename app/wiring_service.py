@@ -28,6 +28,7 @@ from sqlalchemy import func, or_, String as SAString
 from sqlalchemy.orm import Session, defer
 
 import models
+from wiring_builtin import BUILTIN_PARTS, BY_ID as BUILTIN_BY_ID
 
 LANGS = ("pl", "en")
 
@@ -47,6 +48,7 @@ PIN_TYPES = ("power", "gnd", "analog", "digital", "spi", "i2c", "i2s", "uart", "
              "control", "nc", "other", "gpio", "pass", "i2c_sda", "i2c_scl", "spi_sck", "spi_mosi", "spi_miso", "spi_cs",
              "uart_tx", "uart_rx")
 ID_RE = re.compile(r"^[A-Za-z0-9_.:-]{1,64}$")
+PIN_RE = re.compile(r"^[^\s\"'<>&\\`]{1,40}$")            # id pinu: także „+12V”, „+”, „VCC/VDD”, „IN−” (bez spacji i znaków HTML)
 CAT_ID_RE = re.compile(r"^cat-(\d{1,9})$")
 
 # ── adapter katalogu (bez zmian względem demo edytora) ──────────────────────────────────────────────
@@ -189,6 +191,11 @@ def clean_part_ref(v) -> Optional[str]:
     return s if ID_RE.match(s) else None
 
 
+def clean_pin_ref(v) -> Optional[str]:
+    s = str(v if v is not None else "")
+    return s if PIN_RE.match(s) else None
+
+
 def clean_wiring(body: dict) -> dict:
     """Schemat od klienta -> tylko dozwolone pola i wartości (README edytora 10.2). Nieznane klucze są odrzucane."""
     if not isinstance(body, dict):
@@ -243,7 +250,7 @@ def clean_wiring(body: dict) -> dict:
         lid = clean_part_ref(ln.get("id"))
         a, b = ln["a"], ln["b"]
         an, bn = str(a.get("n", "")), str(b.get("n", ""))
-        ap, bp = clean_part_ref(a.get("p")), clean_part_ref(b.get("p"))
+        ap, bp = clean_pin_ref(a.get("p")), clean_pin_ref(b.get("p"))
         if not lid or lid in lids or an not in ids or bn not in ids or not ap or not bp:
             continue
         o = {"id": lid, "a": {"n": an, "p": ap}, "b": {"n": bn, "p": bp}, "note": _txt(ln.get("note"), LIM["link_note"])}
@@ -326,7 +333,7 @@ def clean_part(pid: str, body: dict) -> dict:
     for p in pins_in:
         if not isinstance(p, dict):
             continue
-        pin_id = clean_part_ref(p.get("id"))
+        pin_id = clean_pin_ref(p.get("id"))
         if not pin_id or pin_id in seen:
             continue
         q = {"id": pin_id, "name": _txt(p.get("name"), 40) or pin_id,
@@ -485,10 +492,13 @@ def build_router(get_db, get_current_user, get_optional_user) -> APIRouter:
         q = (q or "").strip()[:100]
         lang = request_lang(request)
         items = []
+        ql = q.lower()
+        if src in ("all", "basic"):                       # części podstawowe (wiring_builtin.py)
+            items += [p for p in BUILTIN_PARTS
+                      if not ql or ql in " ".join(str(p.get(k) or "") for k in ("name", "name_en", "desc", "desc_en", "category")).lower()]
         if src in ("all", "catalog"):
             items += catalog_summaries(db, lang, q)
         if src in ("all", "own"):
-            ql = q.lower()
             items += [p for p in own_parts(db, user)
                       if not ql or ql in " ".join(str(p.get(k) or "") for k in ("name", "name_en", "desc", "desc_en", "category")).lower()]
         items.sort(key=lambda p: (CAT_RANK.get(p.get("category"), 99), str(p.get("name", "")).lower()))
@@ -505,7 +515,10 @@ def build_router(get_db, get_current_user, get_optional_user) -> APIRouter:
                 if c.pinout and c.pinout.get("pins"):
                     p = catalog_part(c, lang)
                     out[p["id"]] = p
-        own = [i for i in ids if not CAT_ID_RE.match(i)]
+        for i in ids:
+            if i in BUILTIN_BY_ID:
+                out[i] = BUILTIN_BY_ID[i]
+        own = [i for i in ids if not CAT_ID_RE.match(i) and not i.startswith("std-")]
         if own:
             # najpierw części zalogowanego, potem właścicieli wskazanych schematów, na końcu dowolne o tym id
             rows = db.query(P).filter(P.part_id.in_(own)).all()
@@ -530,6 +543,8 @@ def build_router(get_db, get_current_user, get_optional_user) -> APIRouter:
 
     @router.put("/parts/{pid}")
     async def put_part(pid: str, request: Request, db: Session = Depends(get_db), user=Depends(get_current_user)):
+        if pid.startswith("std-"):
+            raise HTTPException(400, detail="Części podstawowych nie można zmieniać – utwórz własną część")
         if pid.startswith("cat-"):
             raise HTTPException(400, detail="Części z katalogu edytuje się w katalogu platformy")
         if not ID_RE.match(pid):

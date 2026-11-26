@@ -79,3 +79,15 @@
 - [ ] Schematy: `Project.components` ze schematu, walidacja napięć (pola pinoutu 10.3), blokada usuwania komponentu użytego w schemacie (10.4), jasny motyw edytora (etap 11), link tylko do odczytu (etap 8).
 - [x] v39: schematy – jasny motyw edytora, nagłówek narzędzi, „schemat” zamiast „projekt”, no-store, podzespoły projektu ze schematu, ostrzeżenie przy usuwaniu komponentu.
 - [x] v40: lista „Moje schematy” w Narzędziach (otwórz, duplikuj, podepnij/odepnij, usuń).
+
+## Schematy połączeń – plan (ustalony 2026-11-26, kolejność potwierdzona)
+1. [x] (v41) **Części podstawowe wbudowane w edytor** (jak w demo): rezystor, kondensator, dioda, LED, tranzystor NPN/PNP, przycisk, złącze, zasilanie (bateria/zasilacz, regulator), masa, silnik/serwo…
+   – wspólna biblioteka dla wszystkich (bez pinoutu w katalogu), z wartościami i jednostkami jak w demo (4k7, 100n, V, A, Hz…).
+   Złożone podzespoły (MCU, moduły, układy) – z katalogu (pinout + dokumentacja); dalej można dodać własną część lub własny pinout.
+2. [ ] **Usuwanie i zarządzanie częściami własnymi** (dziś: tworzenie i edycja ✎, bez usuwania); ostrzeżenie, gdy część jest użyta w schematach.
+3. [ ] **Ikony kategorii ze schematów → magazyn** (ikony edytora lepiej oddają kategorie; jeden wspólny zestaw dla schematów, magazynu i katalogu).
+4. [ ] **Tryb gościa:** wyraźne przypomnienie, że schematy żyją tylko w przeglądarce (wyczyszczenie danych = utrata) – zachęta do eksportu JSON / zalogowania.
+5. [ ] Checklista edytora (docs/SCHEMATY.md 6): link tylko do odczytu (etap 8), `generated_with_ai`, pola napięć w pinoutach (10.3), wersjonowanie pinoutu (10.4), magazyn/lista zakupowa, PDF z serwera.
+6. [ ] **Widok fizyczny (etap 13 edytora, w stylu Tinkercad/Fritzing):** kafelek = rysunek pinoutu z fizycznym rozmieszczeniem pinów (renderer `pinout.js`), przewody od fizycznych pozycji pinów,
+   użyte piny podświetlone; ten sam zapis połączeń co widoki uproszczony i szczegółowy. Poziom 1: podświetlanie użytych pinów na rysunku w karcie komponentu. Breadboard – dalszy pomysł.
+- [x] v42: menu Eksport/Widok w edytorze schematów mieści się w edytorze, gdy pasek się zawija.
