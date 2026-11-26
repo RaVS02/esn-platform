@@ -31,3 +31,18 @@
 .wl-link select{max-width:100%;min-width:220px}
 .wl-empty{padding:4px 0 12px}
 .wl-rows{max-height:360px;overflow:auto;margin:0 -6px 6px;padding:0 6px}
+
+/* lista „Moje części” i poradnik (v43) */
+.wl-bar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between;padding:0 0 10px}
+.wg > summary{color:var(--accent)}
+.wg-body{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(420px,100%),1fr));gap:6px 28px;padding:0 0 12px}
+.wg-sec h4{font-family:var(--display);font-size:15px;color:var(--text);margin:10px 0 6px}
+.wg-sec ul{padding-left:18px;margin:0 0 6px} .wg-sec li{margin:0 0 4px;font-size:13px;color:var(--text2);line-height:1.55}
+.wg-sec p{font-size:13px;color:var(--text2);line-height:1.55;margin:6px 0}
+.wg-sec code{font-family:var(--mono);font-size:12px;color:var(--accent)}
+.wg-sec strong{color:var(--text)}
+.wg-tbl{border-collapse:collapse;width:100%;font-size:12.5px;margin:2px 0 6px}
+.wg-tbl td{border-top:1px solid var(--border);padding:5px 8px 5px 0;vertical-align:top;color:var(--text2)}
+.wg-tbl td:first-child{white-space:nowrap;width:1%}
+.wg-code{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;overflow:auto;margin:6px 0}
+.wg-code code{color:var(--text);white-space:pre}

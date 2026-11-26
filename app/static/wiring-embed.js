@@ -70,9 +70,17 @@
         ids.forEach(function (i) { if (!/^(cat|std)-/.test(i) && d.parts[i]) out.push(d.parts[i]); });
         return out;
       }
+      if (method === "GET" && path === "/my-parts") {
+        return Object.keys(d.parts).map(function (k) { var p = d.parts[k];
+          var used = Object.keys(d.projects).filter(function (s) { return (d.projects[s].nodes || []).some(function (n) { return n.part === k; }); })
+            .map(function (s) { return { id: s, title: d.projects[s].title || s }; });
+          return { id: k, name: p.name || k, name_en: p.name_en, category: p.category || "Inne", pins: (p.pins || []).length, updated_at: null, used_in: used };
+        });
+      }
       if ((m = path.match(/^\/parts\/(.+)$/))) {
         var pid = decodeURIComponent(m[1]);
         if (method === "GET") return /^(cat|std)-/.test(pid) ? req("GET", url) : d.parts[pid];
+        if (method === "DELETE") { delete d.parts[pid]; guestSave(d); return { ok: true }; }
         if (method === "PUT") { if (/^(cat|std)-/.test(pid)) throw new Error("catalog"); d.parts[pid] = Object.assign({}, body, { id: pid }); guestSave(d); return d.parts[pid]; }
       }
       if (path === "/projects") {
@@ -215,6 +223,49 @@
     return { refresh: refresh, draw: draw };
   }
 
+  /* lista „Moje części”: edycja (okno edytora), usuwanie z ostrzeżeniem o użyciu w schematach, nowa część */
+  function partList(box, o) {
+    var items = [];
+    async function refresh() {
+      try { items = await o.call("GET", "/my-parts"); } catch (e) { items = []; }
+      draw();
+    }
+    function catName(c) { return _t("wr.kat." + c) !== "wr.kat." + c ? _t("wr.kat." + c) : c; }
+    function draw() {
+      box.textContent = "";
+      var det = h("details", { "class": "wl wl-parts" });
+      if (o.isOpen()) det.setAttribute("open", "open");
+      det.addEventListener("toggle", function () { o.setOpen(det.open); });
+      det.appendChild(h("summary", {}, [h("span", { text: _t("wr.mojeCzesci") + " (" + items.length + ")" })]));
+      var bar = h("div", { "class": "wl-bar" }, [
+        h("span", { "class": "wiring-note", text: _t("wr.mojeCzesciOpis") }),
+        h("button", { type: "button", "class": "btn-action", text: _t("wr.nowaCzesc"), onclick: function () { var ed = o.editor(); if (ed) ed.openPart(null); } })]);
+      det.appendChild(bar);
+      var rows = h("div", { "class": "wl-rows" });
+      if (!items.length) rows.appendChild(h("p", { "class": "wiring-note wl-empty", text: _t("wr.brakCzesci") }));
+      items.forEach(function (it) {
+        var meta = [catName(it.category), _t("wr.pinow", { n: it.pins })];
+        meta.push(it.used_in.length ? _t("wr.uzytaW", { n: it.used_in.length }) : _t("wr.nieuzyta"));
+        rows.appendChild(h("div", { "class": "wl-row" }, [
+          h("div", { "class": "wl-main" }, [h("strong", { text: it.name }), h("small", { text: meta.join(" · ") }),
+            it.used_in.length ? h("span", { "class": "wl-proj", text: it.used_in.slice(0, 4).map(function (s) { return s.title; }).join(", ") + (it.used_in.length > 4 ? "…" : "") }) : null]),
+          h("div", { "class": "wl-btns" }, [
+            h("button", { type: "button", "class": "btn-action", text: _t("wr.edytuj"), onclick: function () { var ed = o.editor(); if (ed) ed.openPart(it.id); } }),
+            h("button", { type: "button", "class": "btn-action wl-del", text: _t("wr.usun"), onclick: async function () {
+              var msg = _t("wr.usunacCzesc", { t: it.name }) + (it.used_in.length ? "\n\n" + _t("wr.czescUzywana", { n: it.used_in.length, s: it.used_in.map(function (s) { return s.title; }).join(", ") }) : "");
+              if (!confirm(msg)) return;
+              try { await o.call("DELETE", "/parts/" + encodeURIComponent(it.id)); toast(_t("wr.usunietoCzesc"), "success"); var ed = o.editor(); if (ed) await ed.reloadLib(); }
+              catch (e) { toast(errMsg(e), "error"); }
+              refresh();
+            } })])]));
+      });
+      det.appendChild(rows);
+      box.appendChild(det);
+    }
+    refresh();
+    return { refresh: refresh };
+  }
+
   function mountTool(el, ctx) {
     var logged = !!token(), wrap = h("div", { "class": "wiring-section" }), host = h("div");
     el.appendChild(h("p", { "class": "hero-sub tp-lead", text: _t("wr.lead") }));
@@ -228,12 +279,16 @@
     }
     var base = logged ? { call: req } : guestApi(), listBox = h("div"), list = null, ed = null;
     // edytor korzysta z tej samej warstwy danych; każdy zapis / nowy / usunięty schemat odświeża listę
-    var edApi = { call: function (m, u, b) { return base.call(m, u, b).then(function (r) { if (m !== "GET" && /^\/projects/.test(u) && list) list.refresh(); else if (m === "GET" && /^\/projects\//.test(u) && list) setTimeout(list.draw, 0); return r; }); } };
-    function remount(id) { ed = mountEditor(host, { api: edApi, project: id || undefined }); }
+    var edApi = { call: function (m, u, b) { return base.call(m, u, b).then(function (r) { if (m !== "GET" && /^\/projects/.test(u) && list) { list.refresh(); if (parts) parts.refresh(); } else if (m === "GET" && /^\/projects\//.test(u) && list) setTimeout(list.draw, 0); return r; }); } };
+    var partsBox = h("div"), parts = null, partsOpen = false;
+    function remount(id) { ed = mountEditor(host, { api: edApi, project: id || undefined, onPartSaved: function () { if (parts) parts.refresh(); } }); }
+    if (global.ESNWiringGuide) el.appendChild(global.ESNWiringGuide.render(h, lang()));
     el.appendChild(listBox);
+    el.appendChild(partsBox);
     wrap.appendChild(host); el.appendChild(wrap);
     remount((ctx.sub && ctx.sub[0]) || undefined);
     list = schemaList(listBox, { call: base.call, logged: logged, editor: function () { return ed; }, remount: function () { remount(); } });
+    parts = partList(partsBox, { call: base.call, editor: function () { return ed; }, isOpen: function () { return partsOpen; }, setOpen: function (v) { partsOpen = v; } });
     return function () { destroyCurrent(); };
   }
 

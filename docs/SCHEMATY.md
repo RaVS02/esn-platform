@@ -41,6 +41,16 @@ Złożone podzespoły (MCU, moduły, układy) pochodzą z katalogu (pinout + dok
 Nowa część podstawowa: dopisz do `BUILTIN_PARTS` (nie zmieniaj id istniejących – są zapisane w schematach); test `test_builtin_parts` sprawdza zgodność z walidacją.
 Identyfikatory pinów mogą zawierać `+`, `/`, `−` itp. (`PIN_RE`; v41 – wcześniej piny typu `+5V` w częściach własnych były gubione przy zapisie).
 
+## 2b. Moje części i poradnik (v43)
+
+- **Moje części** (Narzędzia, pod listą schematów): części własne z kategorią, liczbą pinów i informacją, w których schematach są użyte; **Edytuj** (okno części edytora),
+  **Usuń** (ostrzeżenie z listą schematów – tam pojawi się „Brak części”), **Nowa część**. API: `GET /api/wiring/my-parts`, `DELETE /api/wiring/parts/{id}` (tylko własne; `cat-*`, `std-*` → 400).
+  Gość: to samo na localStorage.
+- **Poradnik** (`static/wiring-guide.js`, PL/EN, zwinięty nad listami): pierwszy schemat, skąd są części, własna część krok po kroku (format pinów
+  `nazwa | typ | opis | napięcie | strona`), typy pinów, wartości/sprawdzenie/eksport, skróty, tryb gościa. **Zmieniając edytor, popraw poradnik.**
+  Ważne dla użytkowników: nazwa pinu = identyfikator, więc zmiana nazwy pinu w istniejącej części rozłącza jego przewody.
+- Haki edytora: `inst.openPart(id|null)`, `inst.reloadLib()`, `opts.onPartSaved(part)`; błąd zapisu części pokazuje komunikat zamiast cichej porażki.
+
 ## 3. Haki dodane w `app.js` (komentarz `ESN:`)
 
 | Hak | Po co |

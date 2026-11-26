@@ -1731,8 +1731,10 @@ $('#pSave').onclick = async () => {
   const img = $('#pImage').value.trim(); if (/^(https?:\/\/|\/)/.test(img)) part.image = img;          // tylko adresy http(s) lub ścieżki na serwerze
   if (old && old.name_en && old.name === name) part.name_en = old.name_en;
   if (old && old.desc_en && old.desc === part.desc) part.desc_en = old.desc_en;
-  await api('PUT', '/parts/' + encodeURIComponent(id), part);
+  try { await api('PUT', '/parts/' + encodeURIComponent(id), part); }
+  catch (e) { alert(t('saveErr', errText(e))); return; }                    // ESN: błąd zapisu części (np. limit) – okno zostaje otwarte
   S.parts[id] = part; $('#dlg').close(); await loadLib(true); render();
+  if (typeof opts.onPartSaved === 'function') { try { opts.onPartSaved(part); } catch (e) { /* kod osadzający */ } }   // ESN
 };
 
 /* ------------------------------------------------------------------ projekty */
@@ -2257,6 +2259,8 @@ const ready = (async () => {
 inst = {
   root, ready,
   open: id => openProject(id),
+  openPart: id => openPart(id || null),                                 // ESN: okno nowej / edycji części własnej z zewnątrz
+  reloadLib: async () => { Object.keys(S.parts).forEach(k => { if (!/^(cat|std)-/.test(k)) delete S.parts[k]; }); await loadLib(true); if (S.p) await ensureParts(S.p.nodes.map(n => n.part)); render(); },
   save: () => saveProject(),
   setLang,
   setEdit: on_ => { S.edit = !!on_; $('#editChk').checked = S.edit; render(); },

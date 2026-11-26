@@ -251,3 +251,19 @@ def test_builtin_parts(env):
     assert client.put("/api/wiring/parts/std-resistor", headers=env["a"]["h"], json={"name": "x"}).status_code == 400
     out = wiring_service.clean_wiring({"nodes": [{"id": "n1", "part": "std-resistor", "x": 0, "y": 0, "value": "4.7 kΩ"}]})
     assert out["nodes"][0]["part"] == "std-resistor" and out["nodes"][0]["value"] == "4.7 kΩ"
+
+
+def test_my_parts_list_usage_and_delete(env):
+    a, b = env["a"]["h"], env["b"]["h"]
+    client.put("/api/wiring/parts/moj-x", headers=a, json={"name": "Mój X", "category": "Moduł", "pins": [{"id": "+5V", "name": "+5V", "type": "power", "v": "5"}, {"id": "GND", "name": "GND", "type": "gnd"}]})
+    s = client.post("/api/wiring/projects", headers=a, json={"title": "Z moją częścią", "nodes": [{"id": "n1", "part": "moj-x", "x": 0, "y": 0}]}).json()
+    lst = {p["id"]: p for p in client.get("/api/wiring/my-parts", headers=a).json()}
+    assert lst["moj-x"]["pins"] == 2 and [u["id"] for u in lst["moj-x"]["used_in"]] == [s["id"]] and lst["moj-x"]["category"] == "Moduł"
+    assert client.get("/api/wiring/parts/batch", params={"ids": "moj-x"}).json()[0]["pins"][0]["id"] == "+5V"   # pin z „+” zachowany
+    assert "moj-x" not in [p["id"] for p in client.get("/api/wiring/my-parts", headers=b).json()]
+    assert client.get("/api/wiring/my-parts").status_code in (401, 403)
+    assert client.delete("/api/wiring/parts/moj-x", headers=b).status_code == 404            # cudzej nie usunie
+    assert client.delete("/api/wiring/parts/std-resistor", headers=a).status_code == 400
+    assert client.delete("/api/wiring/parts/moj-x", headers=a).json() == {"ok": True}
+    assert "moj-x" not in [p["id"] for p in client.get("/api/wiring/my-parts", headers=a).json()]
+    assert client.get("/api/wiring/projects/" + s["id"], headers=a).json()["nodes"][0]["part"] == "moj-x"   # schemat bez zmian („Brak części”)

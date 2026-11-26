@@ -541,6 +541,39 @@ def build_router(get_db, get_current_user, get_optional_user) -> APIRouter:
             raise HTTPException(404, detail="Nie ma takiej części")
         return by[pid]
 
+    def part_usage(db, user, part_ids):
+        """{id części: [{id, title}]} – w których schematach użytkownika występuje część (sprawdzenie dokładne na węzłach)."""
+        out = {i: [] for i in part_ids}
+        if not part_ids:
+            return out
+        for r in db.query(S).filter(S.owner_id == user.id).all():
+            used = {str(n.get("part")) for n in (r.data or {}).get("nodes") or []}
+            for i in part_ids:
+                if i in used:
+                    out[i].append({"id": r.id, "title": r.title or r.id})
+        return out
+
+    @router.get("/my-parts")
+    def my_parts(db: Session = Depends(get_db), user=Depends(get_current_user)):
+        """Części własne zalogowanego (do listy „Moje części” w Narzędziach) z informacją o użyciu w jego schematach."""
+        rows = db.query(P).filter(P.owner_id == user.id).order_by(P.updated_at.desc().nullslast(), P.id.desc()).all()
+        usage = part_usage(db, user, [r.part_id for r in rows])
+        return [{"id": r.part_id, "name": (r.data or {}).get("name") or r.part_id, "name_en": (r.data or {}).get("name_en"),
+                 "category": (r.data or {}).get("category") or "Inne", "pins": len((r.data or {}).get("pins") or []),
+                 "updated_at": r.updated_at.isoformat() if r.updated_at else None, "used_in": usage[r.part_id]} for r in rows]
+
+    @router.delete("/parts/{pid}")
+    def delete_part(pid: str, db: Session = Depends(get_db), user=Depends(get_current_user)):
+        """Usunięcie części własnej. Schematy, które jej używają, pokażą w tym miejscu „Brak części”."""
+        if pid.startswith(("cat-", "std-")):
+            raise HTTPException(400, detail="Części z katalogu i podstawowych nie można usunąć")
+        row = db.query(P).filter(P.owner_id == user.id, P.part_id == pid).first()
+        if not row:
+            raise HTTPException(404, detail="Nie ma takiej części")
+        db.delete(row)
+        db.commit()
+        return {"ok": True}
+
     @router.put("/parts/{pid}")
     async def put_part(pid: str, request: Request, db: Session = Depends(get_db), user=Depends(get_current_user)):
         if pid.startswith("std-"):
