@@ -1,0 +1,388 @@
+diff -ruN a/TODO.md b/TODO.md
+--- a/TODO.md	2026-11-26 14:03:23.008976554 +0100
++++ b/TODO.md	2026-11-26 14:03:23.010174024 +0100
+@@ -63,6 +63,7 @@
+ - [x] (v28) Wiedza (lista, panel redakcji, edytor blokowy, kreator, media, pinout), cały magazyn + `ai-local.js`, etykiety znanych kategorii/zastosowań (`_L`), komunikaty błędów API (`_E`, wzorce `api.*`).
+ - [x] (v30) Wiedza: wersje językowe (lang + translation_group, filtr zakresu, plakietki, tłumaczenie z edytora). Dalej: projekty, komponenty, pinouty, schematy.
+ - [x] (v31) Projekty: pole `lang`, filtr języka, plakietki. Dalej: komponenty (`translations`), pinouty, schematy.
++- [x] (v32) Filtr języków: checkboxy + łączenie tłumaczeń + plakietki (Wiedza, projekty).
+ - [ ] Szablony i przewodnik treści (`knowledge-templates.js`, `knowledge-guide.js`) – wersje EN (razem z treściami wielojęzycznymi).
+ - [ ] Przejście na zmianę języka bez przeładowania strony.
+ - [ ] Treści z polem `lang` (artykuły, kursy, projekty, podzespoły).
+diff -ruN a/app/knowledge_service.py b/app/knowledge_service.py
+--- a/app/knowledge_service.py	2026-11-26 14:03:23.002579811 +0100
++++ b/app/knowledge_service.py	2026-11-26 14:03:23.003866279 +0100
+@@ -250,6 +250,39 @@
+     return [r for r in rows if id(r) in keep]
+ 
+ 
++def parse_langs(raw: str) -> list:
++    """'pl,en' -> ['pl','en'] (tylko obsługiwane, bez duplikatów); pusty/niepoprawny -> []."""
++    out = []
++    for x in (raw or "").split(","):
++        x = x.strip().lower()
++        if x in LANGS and x not in out:
++            out.append(x)
++    return out
++
++
++def apply_langs(rows: list, langs: list, merge: bool, prefer: str = "") -> list:
++    """Wybrane języki (checkboxy): zostają wersje w tych językach; merge – jedna wersja na grupę
++    (w języku `prefer`, jeśli wybrany, inaczej pierwsza z wybranych)."""
++    rows = [r for r in rows if (r.lang or "pl") in langs]
++    if not merge:
++        return rows
++    best: dict = {}
++    for r in rows:
++        key = r.translation_group or f"#{r.id}"
++        cur = best.get(key)
++        if cur is None or ((r.lang or "pl") == prefer and (cur.lang or "pl") != prefer):
++            best[key] = r
++    keep = {id(v) for v in best.values()}
++    return [r for r in rows if id(r) in keep]
++
++
++def filter_rows(rows: list, lang: str, scope: str, langs: str, merge: int) -> list:
++    sel = parse_langs(langs)
++    if sel:
++        return apply_langs(rows, sel, bool(merge), lang)
++    return apply_scope(rows, lang, scope)
++
++
+ def item_card(a: models.KnowledgeArticle, course: Optional[models.KnowledgeCourse] = None, sib: Optional[dict] = None) -> dict:
+     lab, rank = level_info(a.level)
+     return {"lang": a.lang or "pl", "translations": translations_of(a, sib), "id": a.id, "slug": a.slug, "kind": a.kind, "kind_label": KINDS.get(a.kind, a.kind), "title": a.title, "summary": a.summary or "",
+@@ -407,7 +440,7 @@
+         return {"kinds": KINDS, "levels": {k: v[0] for k, v in LEVELS.items()}, "limits": LIM, "langs": list(LANGS)}
+ 
+     @router.get("/api/knowledge/items")
+-    def list_items(kind: str = "", level: str = "", q: str = "", lang: str = "", scope: str = "all", db: Session = Depends(get_db)):
++    def list_items(kind: str = "", level: str = "", q: str = "", lang: str = "", scope: str = "all", langs: str = "", merge: int = 0, db: Session = Depends(get_db)):
+         pub_courses = {c.id: c for c in db.query(C).filter(C.published.is_(True)).all()}
+         qry = db.query(K).filter(K.published.is_(True))
+         if kind and kind in KINDS:
+@@ -430,7 +463,7 @@
+                         and (not kind or a.kind == kind) and (level not in LEVELS or a.level == level):
+                     rows.append(a)
+         sib = sibling_map(db, K)
+-        out = [item_card(a, pub_courses.get(a.course_id), sib) for a in apply_scope(rows, lang, scope)]
++        out = [item_card(a, pub_courses.get(a.course_id), sib) for a in filter_rows(rows, lang, scope, langs, merge)]
+         out.sort(key=sort_key)
+         return out
+ 
+@@ -443,10 +476,10 @@
+         return db.query(K).filter(K.course_id == course_id, K.kind == "lesson", K.published.is_(True)).order_by(K.position, K.id).all()
+ 
+     @router.get("/api/knowledge/courses")
+-    def list_courses(lang: str = "", scope: str = "all", db: Session = Depends(get_db)):
++    def list_courses(lang: str = "", scope: str = "all", langs: str = "", merge: int = 0, db: Session = Depends(get_db)):
+         out = []
+         sib = sibling_map(db, C)
+-        for c in apply_scope(db.query(C).filter(C.published.is_(True)).order_by(C.position, C.id).all(), lang, scope):
++        for c in filter_rows(db.query(C).filter(C.published.is_(True)).order_by(C.position, C.id).all(), lang, scope, langs, merge):
+             out.append(course_card(c, published_lessons(db, c.id), sib))
+         out.sort(key=lambda x: x["level_rank"])
+         return out
+diff -ruN a/app/main.py b/app/main.py
+--- a/app/main.py	2026-11-26 14:03:22.951848365 +0100
++++ b/app/main.py	2026-11-26 14:03:22.953174884 +0100
+@@ -497,7 +497,9 @@
+         query = query.filter(models.Project.owner_id == user_id)
+     
+     if lang and source != "mine":
+-        query = query.filter(models.Project.lang == lang)
++        _ls = [x for x in (y.strip().lower() for y in lang.split(",")) if x in ("pl", "en")]
++        if _ls:
++            query = query.filter(models.Project.lang.in_(_ls))
+ 
+     # LOGIKA SORTOWANIA (Projekty Oficjalne ZAWSZE na samej górze)
+     if sort == "az":
+diff -ruN a/app/static/i18n/en.js b/app/static/i18n/en.js
+--- a/app/static/i18n/en.js	2026-11-26 14:03:22.978280782 +0100
++++ b/app/static/i18n/en.js	2026-11-26 14:03:22.979543751 +0100
+@@ -1006,9 +1006,6 @@
+   "kn.dostepnaTezW": "Also available in:",
+   "kn.jezykTresci": "Content language",
+   "kn.jezyk": "Language",
+-  "kn.scopeAuto": "My language + untranslated",
+-  "kn.scopeOnly": "Only {lang}",
+-  "kn.scopeAll": "All languages",
+   "kn.brakTlumaczenia": "Missing translation",
+   "kn.dodajWersje": "Add version: {lang}",
+   "kn.utworzonoWersje": "Language version created (draft)",
+@@ -1018,7 +1015,10 @@
+   "api.kursMaJuzWersje": "This course already has a version in this language",
+   "api.najpierwUtworzWersjeKursu": "Create the course version in this language first",
+   "api.mozeszTlumaczycTylkoOpublikowane": "You can only translate published or your own content",
+-  "projects.scopeOnly": "My language only",
+-  "projects.scopeAll": "All languages",
+-  "projects.jezykTresci": "Content language"
++  "projects.jezykTresci": "Content language",
++  "lf.jezyki": "Languages",
++  "lf.tylkoMoj": "Only mine",
++  "lf.wszystkie": "All",
++  "lf.laczTlumaczenia": "Merge translations (one version)",
++  "lf.plakietkiZawsze": "Language badge on every card"
+ }, { name: "English", locale: "en-GB" });
+diff -ruN a/app/static/i18n/pl.js b/app/static/i18n/pl.js
+--- a/app/static/i18n/pl.js	2026-11-26 14:03:22.972205577 +0100
++++ b/app/static/i18n/pl.js	2026-11-26 14:03:22.973447518 +0100
+@@ -1006,9 +1006,6 @@
+   "kn.dostepnaTezW": "Dostępne też w:",
+   "kn.jezykTresci": "Język treści",
+   "kn.jezyk": "Język",
+-  "kn.scopeAuto": "Mój język + nieprzetłumaczone",
+-  "kn.scopeOnly": "Tylko {lang}",
+-  "kn.scopeAll": "Wszystkie języki",
+   "kn.brakTlumaczenia": "Brak tłumaczenia",
+   "kn.dodajWersje": "Dodaj wersję: {lang}",
+   "kn.utworzonoWersje": "Utworzono wersję językową (szkic)",
+@@ -1018,7 +1015,10 @@
+   "api.kursMaJuzWersje": "Kurs ma już wersję w tym języku",
+   "api.najpierwUtworzWersjeKursu": "Najpierw utwórz wersję kursu w tym języku",
+   "api.mozeszTlumaczycTylkoOpublikowane": "Możesz tłumaczyć tylko opublikowane lub własne treści",
+-  "projects.scopeOnly": "Tylko mój język",
+-  "projects.scopeAll": "Wszystkie języki",
+-  "projects.jezykTresci": "Język treści"
++  "projects.jezykTresci": "Język treści",
++  "lf.jezyki": "Języki",
++  "lf.tylkoMoj": "Tylko mój",
++  "lf.wszystkie": "Wszystkie",
++  "lf.laczTlumaczenia": "Łącz tłumaczenia (jedna wersja)",
++  "lf.plakietkiZawsze": "Plakietka języka na każdej karcie"
+ }, { name: "Polski", locale: "pl-PL" });
+diff -ruN a/app/static/knowledge.js b/app/static/knowledge.js
+--- a/app/static/knowledge.js	2026-11-26 14:03:22.965600436 +0100
++++ b/app/static/knowledge.js	2026-11-26 14:03:22.966882019 +0100
+@@ -58,10 +58,8 @@
+   /* wersje językowe treści: scope auto = mój język + nieprzetłumaczone, only = tylko mój język, all = wszystkie */
+   var LANG_NAME = { pl: "Polski", en: "English" }, LANG_LIST = ["pl", "en"];
+   function curLang() { return (global.ESNI18n && global.ESNI18n.lang()) || "pl"; }
+-  function getScope() { try { var v = localStorage.getItem("esn-kn-scope"); return ["auto", "only", "all"].indexOf(v) >= 0 ? v : "auto"; } catch (e) { return "auto"; } }
+-  function setScope(v) { try { localStorage.setItem("esn-kn-scope", v); } catch (e) { /* brak storage */ } }
+-  function langQ() { return "lang=" + curLang() + "&scope=" + getScope(); }
+-  function langBadge(l) { return l && l !== curLang() ? badge((l || "").toUpperCase(), "badge-blue") : null; }
++  function langQ() { return global.ESNLangFilter ? global.ESNLangFilter.query() : "lang=" + curLang(); }
++  function langBadge(l) { return global.ESNLangFilter && global.ESNLangFilter.showBadge(l) ? badge((l || "").toUpperCase(), "badge-blue") : null; }
+   function langLinks(list) {
+     if (!list || !list.length) return null;
+     var box = h("div", { "class": "kn-inline kn-langs" }, [h("span", { "class": "kn-meta", text: _t('kn.dostepnaTezW') })]);
+@@ -413,9 +411,8 @@
+     var search = h("input", { type: "search", "class": "text-input kn-search", placeholder: _t('kn.szukajWWiedzy'), "aria-label": _t('kn.szukaj'), value: state.q });
+     var levels = h("select", { "class": "sort-select", "aria-label": _t('kn.poziom') }, [h("option", { value: "", text: _t('kn.wszystkiePoziomy') })].concat(LEVEL_ORDER.map(function (l) { return h("option", { value: l, text: LEVEL_LABEL[l] }); })));
+     levels.value = state.level;
+-    var scopeSel = h("select", { "class": "sort-select", "aria-label": _t('kn.jezykTresci') }, [["auto", _t('kn.scopeAuto')], ["only", _t('kn.scopeOnly', { lang: LANG_NAME[curLang()] || curLang() })], ["all", _t('kn.scopeAll')]].map(function (o) { return h("option", { value: o[0], text: o[1] }); }));
+-    scopeSel.value = getScope();
+-    scopeSel.addEventListener("change", function () { setScope(scopeSel.value); load(); });
++    var scopeSel = h("div", { "class": "kn-lf" });
++    if (global.ESNLangFilter) global.ESNLangFilter.mount(scopeSel, { merge: true, onChange: function () { load(); } });
+     var btns = TABS.map(function (t) {
+       var b = h("button", { type: "button", role: "tab", text: t[1], onclick: function () { state.tab = t[0]; mark(); load(); } });
+       tabs.appendChild(b); return b;
+diff -ruN a/app/static/langfilter.js b/app/static/langfilter.js
+--- a/app/static/langfilter.js	1970-01-01 01:00:00.000000000 +0100
++++ b/app/static/langfilter.js	2026-11-26 14:03:22.984438907 +0100
+@@ -0,0 +1,67 @@
++/* Filtr języka treści (Wiedza, Baza projektów): checkboxy języków + opcje. Stan w localStorage `esn-lang-filter`.
++   ESNLangFilter.get() -> { langs:[kody], merge:bool, badges:bool }
++   ESNLangFilter.query() -> "langs=pl,en&merge=1"
++   ESNLangFilter.mount(el, { merge:bool, onChange:fn }) – rysuje panel (<details>) */
++(function (global) {
++  "use strict";
++  var KEY = "esn-lang-filter";
++  function _t(k, p) { return global.ESNI18n ? global.ESNI18n.t(k, p) : k; }
++  function all() { return global.ESNI18n ? global.ESNI18n.list() : [{ code: "pl", name: "Polski" }]; }
++  function codes() { return all().map(function (l) { return l.code; }); }
++  function mine() { return (global.ESNI18n && global.ESNI18n.lang()) || "pl"; }
++  function defaults() { return { langs: codes(), merge: true, badges: false }; }
++  function get() {
++    var d = defaults(), s = null;
++    try { s = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) { s = null; }
++    if (!s || typeof s !== "object") return d;
++    var known = codes(), langs = (Array.isArray(s.langs) ? s.langs : []).filter(function (c) { return known.indexOf(c) >= 0; });
++    return { langs: langs.length ? langs : d.langs, merge: s.merge !== false, badges: !!s.badges };
++  }
++  function set(v) { try { localStorage.setItem(KEY, JSON.stringify(v)); } catch (e) { /* brak storage */ } }
++  function query() { var s = get(); return "lang=" + mine() + "&langs=" + s.langs.join(",") + "&merge=" + (s.merge ? 1 : 0); }
++  function showBadge(lang) { var s = get(); return !!lang && (s.badges || lang !== mine()); }
++
++  function mount(el, opts) {
++    opts = opts || {};
++    el.textContent = "";
++    var st = get(), names = {};
++    all().forEach(function (l) { names[l.code] = l.name; });
++    var box = document.createElement("details"); box.className = "lf";
++    var sum = document.createElement("summary"); sum.className = "sort-select lf-sum"; box.appendChild(sum);
++    var pnl = document.createElement("div"); pnl.className = "lf-panel"; box.appendChild(pnl);
++    function row(label, checked, fn, dis) {
++      var l = document.createElement("label"); l.className = "lf-row";
++      var c = document.createElement("input"); c.type = "checkbox"; c.checked = checked; c.disabled = !!dis;
++      c.addEventListener("change", function () { fn(c.checked); });
++      var s = document.createElement("span"); s.textContent = label; l.appendChild(c); l.appendChild(s); pnl.appendChild(l); return c;
++    }
++    function btn(label, fn) {
++      var b = document.createElement("button"); b.type = "button"; b.className = "btn-action lf-btn"; b.textContent = label;
++      b.addEventListener("click", fn); return b;
++    }
++    function commit() { set(st); draw(); if (opts.onChange) opts.onChange(get()); }
++    function draw() {
++      sum.textContent = _t("lf.jezyki") + ": " + st.langs.map(function (c) { return c.toUpperCase(); }).join(", ");
++      pnl.textContent = "";
++      var presets = document.createElement("div"); presets.className = "lf-presets";
++      presets.appendChild(btn(_t("lf.tylkoMoj"), function () { st.langs = [mine()]; st.merge = false; commit(); }));
++      presets.appendChild(btn(_t("lf.wszystkie"), function () { st.langs = codes(); commit(); }));
++      pnl.appendChild(presets);
++      all().forEach(function (l) {
++        row(l.name + " (" + l.code.toUpperCase() + ")", st.langs.indexOf(l.code) >= 0, function (on) {
++          var next = st.langs.filter(function (c) { return c !== l.code; });
++          if (on) next.push(l.code);
++          if (!next.length) { draw(); return; }          /* zawsze co najmniej jeden język */
++          st.langs = codes().filter(function (c) { return next.indexOf(c) >= 0; }); commit();
++        });
++      });
++      if (opts.merge) row(_t("lf.laczTlumaczenia"), st.merge, function (on) { st.merge = on; commit(); });
++      row(_t("lf.plakietkiZawsze"), st.badges, function (on) { st.badges = on; commit(); });
++    }
++    draw();
++    document.addEventListener("click", function (e) { if (box.open && e.composedPath().indexOf(box) < 0 && document.contains(box)) box.open = false; });
++    el.appendChild(box);
++    return { refresh: draw };
++  }
++  global.ESNLangFilter = { get: get, set: set, query: query, mount: mount, showBadge: showBadge };
++})(window);
+diff -ruN a/app/static/style.css b/app/static/style.css
+--- a/app/static/style.css	2026-11-26 14:03:22.958473772 +0100
++++ b/app/static/style.css	2026-11-26 14:03:22.959743400 +0100
+@@ -1214,3 +1214,12 @@
+ .ai-set-how summary { cursor: pointer; color: var(--accent); }
+ .ai-set-how p { margin-top: 8px; line-height: 1.6; }
+ @media (max-width: 600px) { .ai-set-grid { grid-template-columns: 1fr; } }
++
++/* Filtr języka treści (langfilter.js) */
++.lf { position: relative; }
++.lf-sum { list-style: none; display: block; white-space: nowrap; }
++.lf-sum::-webkit-details-marker { display: none; }
++.lf-panel { position: absolute; z-index: 30; top: calc(100% + 6px); right: 0; min-width: 240px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px; display: grid; gap: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
++.lf-presets { display: flex; gap: 8px; flex-wrap: wrap; }
++.lf-btn { font-size: 11px; padding: 6px 10px; }
++.lf-row { display: flex; gap: 8px; align-items: center; font-family: var(--mono); font-size: 12px; color: var(--text); cursor: pointer; }
+diff -ruN a/app/templates/index.html b/app/templates/index.html
+--- a/app/templates/index.html	2026-11-26 14:03:22.989867228 +0100
++++ b/app/templates/index.html	2026-11-26 14:03:22.991252217 +0100
+@@ -4,9 +4,9 @@
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <meta name="color-scheme" content="dark light">
+-<script src="{{ url_for('static', path='/i18n.js') }}?v=7"></script>
+-<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=7"></script>
+-<script src="{{ url_for('static', path='/i18n/en.js') }}?v=7"></script>
++<script src="{{ url_for('static', path='/i18n.js') }}?v=8"></script>
++<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=8"></script>
++<script src="{{ url_for('static', path='/i18n/en.js') }}?v=8"></script>
+ <script src="{{ url_for('static', path='/theme.js') }}?v=4"></script>
+ <title data-i18n="meta.title">Platforma Systemów Wbudowanych</title>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+@@ -32,7 +32,8 @@
+ <script src="{{ url_for('static', path='/knowledge-guide.js') }}?v=2"></script>
+ <script src="{{ url_for('static', path='/knowledge-blocks.js') }}?v=2"></script>
+ <script src="{{ url_for('static', path='/knowledge-wizard.js') }}?v=4"></script>
+-<script src="{{ url_for('static', path='/knowledge.js') }}?v=14"></script>
++<script src="{{ url_for('static', path='/langfilter.js') }}?v=2"></script>
++<script src="{{ url_for('static', path='/knowledge.js') }}?v=15"></script>
+ 
+ </head>
+ <body>
+@@ -175,10 +176,7 @@
+           <span class="search-icon">🔍︎</span>
+           <input type="text" id="searchProjects" class="search-input" placeholder="Szukaj projektu..." data-i18n-attr="placeholder:projects.szukajProjektu" onkeyup="updateProjectsView()">
+         </div>
+-        <select id="projLangScope" class="sort-select" onchange="setProjLangScope(this.value)" aria-label="Język treści" data-i18n-attr="aria-label:projects.jezykTresci">
+-          <option value="only" data-i18n="projects.scopeOnly">Tylko mój język</option>
+-          <option value="all" data-i18n="projects.scopeAll">Wszystkie języki</option>
+-        </select>
++        <div id="projLangScope"></div>
+         <select id="sortProjects" class="sort-select" onchange="updateProjectsView()">
+           <option value="newest" data-i18n="projects.pokazNajnowsze">Pokaż: Najnowsze</option>
+           <option value="oldest" data-i18n="projects.pokazNajstarsze">Pokaż: Najstarsze</option>
+@@ -721,11 +719,15 @@
+ let displayLimit = 12; // NOWOŚĆ: Ile kafelków wyświetlamy na starcie
+ 
+ // Parametr resetLimit domyślnie na true. Jeśli wpiszemy coś w lupkę lub klikniemy tag, wracamy do 12 kafelków.
+-function getProjLangScope() { try { return localStorage.getItem('esn-proj-scope') === 'all' ? 'all' : 'only'; } catch (e) { return 'only'; } }
+-function setProjLangScope(v) { try { localStorage.setItem('esn-proj-scope', v); } catch (e) {} updateProjectsView(); }
++let _projLf = null;
++function mountProjLangFilter() {
++    const el = document.getElementById('projLangScope');
++    if (el && !el.firstChild) _projLf = ESNLangFilter.mount(el, { merge: false, onChange: () => updateProjectsView() });
++}
+ 
+ async function updateProjectsView(resetLimit = true) {
+     if (resetLimit) displayLimit = 12;
++    mountProjLangFilter();
+ 
+     const listContainer = document.getElementById('projects-list');
+     listContainer.className = 'projects-grid'; 
+@@ -742,9 +744,7 @@
+     const sortVal = document.getElementById('sortProjects') ? document.getElementById('sortProjects').value : 'newest';
+     
+     let url = `/api/projects?limit=500&source=${currentSource}&sort=${sortVal}`;
+-    const _ls = document.getElementById('projLangScope');
+-    if (_ls) _ls.value = getProjLangScope();
+-    if (getProjLangScope() === 'only') url += `&lang=${ESNI18n.lang()}`;
++    url += `&lang=${ESNLangFilter.get().langs.join(',')}`;
+     if (currentSource === 'mine' && loggedUserId) url += `&user_id=${loggedUserId}`;
+ 
+     try {
+@@ -806,7 +806,7 @@
+                 `<span class="tag" style="font-size:10px; padding:2px 6px;">${esc(tag.trim())}</span>`
+             ).join('') : '';
+ 
+-            const langBadge = (project.lang && project.lang !== ESNI18n.lang())
++            const langBadge = ESNLangFilter.showBadge(project.lang)
+                 ? '<span class="badge badge-blue" style="font-size:10px;">' + esc(project.lang.toUpperCase()) + '</span>' : '';
+             const officialBadge = project.is_official 
+                 ? '<span class="badge badge-green" style="font-size:10px;">✓ ' + _t('badge.official') + '</span>' 
+@@ -1010,7 +1010,7 @@
+     document.getElementById('full-view-content').innerHTML = `
+         <div style="background: var(--card);  padding: 10px; border-radius: 16px; margin-bottom: 30px;">
+             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px;">
+-                <div style="display:flex; gap:10px;">${officialBadge} ${myBadge} ${(p.lang && p.lang !== ESNI18n.lang()) ? `<span class="badge badge-blue">${esc(p.lang.toUpperCase())}</span>` : ''}</div>
++                <div style="display:flex; gap:10px;">${officialBadge} ${myBadge} ${ESNLangFilter.showBadge(p.lang) ? `<span class="badge badge-blue">${esc(p.lang.toUpperCase())}</span>` : ''}</div>
+                 ${p.github_url ? `<a href="${safeUrl(p.github_url)}" target="_blank" rel="noopener noreferrer" class="btn-action primary" style="font-size: 11px; padding: 4px 10px;">[ github_repo ]</a>` : ''}
+             </div>
+             
+diff -ruN a/app/tests/test_knowledge_lang.py b/app/tests/test_knowledge_lang.py
+--- a/app/tests/test_knowledge_lang.py	2026-11-26 14:03:22.996390660 +0100
++++ b/app/tests/test_knowledge_lang.py	2026-11-26 14:03:22.997579954 +0100
+@@ -156,3 +156,21 @@
+     db.query(models.Project).filter(models.Project.id.in_([pid, eid])).delete(synchronize_session=False)
+     db.commit()
+     db.close()
++
++
++def test_langs_checkbox_filter(users):
++    """Wybór języków (langs) + merge: zbiór języków, jedna wersja na grupę, projekty z listą języków."""
++    h = users["admin"]["h"]
++    a = client.post("/api/knowledge/editor/items", json=art("multi"), headers=h).json()
++    assert client.post(f"/api/knowledge/editor/items/{a['id']}/publish", json={"content": art("multi")}, headers=h).status_code == 200
++    t = client.post(f"/api/knowledge/editor/items/{a['id']}/translate", json={"lang": "en"}, headers=h).json()
++    client.put(f"/api/knowledge/editor/items/{t['id']}", json={**art("multi-en"), "lang": "en"}, headers=h)
++    assert client.post(f"/api/knowledge/editor/items/{t['id']}/publish", json={"content": {**art("multi-en"), "lang": "en"}}, headers=h).status_code == 200
++    ids = lambda q: sorted(x["lang"] for x in client.get("/api/knowledge/items?q=" + TAG + "&" + q).json() if "multi" in x["title"])
++    assert ids("langs=pl,en&merge=0") == ["en", "pl"]
++    assert ids("langs=en") == ["en"]
++    assert ids("langs=pl") == ["pl"]
++    assert ids("lang=en&langs=pl,en&merge=1") == ["en"]
++    assert ids("lang=pl&langs=pl,en&merge=1") == ["pl"]
++    assert ids("lang=pl&langs=en&merge=1") == ["en"]
++    assert ids("langs=xx") == ["en", "pl"]   # niepoprawny kod ignorowany -> bez filtra
+diff -ruN a/docs/I18N.md b/docs/I18N.md
+--- a/docs/I18N.md	2026-11-26 14:03:23.011365936 +0100
++++ b/docs/I18N.md	2026-11-26 14:03:23.016427480 +0100
+@@ -52,3 +52,6 @@
+ 
+ ### Projekty (v31)
+ `projects.lang` (`pl`/`en`, domyślnie `pl`, migracja automatyczna). `GET /api/projects?lang=` filtruje (pominięte dla `source=mine`, żeby autor widział własne). UI: selektor „Tylko mój język / Wszystkie języki” (`localStorage` `esn-proj-scope`, domyślnie mój język), plakietka języka na kafelku i w szczegółach, pole języka w formularzu (domyślnie język interfejsu). Edycja starym klientem bez pola `lang` nie zmienia języka. Projekty nie mają grup tłumaczeń – wersja w innym języku to osobny projekt.
++
++### Filtr języków (v32)
++Wspólny panel `static/langfilter.js` (`ESNLangFilter`) w Wiedzy i Bazie projektów: checkboxy wszystkich języków platformy (`ESNI18n.list()`, nowy język pojawia się sam), presety „Tylko mój” / „Wszystkie”, opcja „Łącz tłumaczenia” (tylko Wiedza: jedna wersja na grupę, preferowany język interfejsu) i „Plakietka języka na każdej karcie”. Stan: `localStorage` `esn-lang-filter`, wspólny dla obu miejsc; domyślnie wszystkie języki + łączenie. API: `GET /api/knowledge/items|courses?lang=<mój>&langs=pl,en&merge=0|1` (stare `scope` nadal działa), `GET /api/projects?lang=pl,en`. Nowy język treści: dopisz kod do `LANGS` (`knowledge_service.py`), walidacji projektów w `main.py` i słownika interfejsu.

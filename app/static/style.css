@@ -441,6 +441,7 @@ pre { padding: 18px 20px; overflow-x: auto; font-family: var(--mono); font-size:
 .badge-red    { background: rgba(var(--red-rgb),0.10); color: var(--red-t);        border: 1px solid rgba(var(--red-rgb),0.22); }
 .badge-purple { background: rgba(var(--purple-rgb),0.10);color: var(--purple-t);        border: 1px solid rgba(var(--purple-rgb),0.22); }
 .badge-gray   { background: var(--bg2);            color: var(--text3);   border: 1px solid var(--border2); }
+.badge-blue   { background: rgba(var(--accent-rgb),0.10); color: var(--accent);       border: 1px solid rgba(var(--accent-rgb),0.30); }
 
 /* ─── STATUS PILL (większa niż badge, z dots) ─── */
 .pill {
@@ -1214,3 +1215,16 @@ pre { padding: 18px 20px; overflow-x: auto; font-family: var(--mono); font-size:
 .ai-set-how summary { cursor: pointer; color: var(--accent); }
 .ai-set-how p { margin-top: 8px; line-height: 1.6; }
 @media (max-width: 600px) { .ai-set-grid { grid-template-columns: 1fr; } }
+
+/* Filtr języka treści (langfilter.js) */
+.lf { position: relative; min-width: 190px; }
+.lf-sum { list-style: none; display: block; white-space: nowrap; width: 100%; box-sizing: border-box; padding-right: 36px; position: relative; }
+.lf-sum::-webkit-details-marker { display: none; }
+.lf-sum::after { content: "▾"; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--text3); }
+.lf[open] .lf-sum { border-color: var(--accent); }
+.lf-panel { position: absolute; z-index: 30; top: calc(100% + 6px); right: 0; min-width: 260px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 10px 28px rgba(0,0,0,.35); }
+.lf-presets { display: flex; gap: 8px; padding-bottom: 8px; margin-bottom: 4px; border-bottom: 1px solid var(--border2); }
+.lf-btn { font-size: 11px; padding: 6px 12px; }
+.lf-row { display: flex; gap: 10px; align-items: center; font-family: var(--mono); font-size: 12px; color: var(--text); cursor: pointer; padding: 6px 4px; border-radius: 6px; line-height: 1.3; }
+.lf-row:hover { background: var(--bg2); }
+.lf-row input { accent-color: var(--accent); width: 15px; height: 15px; flex: none; margin: 0; }

@@ -156,3 +156,21 @@ def test_projects_lang(users):
     db.query(models.Project).filter(models.Project.id.in_([pid, eid])).delete(synchronize_session=False)
     db.commit()
     db.close()
+
+
+def test_langs_checkbox_filter(users):
+    """Wybór języków (langs) + merge: zbiór języków, jedna wersja na grupę, projekty z listą języków."""
+    h = users["admin"]["h"]
+    a = client.post("/api/knowledge/editor/items", json=art("multi"), headers=h).json()
+    assert client.post(f"/api/knowledge/editor/items/{a['id']}/publish", json={"content": art("multi")}, headers=h).status_code == 200
+    t = client.post(f"/api/knowledge/editor/items/{a['id']}/translate", json={"lang": "en"}, headers=h).json()
+    client.put(f"/api/knowledge/editor/items/{t['id']}", json={**art("multi-en"), "lang": "en"}, headers=h)
+    assert client.post(f"/api/knowledge/editor/items/{t['id']}/publish", json={"content": {**art("multi-en"), "lang": "en"}}, headers=h).status_code == 200
+    ids = lambda q: sorted(x["lang"] for x in client.get("/api/knowledge/items?q=" + TAG + "&" + q).json() if "multi" in x["title"])
+    assert ids("langs=pl,en&merge=0") == ["en", "pl"]
+    assert ids("langs=en") == ["en"]
+    assert ids("langs=pl") == ["pl"]
+    assert ids("lang=en&langs=pl,en&merge=1") == ["en"]
+    assert ids("lang=pl&langs=pl,en&merge=1") == ["pl"]
+    assert ids("lang=pl&langs=en&merge=1") == ["en"]
+    assert ids("langs=xx") == ["en", "pl"]   # niepoprawny kod ignorowany -> bez filtra

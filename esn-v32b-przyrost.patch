@@ -1,0 +1,115 @@
+diff -ruN a/app/static/i18n/en.js b/app/static/i18n/en.js
+--- a/app/static/i18n/en.js	2026-11-26 14:10:13.129500515 +0100
++++ b/app/static/i18n/en.js	2026-11-26 14:10:13.130803257 +0100
+@@ -1019,6 +1019,5 @@
+   "lf.jezyki": "Languages",
+   "lf.tylkoMoj": "Only mine",
+   "lf.wszystkie": "All",
+-  "lf.laczTlumaczenia": "Merge translations (one version)",
+-  "lf.plakietkiZawsze": "Language badge on every card"
++  "lf.laczTlumaczenia": "Merge translations (one version)"
+ }, { name: "English", locale: "en-GB" });
+diff -ruN a/app/static/i18n/pl.js b/app/static/i18n/pl.js
+--- a/app/static/i18n/pl.js	2026-11-26 14:10:13.119380603 +0100
++++ b/app/static/i18n/pl.js	2026-11-26 14:10:13.124534381 +0100
+@@ -1019,6 +1019,5 @@
+   "lf.jezyki": "Języki",
+   "lf.tylkoMoj": "Tylko mój",
+   "lf.wszystkie": "Wszystkie",
+-  "lf.laczTlumaczenia": "Łącz tłumaczenia (jedna wersja)",
+-  "lf.plakietkiZawsze": "Plakietka języka na każdej karcie"
++  "lf.laczTlumaczenia": "Łącz tłumaczenia (jedna wersja)"
+ }, { name: "Polski", locale: "pl-PL" });
+diff -ruN a/app/static/langfilter.js b/app/static/langfilter.js
+--- a/app/static/langfilter.js	2026-11-26 14:10:13.136121984 +0100
++++ b/app/static/langfilter.js	2026-11-26 14:10:13.137313457 +0100
+@@ -19,7 +19,7 @@
+   }
+   function set(v) { try { localStorage.setItem(KEY, JSON.stringify(v)); } catch (e) { /* brak storage */ } }
+   function query() { var s = get(); return "lang=" + mine() + "&langs=" + s.langs.join(",") + "&merge=" + (s.merge ? 1 : 0); }
+-  function showBadge(lang) { var s = get(); return !!lang && (s.badges || lang !== mine()); }
++  function showBadge(lang) { return !!lang; }   /* etykieta języka zawsze widoczna */
+ 
+   function mount(el, opts) {
+     opts = opts || {};
+@@ -56,7 +56,6 @@
+         });
+       });
+       if (opts.merge) row(_t("lf.laczTlumaczenia"), st.merge, function (on) { st.merge = on; commit(); });
+-      row(_t("lf.plakietkiZawsze"), st.badges, function (on) { st.badges = on; commit(); });
+     }
+     draw();
+     document.addEventListener("click", function (e) { if (box.open && e.composedPath().indexOf(box) < 0 && document.contains(box)) box.open = false; });
+diff -ruN a/app/static/style.css b/app/static/style.css
+--- a/app/static/style.css	2026-11-26 14:10:13.116477849 +0100
++++ b/app/static/style.css	2026-11-26 14:10:13.117938231 +0100
+@@ -441,6 +441,7 @@
+ .badge-red    { background: rgba(var(--red-rgb),0.10); color: var(--red-t);        border: 1px solid rgba(var(--red-rgb),0.22); }
+ .badge-purple { background: rgba(var(--purple-rgb),0.10);color: var(--purple-t);        border: 1px solid rgba(var(--purple-rgb),0.22); }
+ .badge-gray   { background: var(--bg2);            color: var(--text3);   border: 1px solid var(--border2); }
++.badge-blue   { background: rgba(var(--accent-rgb),0.10); color: var(--accent);       border: 1px solid rgba(var(--accent-rgb),0.30); }
+ 
+ /* ─── STATUS PILL (większa niż badge, z dots) ─── */
+ .pill {
+@@ -1216,10 +1217,14 @@
+ @media (max-width: 600px) { .ai-set-grid { grid-template-columns: 1fr; } }
+ 
+ /* Filtr języka treści (langfilter.js) */
+-.lf { position: relative; }
+-.lf-sum { list-style: none; display: block; white-space: nowrap; }
++.lf { position: relative; min-width: 190px; }
++.lf-sum { list-style: none; display: block; white-space: nowrap; width: 100%; box-sizing: border-box; padding-right: 36px; position: relative; }
+ .lf-sum::-webkit-details-marker { display: none; }
+-.lf-panel { position: absolute; z-index: 30; top: calc(100% + 6px); right: 0; min-width: 240px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px; display: grid; gap: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+-.lf-presets { display: flex; gap: 8px; flex-wrap: wrap; }
+-.lf-btn { font-size: 11px; padding: 6px 10px; }
+-.lf-row { display: flex; gap: 8px; align-items: center; font-family: var(--mono); font-size: 12px; color: var(--text); cursor: pointer; }
++.lf-sum::after { content: "▾"; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--text3); }
++.lf[open] .lf-sum { border-color: var(--accent); }
++.lf-panel { position: absolute; z-index: 30; top: calc(100% + 6px); right: 0; min-width: 260px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 10px 28px rgba(0,0,0,.35); }
++.lf-presets { display: flex; gap: 8px; padding-bottom: 8px; margin-bottom: 4px; border-bottom: 1px solid var(--border2); }
++.lf-btn { font-size: 11px; padding: 6px 12px; }
++.lf-row { display: flex; gap: 10px; align-items: center; font-family: var(--mono); font-size: 12px; color: var(--text); cursor: pointer; padding: 6px 4px; border-radius: 6px; line-height: 1.3; }
++.lf-row:hover { background: var(--bg2); }
++.lf-row input { accent-color: var(--accent); width: 15px; height: 15px; flex: none; margin: 0; }
+diff -ruN a/app/templates/index.html b/app/templates/index.html
+--- a/app/templates/index.html	2026-11-26 14:10:13.142383496 +0100
++++ b/app/templates/index.html	2026-11-26 14:10:13.143717705 +0100
+@@ -4,15 +4,15 @@
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <meta name="color-scheme" content="dark light">
+-<script src="{{ url_for('static', path='/i18n.js') }}?v=8"></script>
+-<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=8"></script>
+-<script src="{{ url_for('static', path='/i18n/en.js') }}?v=8"></script>
++<script src="{{ url_for('static', path='/i18n.js') }}?v=9"></script>
++<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=9"></script>
++<script src="{{ url_for('static', path='/i18n/en.js') }}?v=9"></script>
+ <script src="{{ url_for('static', path='/theme.js') }}?v=4"></script>
+ <title data-i18n="meta.title">Platforma Systemów Wbudowanych</title>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+-<link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=2.25">
++<link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=2.27">
+ <link rel="stylesheet" href="{{ url_for('static', path='/pinout.css') }}?v=5">
+ <script src="{{ url_for('static', path='/vendor/marked.umd.js') }}?v=18.2.1"></script>
+ <script src="{{ url_for('static', path='/vendor/purify.min.js') }}?v=3.4.18"></script>
+@@ -32,7 +32,7 @@
+ <script src="{{ url_for('static', path='/knowledge-guide.js') }}?v=2"></script>
+ <script src="{{ url_for('static', path='/knowledge-blocks.js') }}?v=2"></script>
+ <script src="{{ url_for('static', path='/knowledge-wizard.js') }}?v=4"></script>
+-<script src="{{ url_for('static', path='/langfilter.js') }}?v=2"></script>
++<script src="{{ url_for('static', path='/langfilter.js') }}?v=3"></script>
+ <script src="{{ url_for('static', path='/knowledge.js') }}?v=15"></script>
+ 
+ </head>
+diff -ruN a/docs/I18N.md b/docs/I18N.md
+--- a/docs/I18N.md	2026-11-26 14:10:13.148777082 +0100
++++ b/docs/I18N.md	2026-11-26 14:10:13.149961607 +0100
+@@ -54,4 +54,4 @@
+ `projects.lang` (`pl`/`en`, domyślnie `pl`, migracja automatyczna). `GET /api/projects?lang=` filtruje (pominięte dla `source=mine`, żeby autor widział własne). UI: selektor „Tylko mój język / Wszystkie języki” (`localStorage` `esn-proj-scope`, domyślnie mój język), plakietka języka na kafelku i w szczegółach, pole języka w formularzu (domyślnie język interfejsu). Edycja starym klientem bez pola `lang` nie zmienia języka. Projekty nie mają grup tłumaczeń – wersja w innym języku to osobny projekt.
+ 
+ ### Filtr języków (v32)
+-Wspólny panel `static/langfilter.js` (`ESNLangFilter`) w Wiedzy i Bazie projektów: checkboxy wszystkich języków platformy (`ESNI18n.list()`, nowy język pojawia się sam), presety „Tylko mój” / „Wszystkie”, opcja „Łącz tłumaczenia” (tylko Wiedza: jedna wersja na grupę, preferowany język interfejsu) i „Plakietka języka na każdej karcie”. Stan: `localStorage` `esn-lang-filter`, wspólny dla obu miejsc; domyślnie wszystkie języki + łączenie. API: `GET /api/knowledge/items|courses?lang=<mój>&langs=pl,en&merge=0|1` (stare `scope` nadal działa), `GET /api/projects?lang=pl,en`. Nowy język treści: dopisz kod do `LANGS` (`knowledge_service.py`), walidacji projektów w `main.py` i słownika interfejsu.
++Wspólny panel `static/langfilter.js` (`ESNLangFilter`) w Wiedzy i Bazie projektów: checkboxy wszystkich języków platformy (`ESNI18n.list()`, nowy język pojawia się sam), presety „Tylko mój” / „Wszystkie”, opcja „Łącz tłumaczenia” (tylko Wiedza: jedna wersja na grupę, preferowany język interfejsu). Stan: `localStorage` `esn-lang-filter`, wspólny dla obu miejsc; domyślnie wszystkie języki + łączenie. API: `GET /api/knowledge/items|courses?lang=<mój>&langs=pl,en&merge=0|1` (stare `scope` nadal działa), `GET /api/projects?lang=pl,en`. Nowy język treści: dopisz kod do `LANGS` (`knowledge_service.py`), walidacji projektów w `main.py` i słownika interfejsu.

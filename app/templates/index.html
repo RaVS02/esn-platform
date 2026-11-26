@@ -4,15 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="dark light">
-<script src="{{ url_for('static', path='/i18n.js') }}?v=7"></script>
-<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=7"></script>
-<script src="{{ url_for('static', path='/i18n/en.js') }}?v=7"></script>
+<script src="{{ url_for('static', path='/i18n.js') }}?v=9"></script>
+<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=9"></script>
+<script src="{{ url_for('static', path='/i18n/en.js') }}?v=9"></script>
 <script src="{{ url_for('static', path='/theme.js') }}?v=4"></script>
 <title data-i18n="meta.title">Platforma Systemów Wbudowanych</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=2.25">
+<link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=2.27">
 <link rel="stylesheet" href="{{ url_for('static', path='/pinout.css') }}?v=5">
 <script src="{{ url_for('static', path='/vendor/marked.umd.js') }}?v=18.2.1"></script>
 <script src="{{ url_for('static', path='/vendor/purify.min.js') }}?v=3.4.18"></script>
@@ -32,7 +32,8 @@
 <script src="{{ url_for('static', path='/knowledge-guide.js') }}?v=2"></script>
 <script src="{{ url_for('static', path='/knowledge-blocks.js') }}?v=2"></script>
 <script src="{{ url_for('static', path='/knowledge-wizard.js') }}?v=4"></script>
-<script src="{{ url_for('static', path='/knowledge.js') }}?v=14"></script>
+<script src="{{ url_for('static', path='/langfilter.js') }}?v=3"></script>
+<script src="{{ url_for('static', path='/knowledge.js') }}?v=15"></script>
 
 </head>
 <body>
@@ -175,10 +176,7 @@
           <span class="search-icon">🔍︎</span>
           <input type="text" id="searchProjects" class="search-input" placeholder="Szukaj projektu..." data-i18n-attr="placeholder:projects.szukajProjektu" onkeyup="updateProjectsView()">
         </div>
-        <select id="projLangScope" class="sort-select" onchange="setProjLangScope(this.value)" aria-label="Język treści" data-i18n-attr="aria-label:projects.jezykTresci">
-          <option value="only" data-i18n="projects.scopeOnly">Tylko mój język</option>
-          <option value="all" data-i18n="projects.scopeAll">Wszystkie języki</option>
-        </select>
+        <div id="projLangScope"></div>
         <select id="sortProjects" class="sort-select" onchange="updateProjectsView()">
           <option value="newest" data-i18n="projects.pokazNajnowsze">Pokaż: Najnowsze</option>
           <option value="oldest" data-i18n="projects.pokazNajstarsze">Pokaż: Najstarsze</option>
@@ -721,11 +719,15 @@ let activeProjectStatuses = [];
 let displayLimit = 12; // NOWOŚĆ: Ile kafelków wyświetlamy na starcie
 
 // Parametr resetLimit domyślnie na true. Jeśli wpiszemy coś w lupkę lub klikniemy tag, wracamy do 12 kafelków.
-function getProjLangScope() { try { return localStorage.getItem('esn-proj-scope') === 'all' ? 'all' : 'only'; } catch (e) { return 'only'; } }
-function setProjLangScope(v) { try { localStorage.setItem('esn-proj-scope', v); } catch (e) {} updateProjectsView(); }
+let _projLf = null;
+function mountProjLangFilter() {
+    const el = document.getElementById('projLangScope');
+    if (el && !el.firstChild) _projLf = ESNLangFilter.mount(el, { merge: false, onChange: () => updateProjectsView() });
+}
 
 async function updateProjectsView(resetLimit = true) {
     if (resetLimit) displayLimit = 12;
+    mountProjLangFilter();
 
     const listContainer = document.getElementById('projects-list');
     listContainer.className = 'projects-grid'; 
@@ -742,9 +744,7 @@ async function updateProjectsView(resetLimit = true) {
     const sortVal = document.getElementById('sortProjects') ? document.getElementById('sortProjects').value : 'newest';
     
     let url = `/api/projects?limit=500&source=${currentSource}&sort=${sortVal}`;
-    const _ls = document.getElementById('projLangScope');
-    if (_ls) _ls.value = getProjLangScope();
-    if (getProjLangScope() === 'only') url += `&lang=${ESNI18n.lang()}`;
+    url += `&lang=${ESNLangFilter.get().langs.join(',')}`;
     if (currentSource === 'mine' && loggedUserId) url += `&user_id=${loggedUserId}`;
 
     try {
@@ -806,7 +806,7 @@ async function updateProjectsView(resetLimit = true) {
                 `<span class="tag" style="font-size:10px; padding:2px 6px;">${esc(tag.trim())}</span>`
             ).join('') : '';
 
-            const langBadge = (project.lang && project.lang !== ESNI18n.lang())
+            const langBadge = ESNLangFilter.showBadge(project.lang)
                 ? '<span class="badge badge-blue" style="font-size:10px;">' + esc(project.lang.toUpperCase()) + '</span>' : '';
             const officialBadge = project.is_official 
                 ? '<span class="badge badge-green" style="font-size:10px;">✓ ' + _t('badge.official') + '</span>' 
@@ -1010,7 +1010,7 @@ function openFullProjectView(slug) {
     document.getElementById('full-view-content').innerHTML = `
         <div style="background: var(--card);  padding: 10px; border-radius: 16px; margin-bottom: 30px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px;">
-                <div style="display:flex; gap:10px;">${officialBadge} ${myBadge} ${(p.lang && p.lang !== ESNI18n.lang()) ? `<span class="badge badge-blue">${esc(p.lang.toUpperCase())}</span>` : ''}</div>
+                <div style="display:flex; gap:10px;">${officialBadge} ${myBadge} ${ESNLangFilter.showBadge(p.lang) ? `<span class="badge badge-blue">${esc(p.lang.toUpperCase())}</span>` : ''}</div>
                 ${p.github_url ? `<a href="${safeUrl(p.github_url)}" target="_blank" rel="noopener noreferrer" class="btn-action primary" style="font-size: 11px; padding: 4px 10px;">[ github_repo ]</a>` : ''}
             </div>
             

@@ -1006,9 +1006,6 @@ ESNI18n.add("pl", {
   "kn.dostepnaTezW": "Dostępne też w:",
   "kn.jezykTresci": "Język treści",
   "kn.jezyk": "Język",
-  "kn.scopeAuto": "Mój język + nieprzetłumaczone",
-  "kn.scopeOnly": "Tylko {lang}",
-  "kn.scopeAll": "Wszystkie języki",
   "kn.brakTlumaczenia": "Brak tłumaczenia",
   "kn.dodajWersje": "Dodaj wersję: {lang}",
   "kn.utworzonoWersje": "Utworzono wersję językową (szkic)",
@@ -1018,7 +1015,9 @@ ESNI18n.add("pl", {
   "api.kursMaJuzWersje": "Kurs ma już wersję w tym języku",
   "api.najpierwUtworzWersjeKursu": "Najpierw utwórz wersję kursu w tym języku",
   "api.mozeszTlumaczycTylkoOpublikowane": "Możesz tłumaczyć tylko opublikowane lub własne treści",
-  "projects.scopeOnly": "Tylko mój język",
-  "projects.scopeAll": "Wszystkie języki",
-  "projects.jezykTresci": "Język treści"
+  "projects.jezykTresci": "Język treści",
+  "lf.jezyki": "Języki",
+  "lf.tylkoMoj": "Tylko mój",
+  "lf.wszystkie": "Wszystkie",
+  "lf.laczTlumaczenia": "Łącz tłumaczenia (jedna wersja)"
 }, { name: "Polski", locale: "pl-PL" });

@@ -58,10 +58,8 @@
   /* wersje językowe treści: scope auto = mój język + nieprzetłumaczone, only = tylko mój język, all = wszystkie */
   var LANG_NAME = { pl: "Polski", en: "English" }, LANG_LIST = ["pl", "en"];
   function curLang() { return (global.ESNI18n && global.ESNI18n.lang()) || "pl"; }
-  function getScope() { try { var v = localStorage.getItem("esn-kn-scope"); return ["auto", "only", "all"].indexOf(v) >= 0 ? v : "auto"; } catch (e) { return "auto"; } }
-  function setScope(v) { try { localStorage.setItem("esn-kn-scope", v); } catch (e) { /* brak storage */ } }
-  function langQ() { return "lang=" + curLang() + "&scope=" + getScope(); }
-  function langBadge(l) { return l && l !== curLang() ? badge((l || "").toUpperCase(), "badge-blue") : null; }
+  function langQ() { return global.ESNLangFilter ? global.ESNLangFilter.query() : "lang=" + curLang(); }
+  function langBadge(l) { return global.ESNLangFilter && global.ESNLangFilter.showBadge(l) ? badge((l || "").toUpperCase(), "badge-blue") : null; }
   function langLinks(list) {
     if (!list || !list.length) return null;
     var box = h("div", { "class": "kn-inline kn-langs" }, [h("span", { "class": "kn-meta", text: _t('kn.dostepnaTezW') })]);
@@ -413,9 +411,8 @@
     var search = h("input", { type: "search", "class": "text-input kn-search", placeholder: _t('kn.szukajWWiedzy'), "aria-label": _t('kn.szukaj'), value: state.q });
     var levels = h("select", { "class": "sort-select", "aria-label": _t('kn.poziom') }, [h("option", { value: "", text: _t('kn.wszystkiePoziomy') })].concat(LEVEL_ORDER.map(function (l) { return h("option", { value: l, text: LEVEL_LABEL[l] }); })));
     levels.value = state.level;
-    var scopeSel = h("select", { "class": "sort-select", "aria-label": _t('kn.jezykTresci') }, [["auto", _t('kn.scopeAuto')], ["only", _t('kn.scopeOnly', { lang: LANG_NAME[curLang()] || curLang() })], ["all", _t('kn.scopeAll')]].map(function (o) { return h("option", { value: o[0], text: o[1] }); }));
-    scopeSel.value = getScope();
-    scopeSel.addEventListener("change", function () { setScope(scopeSel.value); load(); });
+    var scopeSel = h("div", { "class": "kn-lf" });
+    if (global.ESNLangFilter) global.ESNLangFilter.mount(scopeSel, { merge: true, onChange: function () { load(); } });
     var btns = TABS.map(function (t) {
       var b = h("button", { type: "button", role: "tab", text: t[1], onclick: function () { state.tab = t[0]; mark(); load(); } });
       tabs.appendChild(b); return b;

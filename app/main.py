@@ -497,7 +497,9 @@ def get_projects(
         query = query.filter(models.Project.owner_id == user_id)
     
     if lang and source != "mine":
-        query = query.filter(models.Project.lang == lang)
+        _ls = [x for x in (y.strip().lower() for y in lang.split(",")) if x in ("pl", "en")]
+        if _ls:
+            query = query.filter(models.Project.lang.in_(_ls))
 
     # LOGIKA SORTOWANIA (Projekty Oficjalne ZAWSZE na samej górze)
     if sort == "az":

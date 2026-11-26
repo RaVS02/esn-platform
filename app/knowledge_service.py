@@ -250,6 +250,39 @@ def apply_scope(rows: list, lang: str, scope: str) -> list:
     return [r for r in rows if id(r) in keep]
 
 
+def parse_langs(raw: str) -> list:
+    """'pl,en' -> ['pl','en'] (tylko obsługiwane, bez duplikatów); pusty/niepoprawny -> []."""
+    out = []
+    for x in (raw or "").split(","):
+        x = x.strip().lower()
+        if x in LANGS and x not in out:
+            out.append(x)
+    return out
+
+
+def apply_langs(rows: list, langs: list, merge: bool, prefer: str = "") -> list:
+    """Wybrane języki (checkboxy): zostają wersje w tych językach; merge – jedna wersja na grupę
+    (w języku `prefer`, jeśli wybrany, inaczej pierwsza z wybranych)."""
+    rows = [r for r in rows if (r.lang or "pl") in langs]
+    if not merge:
+        return rows
+    best: dict = {}
+    for r in rows:
+        key = r.translation_group or f"#{r.id}"
+        cur = best.get(key)
+        if cur is None or ((r.lang or "pl") == prefer and (cur.lang or "pl") != prefer):
+            best[key] = r
+    keep = {id(v) for v in best.values()}
+    return [r for r in rows if id(r) in keep]
+
+
+def filter_rows(rows: list, lang: str, scope: str, langs: str, merge: int) -> list:
+    sel = parse_langs(langs)
+    if sel:
+        return apply_langs(rows, sel, bool(merge), lang)
+    return apply_scope(rows, lang, scope)
+
+
 def item_card(a: models.KnowledgeArticle, course: Optional[models.KnowledgeCourse] = None, sib: Optional[dict] = None) -> dict:
     lab, rank = level_info(a.level)
     return {"lang": a.lang or "pl", "translations": translations_of(a, sib), "id": a.id, "slug": a.slug, "kind": a.kind, "kind_label": KINDS.get(a.kind, a.kind), "title": a.title, "summary": a.summary or "",
@@ -407,7 +440,7 @@ def build_router(get_db, get_current_user) -> APIRouter:
         return {"kinds": KINDS, "levels": {k: v[0] for k, v in LEVELS.items()}, "limits": LIM, "langs": list(LANGS)}
 
     @router.get("/api/knowledge/items")
-    def list_items(kind: str = "", level: str = "", q: str = "", lang: str = "", scope: str = "all", db: Session = Depends(get_db)):
+    def list_items(kind: str = "", level: str = "", q: str = "", lang: str = "", scope: str = "all", langs: str = "", merge: int = 0, db: Session = Depends(get_db)):
         pub_courses = {c.id: c for c in db.query(C).filter(C.published.is_(True)).all()}
         qry = db.query(K).filter(K.published.is_(True))
         if kind and kind in KINDS:
@@ -430,7 +463,7 @@ def build_router(get_db, get_current_user) -> APIRouter:
                         and (not kind or a.kind == kind) and (level not in LEVELS or a.level == level):
                     rows.append(a)
         sib = sibling_map(db, K)
-        out = [item_card(a, pub_courses.get(a.course_id), sib) for a in apply_scope(rows, lang, scope)]
+        out = [item_card(a, pub_courses.get(a.course_id), sib) for a in filter_rows(rows, lang, scope, langs, merge)]
         out.sort(key=sort_key)
         return out
 
@@ -443,10 +476,10 @@ def build_router(get_db, get_current_user) -> APIRouter:
         return db.query(K).filter(K.course_id == course_id, K.kind == "lesson", K.published.is_(True)).order_by(K.position, K.id).all()
 
     @router.get("/api/knowledge/courses")
-    def list_courses(lang: str = "", scope: str = "all", db: Session = Depends(get_db)):
+    def list_courses(lang: str = "", scope: str = "all", langs: str = "", merge: int = 0, db: Session = Depends(get_db)):
         out = []
         sib = sibling_map(db, C)
-        for c in apply_scope(db.query(C).filter(C.published.is_(True)).order_by(C.position, C.id).all(), lang, scope):
+        for c in filter_rows(db.query(C).filter(C.published.is_(True)).order_by(C.position, C.id).all(), lang, scope, langs, merge):
             out.append(course_card(c, published_lessons(db, c.id), sib))
         out.sort(key=lambda x: x["level_rank"])
         return out

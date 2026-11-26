@@ -1006,9 +1006,6 @@ ESNI18n.add("en", {
   "kn.dostepnaTezW": "Also available in:",
   "kn.jezykTresci": "Content language",
   "kn.jezyk": "Language",
-  "kn.scopeAuto": "My language + untranslated",
-  "kn.scopeOnly": "Only {lang}",
-  "kn.scopeAll": "All languages",
   "kn.brakTlumaczenia": "Missing translation",
   "kn.dodajWersje": "Add version: {lang}",
   "kn.utworzonoWersje": "Language version created (draft)",
@@ -1018,7 +1015,9 @@ ESNI18n.add("en", {
   "api.kursMaJuzWersje": "This course already has a version in this language",
   "api.najpierwUtworzWersjeKursu": "Create the course version in this language first",
   "api.mozeszTlumaczycTylkoOpublikowane": "You can only translate published or your own content",
-  "projects.scopeOnly": "My language only",
-  "projects.scopeAll": "All languages",
-  "projects.jezykTresci": "Content language"
+  "projects.jezykTresci": "Content language",
+  "lf.jezyki": "Languages",
+  "lf.tylkoMoj": "Only mine",
+  "lf.wszystkie": "All",
+  "lf.laczTlumaczenia": "Merge translations (one version)"
 }, { name: "English", locale: "en-GB" });
