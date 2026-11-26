@@ -1211,5 +1211,8 @@ ESNI18n.add("pl", {
   "api.nieprawidlowyCzasWaznosci": "Nieprawidłowy czas ważności linku",
   "api.limitAktywnychLinkow": "Osiągnięto limit aktywnych linków ({n}) – unieważnij nieużywane",
   "api.nieMaTakiegoLinku": "Nie ma takiego linku",
-  "api.linkDoSchematuNiewazny": "Link do schematu jest nieważny albo wygasł"
+  "api.linkDoSchematuNiewazny": "Link do schematu jest nieważny albo wygasł",
+  "conf.delProject": "Usunąć projekt „{t}” wraz z jego plikami, zdjęciami i przykładami kodu? Tej operacji nie można cofnąć. Schemat połączeń (jeśli jest) zostanie na koncie autora jako prywatny.",
+  "conf.delProjectTitle": "Usuwanie projektu",
+  "toast.projectDeleted": "Projekt usunięty"
 }, { name: "Polski", locale: "pl-PL" });

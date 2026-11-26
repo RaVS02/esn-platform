@@ -309,3 +309,23 @@ def test_view_only_share_links(env):
     db = SessionLocal()
     assert db.query(models.WiringShare).filter(models.WiringShare.schema_id == s["id"]).count() == 0
     db.close()
+
+
+def test_delete_project_with_schematic_and_components(env):
+    """Usuwanie projektu (przycisk w miniaturce i karcie – v47): autor i admin mogą, inni nie; schemat zostaje jako prywatny."""
+    a, b, adm = env["a"]["h"], env["b"]["h"], env["adm"]["h"]
+    for who in (a, adm):
+        p = client.post("/api/projects", headers=a, json={"title": TAG + " do usunięcia " + uuid.uuid4().hex[:4], "short_desc": "opis", "tags": "test"})
+        assert p.status_code in (200, 201), p.text
+        pid = p.json()["id"]
+        s = client.post("/api/wiring/projects", headers=a, json={"title": "schemat", "project_id": pid,
+                        "nodes": [{"id": "n1", "part": f"cat-{env['cid']}", "x": 0, "y": 0}]}).json()
+        assert client.get(f"/api/projects/{pid}/components").json()                   # podzespół dopisany ze schematu
+        client.post(f"/api/wiring/projects/{s['id']}/shares", headers=a, json={"days": 7})
+        assert client.delete(f"/api/projects/{pid}", headers=b).status_code == 403
+        r = client.delete(f"/api/projects/{pid}", headers=who)
+        assert r.status_code == 200, r.text
+        doc = client.get(f"/api/wiring/projects/{s['id']}", headers=a).json()
+        assert doc["project_id"] is None                                               # schemat został, odpięty
+        assert client.get(f"/api/wiring/projects/{s['id']}").status_code == 404        # i jest prywatny
+        client.delete(f"/api/wiring/projects/{s['id']}", headers=a)

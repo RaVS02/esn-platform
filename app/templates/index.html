@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="dark light">
 <script src="{{ url_for('static', path='/i18n.js') }}?v=13"></script>
-<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=20"></script>
-<script src="{{ url_for('static', path='/i18n/en.js') }}?v=20"></script>
+<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=21"></script>
+<script src="{{ url_for('static', path='/i18n/en.js') }}?v=21"></script>
 <script src="{{ url_for('static', path='/theme.js') }}?v=4"></script>
 <title data-i18n="meta.title">Platforma Systemów Wbudowanych</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,7 +26,7 @@
 <script>window.SCH_AUTOMOUNT = false;</script>
 <script src="{{ url_for('static', path='/wiring/app.js') }}?v=7"></script>
 <script src="{{ url_for('static', path='/wiring-guide.js') }}?v=2"></script>
-<script src="{{ url_for('static', path='/wiring-embed.js') }}?v=9"></script>
+<script src="{{ url_for('static', path='/wiring-embed.js') }}?v=10"></script>
 <link rel="stylesheet" href="{{ url_for('static', path='/media.css') }}?v=1">
 <script src="{{ url_for('static', path='/media.js') }}?v=3"></script>
 <script src="{{ url_for('static', path='/ai-local.js') }}?v=2"></script>
@@ -959,7 +959,7 @@ function openFullProjectView(slug) {
     const controlButtonsHtml = showControls ? `
         <div class="cat-admin" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border); display: flex; gap: 15px;">
             <button class="btn-action" onclick="editProject('${p.slug}')">✎ ${_t('act.editProject')}</button>
-            <button class="btn-action" style="border-color:var(--red); color:var(--red);" onclick="deleteProject('${p.id}'); closeFullProjectView();">🗑 ${_t('act.deleteProject')}</button>
+            <button class="btn-action" style="border-color:var(--red); color:var(--red);" onclick="deleteProject('${p.id}', true)">🗑 ${_t('act.deleteProject')}</button>
         </div>
     ` : '';
 
@@ -1396,6 +1396,33 @@ function closeProjectModal() {
 }
 
 // NOWOŚĆ: Funkcja do natychmiastowego usuwania pliku
+// usuwanie projektu (miniaturka i karta) – funkcji brakowało, przyciski nic nie robiły (v47)
+async function deleteProject(id, fromFullView) {
+    const p = allLoadedProjects.find(x => String(x.id) === String(id));
+    const isConfirmed = await customConfirm(_t('conf.delProject', { t: p ? p.title : '' }), _t('conf.delProjectTitle'));
+    if (!isConfirmed) return;
+    try {
+        const res = await fetch(`/api/projects/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
+        if (!res.ok) {
+            let detail = '';
+            try { detail = (await res.json()).detail; } catch (e) { /* brak treści */ }
+            toast(_t('err.delete') + _E(detail || ('HTTP ' + res.status)), 'error');
+            return;
+        }
+        if (fromFullView) {
+            if (window.ESNWiring) ESNWiring.leave(true);   // zamknij edytor schematu z karty (bez pytania – projekt już usunięty)
+            document.getElementById('project-full-view').style.display = 'none';
+            document.getElementById('projects-list').style.display = 'grid';
+            document.querySelector('.controls-bar').style.display = 'flex';
+        }
+        allLoadedProjects = allLoadedProjects.filter(x => String(x.id) !== String(id));
+        toast(_t('toast.projectDeleted'), 'success');
+        await updateProjectsView();
+    } catch (e) {
+        toast(_t('err.connection') + e.message, 'error');
+    }
+}
+
 async function deleteProjectFile(field) {
     if (!editingProjectId) return;
     const isConfirmed = await customConfirm(_t('conf.delFile'), _t('conf.delFileTitle'));

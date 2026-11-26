@@ -1211,5 +1211,8 @@ ESNI18n.add("en", {
   "api.nieprawidlowyCzasWaznosci": "Invalid link validity period",
   "api.limitAktywnychLinkow": "Active link limit reached ({n}) – revoke unused ones",
   "api.nieMaTakiegoLinku": "No such link",
-  "api.linkDoSchematuNiewazny": "The diagram link is invalid or has expired"
+  "api.linkDoSchematuNiewazny": "The diagram link is invalid or has expired",
+  "conf.delProject": "Delete the project “{t}” with its files, photos and code examples? This cannot be undone. Its wiring diagram (if any) stays in the author’s account as private.",
+  "conf.delProjectTitle": "Deleting a project",
+  "toast.projectDeleted": "Project deleted"
 }, { name: "English", locale: "en-GB" });

@@ -115,8 +115,8 @@
     return current;
   }
   /* przy wychodzeniu z widoku: niezapisane zmiany → pytanie (zwraca false, gdy użytkownik zostaje) */
-  function leave() {
-    if (current && current.dirty && !confirm(_t("wr.porzucicZmiany"))) return false;
+  function leave(force) {
+    if (!force && current && current.dirty && !confirm(_t("wr.porzucicZmiany"))) return false;
     destroyCurrent();
     return true;
   }

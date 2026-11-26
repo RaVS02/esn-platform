@@ -91,3 +91,9 @@
 6. [ ] **Widok fizyczny (etap 13 edytora, w stylu Tinkercad/Fritzing):** kafelek = rysunek pinoutu z fizycznym rozmieszczeniem pinów (renderer `pinout.js`), przewody od fizycznych pozycji pinów,
    użyte piny podświetlone; ten sam zapis połączeń co widoki uproszczony i szczegółowy. Poziom 1: podświetlanie użytych pinów na rysunku w karcie komponentu. Breadboard – dalszy pomysł.
 - [x] v42: menu Eksport/Widok w edytorze schematów mieści się w edytorze, gdy pasek się zawija.
+
+## Po aktualizacji „użytkownicy i społeczność” (zgłoszone 2026-11-26)
+- [ ] **Współtwórcy:** dodawanie innych użytkowników jako współtwórców projektu oraz jako współedytorów schematu (rola przy projekcie/schemacie,
+      zaproszenie po loginie, uprawnienia: edycja treści / edycja schematu, bez usuwania i bez zmiany właściciela; widoczne w karcie projektu).
+      Uwaga techniczna: schematy mają już blokadę wersji (rev → 409), więc równoległa edycja przez kilka osób jest bezpieczna; wspólna edycja na żywo – osobny, późniejszy pomysł.
+- [x] v47: usuwanie projektu z miniaturki i karty (brakowało funkcji deleteProject – przyciski nic nie robiły od początku).
