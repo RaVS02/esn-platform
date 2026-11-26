@@ -552,7 +552,42 @@ def build_router(get_db, get_current_user, get_optional_user) -> APIRouter:
         if not user:
             return []
         rows = db.query(S).filter(S.owner_id == user.id).order_by(S.updated_at.desc().nullslast(), S.created_at.desc()).all()
-        return [{"id": r.id, "title": r.title or r.id, "title_en": r.title_en, "project_id": r.project_id} for r in rows]
+        pids = [r.project_id for r in rows if r.project_id]
+        prj = {p.id: p for p in db.query(PR).filter(PR.id.in_(pids)).all()} if pids else {}
+
+        def item(r):
+            d, p = r.data or {}, prj.get(r.project_id)
+            when = r.updated_at or r.created_at
+            return {"id": r.id, "title": r.title or r.id, "title_en": r.title_en, "project_id": r.project_id,
+                    "project": {"id": p.id, "title": p.title, "slug": p.slug} if p else None,
+                    "parts": len(d.get("nodes") or []), "links": len(d.get("links") or []), "rev": r.rev,
+                    "updated_at": when.isoformat() if when else None}
+        return [item(r) for r in rows]
+
+    @router.get("/linkable-projects")
+    def linkable_projects(db: Session = Depends(get_db), user=Depends(get_current_user)):
+        """Projekty, do których użytkownik może podpiąć schemat (własne; admin – wszystkie), bez schematu."""
+        taken = {pid for (pid,) in db.query(S.project_id).filter(S.project_id.isnot(None)).all()}
+        q = db.query(PR)
+        if not is_admin(user):
+            q = q.filter(PR.owner_id == user.id)
+        rows = q.order_by(PR.created_at.desc()).limit(300).all()
+        return [{"id": p.id, "title": p.title, "slug": p.slug, "own": p.owner_id == user.id} for p in rows if p.id not in taken]
+
+    @router.put("/projects/{sid}/link")
+    async def link_project(sid: str, request: Request, db: Session = Depends(get_db), user=Depends(get_current_user)):
+        """Podpięcie schematu do projektu ({project_id}) albo odpięcie ({project_id: null})."""
+        row = get_row(db, sid)
+        if not can_edit(user, row, db):
+            raise HTTPException(403, detail="Brak uprawnień do edycji schematu")
+        body = await read_body(request)
+        pid = body.get("project_id")
+        row.project_id = None if pid is None else check_project(db, user, pid)
+        if row.project_id is not None:
+            sync_components(db, row)
+        db.commit()
+        db.refresh(row)
+        return doc(row, user, db)
 
     @router.get("/projects/{sid}")
     def get_project(sid: str, db: Session = Depends(get_db), user=Depends(get_optional_user)):

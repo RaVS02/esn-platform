@@ -78,3 +78,4 @@
 - [x] v38: integracja edytora schematów połączeń (Narzędzia + karta projektu, /api/wiring, rev/409, tryb gościa) – `docs/SCHEMATY.md`.
 - [ ] Schematy: `Project.components` ze schematu, walidacja napięć (pola pinoutu 10.3), blokada usuwania komponentu użytego w schemacie (10.4), jasny motyw edytora (etap 11), link tylko do odczytu (etap 8).
 - [x] v39: schematy – jasny motyw edytora, nagłówek narzędzi, „schemat” zamiast „projekt”, no-store, podzespoły projektu ze schematu, ostrzeżenie przy usuwaniu komponentu.
+- [x] v40: lista „Moje schematy” w Narzędziach (otwórz, duplikuj, podepnij/odepnij, usuń).

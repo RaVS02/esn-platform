@@ -7,7 +7,7 @@ W platformie działa ten sam kod, z kilkoma hakami oznaczonymi w źródle koment
 
 | Miejsce | Co robi |
 |---|---|
-| **Narzędzia → Edytor schematów** (`/#tools/schematic`, `/#tools/schematic/<id>`) | lista własnych schematów, nowy schemat, import/eksport. Zalogowani zapisują na koncie, goście w przeglądarce |
+| **Narzędzia → Edytor schematów** (`/#tools/schematic`, `/#tools/schematic/<id>`) | lista **„Moje schematy”** nad edytorem (v40): części/połączenia, data zmiany, projekt; akcje Otwórz, Duplikuj, Podepnij do projektu / Odepnij, Usuń. Zalogowani zapisują na koncie, goście w przeglądarce (lista „Schematy w tej przeglądarce”, bez podpinania) |
 | **Karta projektu** (sekcja „Schemat połączeń”) | schemat powiązany z projektem. Widzą go wszyscy. Edytują autor projektu (lub schematu) i admin. Autor bez schematu widzi przycisk „Dodaj schemat połączeń” |
 
 Na telefonie edytor w karcie projektu startuje w podglądzie (przełącznik „Edycja” go włącza), zgodnie z rekomendacją README edytora 10.7.
@@ -53,11 +53,13 @@ Kolory magistral i kategorii (`--c`) zostają bez zmian (korzysta z nich eksport
 | GET | `/parts?q=&src=all\|catalog\|own&page=&limit=` | publiczne | lekka lista: katalog (komponenty z pinoutem; pinout nie jest wczytywany, liczba pinów z SQL) + części własne zalogowanego |
 | GET | `/parts/batch?ids=` , `/parts/{id}` | publiczne | pełne definicje; katalog w języku z nagłówka `X-ESN-Lang` (tłumaczenie nazwy/opisu i `fn`/`note` pinów) |
 | PUT | `/parts/{id}` | zalogowani | część własna (limit 200 na osobę, 200 pinów; `cat-*` odrzucane) |
-| GET | `/projects` | zalogowani (gość: `[]`) | schematy użytkownika |
+| GET | `/projects` | zalogowani (gość: `[]`) | schematy użytkownika (+ `parts`, `links`, `updated_at`, `project {id,title,slug}`) |
 | GET | `/projects/{id}` | autor/admin; schemat w projekcie – publiczny | dokument + `rev`, `can_edit`, `project_id` |
 | POST | `/projects` | zalogowani | nowy schemat; `project_id` = projekt platformy (tylko jego autor/admin, jeden schemat na projekt) |
 | PUT | `/projects/{id}` | autor schematu/projektu, admin | zapis tylko przy zgodnym `rev`, inaczej **409** `{detail:{message, rev}}` |
 | DELETE | `/projects/{id}` | jw. | usunięcie |
+| GET | `/linkable-projects` | zalogowani | projekty bez schematu, do których można podpiąć (własne; admin – wszystkie) |
+| PUT | `/projects/{id}/link` | edytujący schemat + autor projektu/admin | `{project_id}` podpina (dopisuje podzespoły), `{project_id: null}` odpina (schemat wraca do prywatnych) |
 | GET | `/usage/component/{id}` | admin | ile schematów używa komponentu – ostrzeżenie przy usuwaniu z katalogu |
 | GET | `/by-project/{project_id}` | publiczne | `{schema: {id, title, rev, can_edit, parts, links} \| null, can_create}` – do karty projektu |
 

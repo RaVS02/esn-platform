@@ -203,3 +203,32 @@ def test_components_synced_to_project_and_usage(env):
     db.query(models.ProjectComponent).filter(models.ProjectComponent.project_id == env["proj"]).delete()
     db.commit()
     db.close()
+
+
+def test_list_fields_link_and_unlink(env):
+    a, b = env["a"]["h"], env["b"]["h"]
+    s = client.post("/api/wiring/projects", headers=a, json={"title": "Do podpięcia",
+                    "nodes": [{"id": "n1", "part": f"cat-{env['cid']}", "x": 0, "y": 0}]}).json()
+    it = [x for x in client.get("/api/wiring/projects", headers=a).json() if x["id"] == s["id"]][0]
+    assert it["parts"] == 1 and it["links"] == 0 and it["updated_at"] and it["project"] is None
+    # zwolnij projekt testowy, jeśli ma już schemat z wcześniejszych testów
+    for x in client.get("/api/wiring/projects", headers=a).json():
+        if x["project_id"] == env["proj"]:
+            client.put(f"/api/wiring/projects/{x['id']}/link", headers=a, json={"project_id": None})
+    linkable = client.get("/api/wiring/linkable-projects", headers=a).json()
+    assert env["proj"] in [p["id"] for p in linkable]
+    assert env["proj"] not in [p["id"] for p in client.get("/api/wiring/linkable-projects", headers=b).json()]
+    assert client.put(f"/api/wiring/projects/{s['id']}/link", headers=b, json={"project_id": env["proj"]}).status_code == 403
+    r = client.put(f"/api/wiring/projects/{s['id']}/link", headers=a, json={"project_id": env["proj"]})
+    assert r.status_code == 200 and r.json()["project_id"] == env["proj"]
+    it = [x for x in client.get("/api/wiring/projects", headers=a).json() if x["id"] == s["id"]][0]
+    assert it["project"]["id"] == env["proj"]
+    assert env["proj"] not in [p["id"] for p in client.get("/api/wiring/linkable-projects", headers=a).json()]
+    assert [c["component_id"] for c in client.get(f"/api/projects/{env['proj']}/components").json()] == [env["cid"]]   # sync przy podpięciu
+    r = client.put(f"/api/wiring/projects/{s['id']}/link", headers=a, json={"project_id": None})
+    assert r.json()["project_id"] is None
+    assert client.get(f"/api/wiring/projects/{s['id']}").status_code == 404     # odpięty = znowu prywatny
+    db = SessionLocal()
+    db.query(models.ProjectComponent).filter(models.ProjectComponent.project_id == env["proj"]).delete()
+    db.commit()
+    db.close()

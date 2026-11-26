@@ -76,17 +76,19 @@
         if (method === "PUT") { if (/^cat-/.test(pid)) throw new Error("catalog"); d.parts[pid] = Object.assign({}, body, { id: pid }); guestSave(d); return d.parts[pid]; }
       }
       if (path === "/projects") {
-        if (method === "GET") return Object.keys(d.projects).map(function (k) { var p = d.projects[k]; return { id: p.id, title: p.title || p.id, title_en: p.title_en }; });
+        if (method === "GET") return Object.keys(d.projects).map(function (k) { var p = d.projects[k];
+          return { id: p.id, title: p.title || p.id, title_en: p.title_en, parts: (p.nodes || []).length, links: (p.links || []).length, updated_at: (d.ts || {})[k] || null, project: null };
+        }).sort(function (a, b) { return String(b.updated_at || "").localeCompare(String(a.updated_at || "")); });
         if (method === "POST") {
           var np = Object.assign({ title: _t("wr.nowySchemat"), wire: "curve", orient: "auto", nodes: [], links: [] }, body || {}, { id: "g" + uid() });
-          delete np.rev; delete np.project_id; d.projects[np.id] = np; guestSave(d); return np;
+          delete np.rev; delete np.project_id; delete np.can_edit; d.projects[np.id] = np; (d.ts = d.ts || {})[np.id] = new Date().toISOString(); guestSave(d); return np;
         }
       }
       if ((m = path.match(/^\/projects\/(.+)$/))) {
         var sid = decodeURIComponent(m[1]);
         if (method === "GET") { if (!d.projects[sid]) { var e404 = new Error("404"); e404.status = 404; throw e404; } return JSON.parse(JSON.stringify(d.projects[sid])); }
-        if (method === "PUT") { var p = Object.assign({}, body, { id: sid }); delete p.rev; d.projects[sid] = p; guestSave(d); return p; }
-        if (method === "DELETE") { delete d.projects[sid]; guestSave(d); return { ok: true }; }
+        if (method === "PUT") { var p = Object.assign({}, body, { id: sid }); delete p.rev; d.projects[sid] = p; (d.ts = d.ts || {})[sid] = new Date().toISOString(); guestSave(d); return p; }
+        if (method === "DELETE") { delete d.projects[sid]; if (d.ts) delete d.ts[sid]; guestSave(d); return { ok: true }; }
       }
       var e = new Error("unsupported " + method + " " + url); e.status = 400; throw e;
     } };
@@ -129,6 +131,90 @@
   }
 
   /* ── 1. Narzędzia ── */
+  /* lista „Moje schematy” nad edytorem: otwórz, duplikuj, podepnij/odepnij od projektu, usuń */
+  function errMsg(e) { var d = e && e.data && e.data.detail; d = typeof d === "string" ? d : (d && d.message) || ""; return d ? global.ESNI18n.err(d) : _t("wr.bladOperacji"); }
+  function fmtDate(iso) { try { return iso ? global.ESNI18n.date(new Date(iso), { dateStyle: "medium", timeStyle: "short" }) : ""; } catch (e) { return ""; } }
+  function schemaList(box, o) {
+    var state = { items: [], linkFor: null, linkable: null };
+    async function refresh() {
+      try { state.items = await o.call("GET", "/projects"); } catch (e) { state.items = []; }
+      draw();
+    }
+    function cur() { var ed = o.editor(); return ed && ed.project ? ed.project.id : null; }
+    async function act(fn) { try { await fn(); } catch (e) { toast(errMsg(e), "error"); } await refresh(); }
+    async function openLink(it) {
+      state.linkFor = it.id; state.linkable = null; draw();
+      try { state.linkable = await o.call("GET", "/linkable-projects"); } catch (e) { state.linkable = []; }
+      draw();
+    }
+    function row(it) {
+      var open = it.id === cur();
+      var meta = [_t("wr.meta", { parts: it.parts || 0, links: it.links || 0 })];
+      if (it.updated_at) meta.push(_t("wr.zmieniono", { d: fmtDate(it.updated_at) }));
+      var proj = it.project ? h("span", { "class": "wl-proj" }, [_t("wr.wProjekcie") + " ",
+        h("a", { href: "#projects", text: it.project.title, onclick: function (e) { e.preventDefault(); if (typeof global.openProjectFromComponent === "function") global.openProjectFromComponent(it.project.slug); } })]) : null;
+      var btns = [
+        h("button", { type: "button", "class": "btn-action", text: open ? _t("wr.otwarty") : _t("wr.otworz"), disabled: open ? "disabled" : null,
+          onclick: function () { var ed = o.editor(); if (ed) ed.open(it.id).then(draw, draw); } }),
+        h("button", { type: "button", "class": "btn-action", text: _t("wr.duplikuj"), onclick: function () { act(async function () {
+          var d = await o.call("GET", "/projects/" + encodeURIComponent(it.id));
+          ["id", "rev", "can_edit", "project_id"].forEach(function (k) { delete d[k]; });
+          d.title = ((d.title || "") + " " + _t("wr.kopia")).trim(); delete d.title_en;
+          var n = await o.call("POST", "/projects", d); toast(_t("wr.zduplikowano"), "success");
+          var ed = o.editor(); if (ed) await ed.open(n.id);
+        }); } })
+      ];
+      if (o.logged) btns.push(it.project
+        ? h("button", { type: "button", "class": "btn-action", text: _t("wr.odepnij"), onclick: function () {
+            if (!confirm(_t("wr.odpiacSchemat", { p: it.project.title }))) return;
+            act(async function () { await o.call("PUT", "/projects/" + encodeURIComponent(it.id) + "/link", { project_id: null }); toast(_t("wr.odpieto"), "success"); });
+          } })
+        : h("button", { type: "button", "class": "btn-action", text: _t("wr.podepnij"), onclick: function () { openLink(it); } }));
+      btns.push(h("button", { type: "button", "class": "btn-action wl-del", text: _t("wr.usun"), onclick: function () {
+        var msg = _t("wr.usunacSchemat", { t: it.title }) + (it.project ? "\n\n" + _t("wr.usunacPodpiety", { p: it.project.title }) : "");
+        if (!confirm(msg)) return;
+        act(async function () {
+          var wasOpen = it.id === cur();
+          await o.call("DELETE", "/projects/" + encodeURIComponent(it.id)); toast(_t("wr.usunieto"), "success");
+          if (wasOpen) o.remount();
+        });
+      } }));
+      var r = h("div", { "class": "wl-row" + (open ? " on" : "") }, [
+        h("div", { "class": "wl-main" }, [h("strong", { text: it.title || it.id }), h("small", { text: meta.join(" · ") }), proj]),
+        h("div", { "class": "wl-btns" }, btns)]);
+      if (state.linkFor === it.id) {
+        var pick = h("div", { "class": "wl-link" });
+        if (state.linkable === null) pick.appendChild(h("span", { "class": "wiring-note", text: "…" }));
+        else if (!state.linkable.length) pick.appendChild(h("span", { "class": "wiring-note", text: _t("wr.brakProjektow") }));
+        else {
+          var sel = h("select", { "class": "sort-select", "aria-label": _t("wr.podepnij") }, [h("option", { value: "", text: _t("wr.wybierzProjekt") })]
+            .concat(state.linkable.map(function (p) { return h("option", { value: String(p.id), text: p.title + (p.own ? "" : " ✦") }); })));
+          pick.appendChild(sel);
+          pick.appendChild(h("button", { type: "button", "class": "btn-action primary", text: _t("wr.podepnij"), onclick: function () {
+            if (!sel.value) return;
+            state.linkFor = null;
+            act(async function () { await o.call("PUT", "/projects/" + encodeURIComponent(it.id) + "/link", { project_id: +sel.value }); toast(_t("wr.podpieto"), "success"); });
+          } }));
+        }
+        pick.appendChild(h("button", { type: "button", "class": "btn-action", text: _t("confirm.anuluj"), onclick: function () { state.linkFor = null; draw(); } }));
+        r.appendChild(pick);
+      }
+      return r;
+    }
+    function draw() {
+      box.textContent = "";
+      var det = h("details", { "class": "wl", open: "open" });
+      det.appendChild(h("summary", {}, [h("span", { text: (o.logged ? _t("wr.mojeSchematy") : _t("wr.schematyWPrzegladarce")) + " (" + state.items.length + ")" })]));
+      if (!state.items.length) det.appendChild(h("p", { "class": "wiring-note wl-empty", text: _t("wr.brakSchematowLista") }));
+      var rows = h("div", { "class": "wl-rows" });
+      state.items.forEach(function (it) { rows.appendChild(row(it)); });
+      det.appendChild(rows);
+      box.appendChild(det);
+    }
+    refresh();
+    return { refresh: refresh, draw: draw };
+  }
+
   function mountTool(el, ctx) {
     var logged = !!token(), wrap = h("div", { "class": "wiring-section" }), host = h("div");
     el.appendChild(h("p", { "class": "hero-sub tp-lead", text: _t("wr.lead") }));
@@ -140,8 +226,14 @@
         onclick: function (e) { migrateGuest(e.currentTarget, function () { el.textContent = ""; mountTool(el, ctx); }); } }));
       el.appendChild(bar);
     }
+    var base = logged ? { call: req } : guestApi(), listBox = h("div"), list = null, ed = null;
+    // edytor korzysta z tej samej warstwy danych; każdy zapis / nowy / usunięty schemat odświeża listę
+    var edApi = { call: function (m, u, b) { return base.call(m, u, b).then(function (r) { if (m !== "GET" && /^\/projects/.test(u) && list) list.refresh(); else if (m === "GET" && /^\/projects\//.test(u) && list) setTimeout(list.draw, 0); return r; }); } };
+    function remount(id) { ed = mountEditor(host, { api: edApi, project: id || undefined }); }
+    el.appendChild(listBox);
     wrap.appendChild(host); el.appendChild(wrap);
-    mountEditor(host, { api: logged ? serverApi() : guestApi(), project: (ctx.sub && ctx.sub[0]) || undefined });
+    remount((ctx.sub && ctx.sub[0]) || undefined);
+    list = schemaList(listBox, { call: base.call, logged: logged, editor: function () { return ed; }, remount: function () { remount(); } });
     return function () { destroyCurrent(); };
   }
 
