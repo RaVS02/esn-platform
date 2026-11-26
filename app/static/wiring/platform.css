@@ -71,3 +71,4 @@
 .wl-sh.active .wl-st{color:var(--green);border-color:rgba(var(--green-rgb),.45)}
 .wl-sh.expired .wl-st,.wl-sh.revoked .wl-st{color:var(--text3)}
 .wl-viewnote{border-style:solid}
+@media (max-width: 820px){ .wg-tbl td:first-child{white-space:normal;width:38%} .wg-tbl code{overflow-wrap:anywhere} }

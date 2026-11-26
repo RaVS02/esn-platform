@@ -490,3 +490,7 @@ input[type="number"] {
   border: 1px solid var(--border2); background: var(--bg2); color: var(--text2); cursor: pointer; }
 .icon-pick .ipk:hover { border-color: var(--accent); color: var(--accent); }
 .icon-pick .ipk.on { border-color: var(--accent); color: var(--accent); background: rgba(var(--accent-rgb, 86,225,253), .10); }
+/* v49: ikony Font Awesome zamiast emoji */
+.toast.success > i { color: var(--green); } .toast.error > i { color: var(--red); } .toast.warn > i { color: var(--orange); }
+.empty-state .e-icon i { font-size: 28px; color: var(--text3); }
+.detail-icon svg, .detail-icon i { vertical-align: middle; }

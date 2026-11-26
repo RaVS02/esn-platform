@@ -5,17 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="dark light">
 <script src="{{ url_for('static', path='/i18n.js') }}?v=13"></script>
-<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=22"></script>
-<script src="{{ url_for('static', path='/i18n/en.js') }}?v=22"></script>
+<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=23"></script>
+<script src="{{ url_for('static', path='/i18n/en.js') }}?v=23"></script>
 <script src="{{ url_for('static', path='/theme.js') }}?v=4"></script>
 <title data-i18n="meta.title">Platforma Systemów Wbudowanych</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=2.27">
+<link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=2.30">
 <link rel="stylesheet" href="{{ url_for('static', path='/pinout.css') }}?v=10">
 <link rel="stylesheet" href="{{ url_for('static', path='/wiring/style.css') }}?v=4">
-<link rel="stylesheet" href="{{ url_for('static', path='/wiring/platform.css') }}?v=7">
+<link rel="stylesheet" href="{{ url_for('static', path='/wiring/platform.css') }}?v=8">
 <link rel="stylesheet" href="{{ url_for('static', path='/shops.css') }}?v=2">
 <script src="{{ url_for('static', path='/vendor/marked.umd.js') }}?v=18.2.1"></script>
 <script src="{{ url_for('static', path='/vendor/purify.min.js') }}?v=3.4.18"></script>
@@ -23,21 +23,21 @@
 <script src="{{ url_for('static', path='/component-i18n.js') }}?v=1"></script>
 <script src="{{ url_for('static', path='/tools.js') }}?v=4"></script>
 <script src="{{ url_for('static', path='/pinout-examples.js') }}?v=1"></script>
-<script src="{{ url_for('static', path='/tools-pinout.js') }}?v=2"></script>
+<script src="{{ url_for('static', path='/tools-pinout.js') }}?v=3"></script>
 <script>window.SCH_AUTOMOUNT = false;</script>
 <script src="{{ url_for('static', path='/wiring/app.js') }}?v=7"></script>
 <script src="{{ url_for('static', path='/wiring-guide.js') }}?v=2"></script>
-<script src="{{ url_for('static', path='/shops.js') }}?v=1"></script>
-<script src="{{ url_for('static', path='/wiring-embed.js') }}?v=10"></script>
+<script src="{{ url_for('static', path='/shops.js') }}?v=2"></script>
+<script src="{{ url_for('static', path='/wiring-embed.js') }}?v=11"></script>
 <link rel="stylesheet" href="{{ url_for('static', path='/media.css') }}?v=1">
-<script src="{{ url_for('static', path='/media.js') }}?v=3"></script>
+<script src="{{ url_for('static', path='/media.js') }}?v=4"></script>
 <script src="{{ url_for('static', path='/ai-local.js') }}?v=2"></script>
 <script src="{{ url_for('static', path='/ai-settings.js') }}?v=1"></script>
 <link rel="stylesheet" href="{{ url_for('static', path='/content.css') }}?v=6">
 <script src="{{ url_for('static', path='/vendor/highlight.min.js') }}?v=11.12.0"></script>
 <script src="{{ url_for('static', path='/vendor/arduino.min.js') }}?v=11.12.0"></script>
 <link rel="stylesheet" href="{{ url_for('static', path='/vendor/vs2015.min.css') }}?v=11.12.0">
-<script src="{{ url_for('static', path='/content.js') }}?v=3"></script>
+<script src="{{ url_for('static', path='/content.js') }}?v=4"></script>
 <link rel="stylesheet" href="{{ url_for('static', path='/knowledge.css') }}?v=13">
 <link rel="stylesheet" href="{{ url_for('static', path='/mobile.css') }}?v=3">
 <script src="{{ url_for('static', path='/knowledge-templates.js') }}?v=2"></script>
@@ -129,7 +129,7 @@
     
     <aside>
       <details class="filter-details" open>
-        <summary class="filter-summary" data-i18n="projects.opcjeFiltrowania">⚙︎ Opcje Filtrowania</summary>
+        <summary class="filter-summary"><i class="fa-solid fa-sliders" aria-hidden="true"></i> <span data-i18n="projects.opcjeFiltrowania">Opcje Filtrowania</span></summary>
         
         <div class="filter-content">
           <div class="filter-group-label" data-i18n="projects.mikrokontrolery">Mikrokontrolery</div>
@@ -187,7 +187,7 @@
       
       <div class="controls-bar">
         <div class="search-wrap">
-          <span class="search-icon">🔍︎</span>
+          <span class="search-icon"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
           <input type="text" id="searchProjects" class="search-input" placeholder="Szukaj projektu..." data-i18n-attr="placeholder:projects.szukajProjektu" onkeyup="updateProjectsView()">
         </div>
         <div id="projLangScope"></div>
@@ -197,7 +197,7 @@
           <option value="az" data-i18n="projects.pokazAZ">Pokaż: A-Z</option>
         </select>
         <div id="authControls" style="display: none; gap: 10px;">
-            <button id="btnToggleMine" class="btn-action" onclick="toggleSourceFilter('mine', this)" data-i18n="projects.mojeProjekty">✦︎ Moje projekty</button>
+            <button id="btnToggleMine" class="btn-action" onclick="toggleSourceFilter('mine', this)"><i class="fa-solid fa-star" aria-hidden="true"></i> <span data-i18n="projects.mojeProjekty">Moje projekty</span></button>
             <button class="btn-action primary" onclick="openProjectModal()" data-i18n="projects.dodajSwojProjekt">+ Dodaj swój projekt</button>
         </div>
       </div>
@@ -206,9 +206,7 @@
     <div style="text-align:center; padding: 50px; color: var(--text3);" data-i18n="projects.ladowanieBazyProjektow">Ładowanie bazy projektów...</div>
     </div>
     <div id="project-full-view" style="display: none;">
-            <button class="btn-action" onclick="closeFullProjectView()" style="margin-bottom: 20px; border-color: var(--accent); color: var(--accent);" data-i18n="projects.wrocDoListyProjektow">
-                ❮ Wróć do listy projektów
-            </button>
+            <button class="btn-action" onclick="closeFullProjectView()" style="margin-bottom: 20px; border-color: var(--accent); color: var(--accent);" ><i class="fa-solid fa-chevron-left" aria-hidden="true"></i> <span data-i18n="projects.wrocDoListyProjektow">Wróć do listy projektów</span></button>
             <div id="full-view-content" style="background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px;">
                 </div>
         </div>
@@ -228,7 +226,7 @@
     <!-- ── SIDEBAR FILTRÓW ──────────────────────────────────────── -->
     <aside>
       <details class="filter-details" open>
-        <summary class="filter-summary" data-i18n="components.opcjeFiltrowania">⚙︎ Opcje Filtrowania</summary>
+        <summary class="filter-summary"><i class="fa-solid fa-sliders" aria-hidden="true"></i> <span data-i18n="components.opcjeFiltrowania">Opcje Filtrowania</span></summary>
         <div class="filter-content">
 
           <div class="filter-group-label" data-i18n="components.kategoria">Kategoria</div>
@@ -255,7 +253,7 @@
       <!-- Panel admina widoczny tylko dla admin/moderator -->
       <div id="catalog-admin-panel" style="display:none;margin-top:16px;">
         <details class="filter-details" open>
-          <summary class="filter-summary" style="color:var(--accent)" data-i18n="components.panelAdmina">🜲 Panel Admina</summary>
+          <summary class="filter-summary" style="color:var(--accent)"><i class="fa-solid fa-user-shield" aria-hidden="true"></i> <span data-i18n="components.panelAdmina">Panel Admina</span></summary>
           <div class="filter-content">
             <p style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:10px" data-i18n="components.zarzadzanieKatalogiemKomponentow">Zarządzanie katalogiem komponentów</p>
             <button class="btn-action" style="width:100%;justify-content:center;margin-bottom:6px;" onclick="openCatalogModal()" data-i18n="components.dodajKomponent">+ Dodaj komponent</button>
@@ -269,7 +267,7 @@
     <main>
       <div id="catalog-controls-bar" class="controls-bar">
         <div class="search-wrap">
-          <span class="search-icon">🔍︎</span>
+          <span class="search-icon"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
           <input type="text" id="searchComponents" class="search-input"
             placeholder="Szukaj nazwy, symbolu..." data-i18n-attr="placeholder:components.szukajNazwySymbolu" oninput="catalogVisibleCount=12; updateCompView()">
         </div>
@@ -283,15 +281,12 @@
       <div id="comp-count-bar" style="font-family:var(--mono);font-size:11px;color:var(--text3);margin-bottom:14px;"></div>
       
       <div id="components-list" class="projects-grid">
-        <div style="text-align:center;padding:60px 20px;color:var(--text3);font-family:var(--mono);font-size:13px;" data-i18n="components.ladowanieKatalogu">
-          ⏳ Ładowanie katalogu...
+        <div style="text-align:center;padding:60px 20px;color:var(--text3);font-family:var(--mono);font-size:13px;" data-i18n="components.ladowanieKatalogu">Ładowanie katalogu...
         </div>
       </div>
 
       <div id="catalog-full-view" style="display: none;">
-          <button class="btn-action" onclick="closeFullCatalogView()" style="margin-bottom: 20px; border-color: var(--accent); color: var(--accent);" data-i18n="components.wrocDoListyPodzespolow">
-              ❮ Wróć do listy podzespołów
-          </button>
+          <button class="btn-action" onclick="closeFullCatalogView()" style="margin-bottom: 20px; border-color: var(--accent); color: var(--accent);" ><i class="fa-solid fa-chevron-left" aria-hidden="true"></i> <span data-i18n="components.wrocDoListyPodzespolow">Wróć do listy podzespołów</span></button>
           <div id="catalog-full-content" style="background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px;">
           </div>
       </div>
@@ -385,7 +380,7 @@
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
         <button class="btn-action" onclick="closeCatalogModal()" data-i18n="components.anuluj">Anuluj</button>
         <button class="btn-action" id="cm-delete-btn" style="display:none;color:var(--red);
-          border-color:rgba(var(--red-rgb),0.3);" onclick="deleteCatalogItem()" data-i18n="components.usun">🗑 Usuń</button>
+          border-color:rgba(var(--red-rgb),0.3);" onclick="deleteCatalogItem()"><i class="fa-solid fa-trash" aria-hidden="true"></i> <span data-i18n="components.usun">Usuń</span></button>
         <button class="btn-action primary" onclick="saveCatalogItem()" data-i18n="components.zapisz">Zapisz</button>
       </div>
     </div>
@@ -581,9 +576,9 @@
           <option value="en">English</option>
       </select>
       <select id="p-status" class="text-input" style="font-family: var(--mono); font-size: 13px; color: var(--accent);">
-          <option value="stable" style="color: var(--green);" data-i18n="contact.stableUkonczony">🟢 STABLE (Ukończony)</option>
-          <option value="progress" style="color: var(--orange);" data-i18n="contact.inProgressWTrakcie">🟡 IN PROGRESS (W trakcie)</option>
-          <option value="archive" style="color: var(--red);" data-i18n="contact.archivedArchiwalnyBledy">🔴 ARCHIVED (Archiwalny/Błędy)</option>
+          <option value="stable" style="color: var(--green);" data-i18n="contact.stableUkonczony">STABLE (Ukończony)</option>
+          <option value="progress" style="color: var(--orange);" data-i18n="contact.inProgressWTrakcie">IN PROGRESS (W trakcie)</option>
+          <option value="archive" style="color: var(--red);" data-i18n="contact.archivedArchiwalnyBledy">ARCHIVED (Archiwalny/Błędy)</option>
       </select>
 
       <textarea id="p-notes" placeholder="Notatki techniczne..." data-i18n-attr="placeholder:contact.notatkiTechniczne2" class="text-input" style="height:80px; resize:none; font-family:var(--sans)"></textarea>
@@ -597,7 +592,7 @@
           <label style="font-size:11px; color:var(--accent); font-family:var(--mono); display:block; margin-bottom:6px;">
               <i class="fa-solid fa-file-alt"></i> <span data-i18n="contact.artykulMd">Artykuł .md:</span> 
               <span id="name-markdown_path" style="color:var(--text3); font-style:italic; margin-left:10px;"></span>
-              <a href="javascript:void(0)" id="del-markdown_path" style="display:none; color:var(--red); text-decoration:none; margin-left:10px;" onclick="deleteProjectFile('markdown_path')" data-i18n="contact.usun">🗑️ Usuń</a>
+              <a href="javascript:void(0)" id="del-markdown_path" style="display:none; color:var(--red); text-decoration:none; margin-left:10px;" onclick="deleteProjectFile('markdown_path')" ><i class="fa-solid fa-trash" aria-hidden="true"></i> <span data-i18n="contact.usun">Usuń</span></a>
           </label>
           <input type="file" id="p-markdown-file" accept=".md" style="font-size: 12px; color: var(--text2); width:100%;">
       </div>
@@ -818,7 +813,7 @@ async function updateProjectsView(resetLimit = true) {
 
         projectsToShow.forEach(project => {
             const authorName = project.owner ? esc(project.owner.username) : _t('common.deletedAccount');
-            const authorRole = (project.owner && project.owner.role === 'admin') ? ' 🜲 ' : '';
+            const authorRole = (project.owner && project.owner.role === 'admin') ? ' <i class="fa-solid fa-user-shield" aria-hidden="true" title="admin"></i> ' : '';
             
             const dateObj = new Date(project.created_at);
             const formattedDate = ESNI18n.date(dateObj, { day: 'numeric', month: 'short', year: 'numeric' });
@@ -830,14 +825,14 @@ async function updateProjectsView(resetLimit = true) {
             const langBadge = ESNLangFilter.showBadge(project.lang)
                 ? '<span class="badge badge-blue" style="font-size:10px;">' + esc(project.lang.toUpperCase()) + '</span>' : '';
             const officialBadge = project.is_official 
-                ? '<span class="badge badge-green" style="font-size:10px;">✓ ' + _t('badge.official') + '</span>' 
-                : '<span class="badge badge-orange" style="font-size:10px;">𖨆 ' + _t('badge.community') + '</span>';
+                ? '<span class="badge badge-green" style="font-size:10px;"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> ' + _t('badge.official') + '</span>' 
+                : '<span class="badge badge-orange" style="font-size:10px;"><i class="fa-solid fa-users" aria-hidden="true"></i> ' + _t('badge.community') + '</span>';
 
             let myBadge = '';
             if (loggedUserId && project.owner_id === loggedUserId) {
-                myBadge = '<span class="badge badge-purple" style="font-size:10px;">✦︎ ' + _t('badge.yours') + '</span>';
+                myBadge = '<span class="badge badge-purple" style="font-size:10px;"><i class="fa-solid fa-star" aria-hidden="true"></i> ' + _t('badge.yours') + '</span>';
             } else if (isAdmin) {
-                myBadge = '<span class="badge badge-red" style="font-size:10px;">🜲 ' + _t('badge.moderation') + '</span>';
+                myBadge = '<span class="badge badge-red" style="font-size:10px;"><i class="fa-solid fa-user-shield" aria-hidden="true"></i> ' + _t('badge.moderation') + '</span>';
             }
 
             // NOWOŚĆ: Wizualny znacznik statusu na kafelku
@@ -855,8 +850,8 @@ async function updateProjectsView(resetLimit = true) {
 
             const controls = showControls ? `
                 <div style="margin-top:15px; display:flex; gap:10px; border-top: 1px solid var(--border2); padding-top: 12px;">
-                    <button class="btn-action" style="flex:1; justify-content:center; font-size:11px;" onclick="event.stopPropagation(); editProject('${project.slug}')">✎ ${_t('act.edit')}</button>
-                    <button class="btn-action" style="flex:1; justify-content:center; font-size:11px; border-color:var(--red); color:var(--red);" onclick="event.stopPropagation(); deleteProject('${project.id}')">🗑 ${_t('act.delete')}</button>
+                    <button class="btn-action" style="flex:1; justify-content:center; font-size:11px;" onclick="event.stopPropagation(); editProject('${project.slug}')"><i class="fa-solid fa-pen" aria-hidden="true"></i> ${_t('act.edit')}</button>
+                    <button class="btn-action" style="flex:1; justify-content:center; font-size:11px; border-color:var(--red); color:var(--red);" onclick="event.stopPropagation(); deleteProject('${project.id}')"><i class="fa-solid fa-trash" aria-hidden="true"></i> ${_t('act.delete')}</button>
                 </div>
             ` : '';
 
@@ -946,13 +941,13 @@ function openFullProjectView(slug) {
     const tagsHtml = p.tags ? p.tags.split(',').map(tag => `<span class="tag">${esc(tag.trim())}</span>`).join('') : '';
     
     const officialBadge = p.is_official 
-        ? '<span class="badge badge-green">✓ ' + _t('badge.official') + '</span>' 
-        : '<span class="badge badge-orange">𖨆 ' + _t('badge.community') + '</span>';
+        ? '<span class="badge badge-green"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> ' + _t('badge.official') + '</span>' 
+        : '<span class="badge badge-orange"><i class="fa-solid fa-users" aria-hidden="true"></i> ' + _t('badge.community') + '</span>';
     let myBadge = '';
     if (loggedUserId && p.owner_id === loggedUserId) {
-        myBadge = '<span class="badge badge-purple">✦︎ ' + _t('badge.yourProject') + '</span>';
+        myBadge = '<span class="badge badge-purple"><i class="fa-solid fa-star" aria-hidden="true"></i> ' + _t('badge.yourProject') + '</span>';
     } else if (isAdmin) {
-        myBadge = '<span class="badge badge-red">🜲 ' + _t('badge.modMode') + '</span>';
+        myBadge = '<span class="badge badge-red"><i class="fa-solid fa-user-shield" aria-hidden="true"></i> ' + _t('badge.modMode') + '</span>';
     }
 
     let showControls = false;
@@ -961,8 +956,8 @@ function openFullProjectView(slug) {
 
     const controlButtonsHtml = showControls ? `
         <div class="cat-admin" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border); display: flex; gap: 15px;">
-            <button class="btn-action" onclick="editProject('${p.slug}')">✎ ${_t('act.editProject')}</button>
-            <button class="btn-action" style="border-color:var(--red); color:var(--red);" onclick="deleteProject('${p.id}', true)">🗑 ${_t('act.deleteProject')}</button>
+            <button class="btn-action" onclick="editProject('${p.slug}')"><i class="fa-solid fa-pen" aria-hidden="true"></i> ${_t('act.editProject')}</button>
+            <button class="btn-action" style="border-color:var(--red); color:var(--red);" onclick="deleteProject('${p.id}', true)"><i class="fa-solid fa-trash" aria-hidden="true"></i> ${_t('act.deleteProject')}</button>
         </div>
     ` : '';
 
@@ -1057,7 +1052,7 @@ function openFullProjectView(slug) {
         
         <div id="project-gallery-slot"></div>
         
-        <div class="cat-tags" style="display:flex; gap:10px; margin-bottom: 30px;">${tagsHtml}</div>
+        <div class="cat-tags" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom: 30px;">${tagsHtml}</div>
         
         ${infoGrid}
         
@@ -1611,19 +1606,19 @@ function renderCatalogCard(item, isAdmin) {
     const langBadge = (cLangs.length > 1 || (cLangs.length === 1 && cLangs[0] !== cUi))
         ? `<span style="display:inline-flex; gap:3px;" title="${esc(_t('cat.wersjeJezykowe', {list: cLangs.map(l => l.toUpperCase()).join(', ')}) + (item.lang_used && item.lang_used !== cUi ? ' · ' + _t('cat.wersjaPodstawowa', {lang: item.lang_used.toUpperCase()}) : ''))}">${cLangs.map(l => `<span class="badge ${l === item.lang_used ? 'badge-blue' : 'badge-gray'}" style="font-size:10px;">${esc(l.toUpperCase())}</span>`).join('')}</span>`
         : '';
-    const shopBadge = item.shops_count ? `<span class="badge badge-gray" style="font-size:10px;" title="${esc(_t('shop.tytul'))}">🛒 ${item.shops_count}</span>` : '';
-    const pinBadge = item.pinout_summary ? `<span class="badge badge-accent" style="font-size:10px;">⌖ ${item.pinout_summary.count} pin</span>` : '';
+    const shopBadge = item.shops_count ? `<span class="badge badge-gray" style="font-size:10px;" title="${esc(_t('shop.tytul'))}"><i class="fa-solid fa-cart-shopping" aria-hidden="true"></i> ${item.shops_count}</span>` : '';
+    const pinBadge = item.pinout_summary ? `<span class="badge badge-accent" style="font-size:10px;"><i class="fa-solid fa-microchip" aria-hidden="true"></i> ${item.pinout_summary.count} pin</span>` : '';
     const appsHtml = apps.slice(0, 2).map(a => `<span class="badge badge-gray" style="font-size:10px;">${esc(_L('app', a))}</span>`).join(' ');
     const tagsHtml = tags.slice(0, 5).map(t => `<span class="tag" style="font-size:10px; padding:2px 6px;">${esc(t)}</span>`).join(' ');
 
     const thumbHtml = item.image_main 
         ? `<img src="/static/${item.image_main}" alt="${esc(item.name)}">`
-        : `<span style="font-size: 20px;">⌞ ⌝</span>`;
+        : `<i class="fa-solid fa-microchip" aria-hidden="true" style="font-size:20px;opacity:.5"></i>`;
 
     const adminBtns = isAdmin ? `
         <div style="margin-top:auto; padding-top:12px; border-top: 1px solid var(--border2); display:flex; gap:10px;">
-            <button class="btn-action" style="flex:1; justify-content:center; font-size:11px;" onclick="event.stopPropagation(); editCatalogItem(${item.id})">✎ ${_t('act.edit')}</button>
-            <button class="btn-action" style="flex:1; justify-content:center; font-size:11px; border-color:var(--red); color:var(--red);" onclick="event.stopPropagation(); catalogEditingId=${item.id}; deleteCatalogItem();">🗑 ${_t('act.delete')}</button>
+            <button class="btn-action" style="flex:1; justify-content:center; font-size:11px;" onclick="event.stopPropagation(); editCatalogItem(${item.id})"><i class="fa-solid fa-pen" aria-hidden="true"></i> ${_t('act.edit')}</button>
+            <button class="btn-action" style="flex:1; justify-content:center; font-size:11px; border-color:var(--red); color:var(--red);" onclick="event.stopPropagation(); catalogEditingId=${item.id}; deleteCatalogItem();"><i class="fa-solid fa-trash" aria-hidden="true"></i> ${_t('act.delete')}</button>
         </div>` : '<div style="margin-top:auto;"></div>';
 
     return `
@@ -1669,8 +1664,8 @@ function openFullCatalogView(id) {
 
     let adminBtns = isAdmin ? `
         <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border); display: flex; gap: 15px;">
-            <button class="btn-action" onclick="editCatalogItem(${item.id})">✎ ${_t('act.editComponent')}</button>
-            <button class="btn-action" style="border-color:var(--red); color:var(--red);" onclick="catalogEditingId=${item.id}; deleteCatalogItem();">🗑 ${_t('act.deleteComponent')}</button>
+            <button class="btn-action" onclick="editCatalogItem(${item.id})"><i class="fa-solid fa-pen" aria-hidden="true"></i> ${_t('act.editComponent')}</button>
+            <button class="btn-action" style="border-color:var(--red); color:var(--red);" onclick="catalogEditingId=${item.id}; deleteCatalogItem();"><i class="fa-solid fa-trash" aria-hidden="true"></i> ${_t('act.deleteComponent')}</button>
         </div>` : '';
 
     const dsBtn = item.datasheet_url ? `<a href="${safeUrl(item.datasheet_url)}" target="_blank" rel="noopener noreferrer" class="btn-action primary" style="font-size: 11px; padding: 4px 10px;">[ Datasheet ]</a>` : '';
@@ -1689,7 +1684,7 @@ function openFullCatalogView(id) {
         
         <div id="catalog-gallery-slot"></div>
         
-        <div style="display:flex; gap:10px; margin-bottom: 30px;">${tagsHtml}</div>
+        <div class="cat-tags" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom: 30px;">${tagsHtml}</div>
         
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; align-items: start; margin-bottom: 40px; background: var(--bg2); padding: 24px; border-radius: 12px;">
             <div>
@@ -1769,7 +1764,7 @@ async function loadCatalog() {
   } catch(e) {
     document.getElementById('components-list').innerHTML =
       `<div style="text-align:center;padding:60px;color:var(--text3);font-family:var(--mono);">
-        ⚠ ${_t('components.katalogBlad')}<br><small>${esc(e.message)}</small>
+        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> ${_t('components.katalogBlad')}<br><small>${esc(e.message)}</small>
        </div>`;
   }
 }
@@ -2371,7 +2366,7 @@ function checkAuth() {
                 return; // Przerywamy rysowanie menu!
             }
             const login = payload.sub;
-            const rola = payload.role === 'admin' ? ' 🜲 ' + _t('role.admin') : ' 𖨆 ' + _t('role.user');
+            const rola = ' ' + (payload.role === 'admin' ? _t('role.admin') : _t('role.user'));
 
             // Budujemy pasek nawigacji
             document.getElementById('navAuth').innerHTML = `
@@ -2590,7 +2585,7 @@ async function uploadAvatar() {
     formData.append('file', file);
     
     // Pokazujemy klepsydrę na czas ładowania
-    document.getElementById('prof-avatar-placeholder').innerText = "⏳";
+    document.getElementById('prof-avatar-placeholder').innerHTML = '<i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>';
     
     const res = await fetch('/api/users/me/avatar', {
         method: 'POST',
@@ -2604,7 +2599,7 @@ async function uploadAvatar() {
         applyAvatarToUI(data.avatar_path); // Odświeżamy UI natychmiast bez wylogowania!
     } else {
         toast(_t('err.avatar'));
-        document.getElementById('prof-avatar-placeholder').innerText = "⚠";
+        document.getElementById('prof-avatar-placeholder').innerHTML = '<i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>';
     }
 }
 
@@ -2712,13 +2707,13 @@ function toast(msg, type = 'success') {
   const el = document.getElementById('toast');
   if (!el) return;
   
-  let icon = '✔';
-  if (type === 'error') icon = '✖';
-  if (type === 'warn') icon = '⚠';
-  if (type === 'info') icon = '🛈'
+  let icon = 'circle-check';                 // ikony Font Awesome zamiast znaków ✔ ✖ ⚠ 🛈 (v49)
+  if (type === 'error') icon = 'circle-xmark';
+  if (type === 'warn') icon = 'triangle-exclamation';
+  if (type === 'info') icon = 'circle-info';
   el.className = `toast show ${type}`;
   el.textContent = '';                       // komunikat jako tekst – nazwy plików/błędy serwera nie mogą wstrzyknąć HTML
-  const iconEl = document.createElement('span'); iconEl.textContent = icon;
+  const iconEl = document.createElement('i'); iconEl.className = 'fa-solid fa-' + icon; iconEl.setAttribute('aria-hidden', 'true');
   const msgEl = document.createElement('span'); msgEl.style.flex = '1'; msgEl.textContent = msg;
   el.append(iconEl, msgEl);
   

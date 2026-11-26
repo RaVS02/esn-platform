@@ -201,7 +201,7 @@
         var grid = h("div", { "class": "esn-cards" });
         items.forEach(function (c) {
           var card = h("button", { type: "button", "class": "esn-card", "aria-label": _t('ct.otworzKartePodzespolu') + " " + c.name, title: _t('ct.przejdzDoKartyW'), onclick: function () { if (opts.onOpen) opts.onOpen(c.component_id); } });
-          card.appendChild(c.image_main ? h("img", { src: imgSrc(c.image_main), alt: "", loading: "lazy" }) : h("span", { "class": "esn-card-ph", text: "⌖" }));
+          card.appendChild(c.image_main ? h("img", { src: imgSrc(c.image_main), alt: "", loading: "lazy" }) : faPh("microchip"));
           var txt = h("span", { "class": "esn-card-txt" }, [h("strong", { text: partLabel(c.name, c.symbol) })]);
           if (c.note) txt.appendChild(h("span", { "class": "esn-card-note", text: c.note }));
           txt.appendChild(h("span", { "class": "esn-card-cat", text: [c.category, _t('ct.kartaWKatalogu')].filter(Boolean).join(" · ") }));
@@ -227,7 +227,7 @@
       var box = section(slot, _t('ct.przykladoweWykorzystanieWProjektach')), grid = h("div", { "class": "esn-cards" });
       items.forEach(function (p) {
         var card = h("button", { type: "button", "class": "esn-card", "aria-label": _t('ct.otworzProjekt') + " " + p.title, onclick: function () { if (opts && opts.onOpen) opts.onOpen(p.slug); } });
-        card.appendChild(p.image_main ? h("img", { src: imgSrc(p.image_main), alt: "", loading: "lazy" }) : h("span", { "class": "esn-card-ph", text: "▣" }));
+        card.appendChild(p.image_main ? h("img", { src: imgSrc(p.image_main), alt: "", loading: "lazy" }) : faPh("diagram-project"));
         var desc = (p.short_desc || "").slice(0, 110) + ((p.short_desc || "").length > 110 ? "…" : "");
         var txt = h("span", { "class": "esn-card-txt" }, [h("strong", { text: p.title })]);
         if (p.note) txt.appendChild(h("span", { "class": "esn-card-note", text: _t('ct.rola') + " " + p.note }));
@@ -240,7 +240,12 @@
   }
 
   /* ══ EDYTORY ══════════════════════════════════════════════════════════ */
-  function ctlBtn(txt, label, fn, dis) { var b = h("button", { type: "button", "class": "esn-ed-ic", "aria-label": label, title: label, text: txt, onclick: fn }); if (dis) b.disabled = true; return b; }
+  function faPh(n) { var s = h("span", { "class": "esn-card-ph", "aria-hidden": "true" }), i = document.createElement("i"); i.className = "fa-solid fa-" + n; s.appendChild(i); return s; }
+  function ctlBtn(txt, label, fn, dis) {   // txt "fa:<nazwa>" → ikona Font Awesome (v49)
+    var fa = /^fa:/.test(txt), b = h("button", { type: "button", "class": "esn-ed-ic", "aria-label": label, title: label, text: fa ? "" : txt, onclick: fn });
+    if (fa) { var i = document.createElement("i"); i.className = "fa-solid fa-" + txt.slice(3); i.setAttribute("aria-hidden", "true"); b.appendChild(i); }
+    if (dis) b.disabled = true; return b;
+  }
 
   function codeEditor(root, opts) {
     var type = opts.ownerType, ownerId = opts.ownerId || null, items = [], L = DEFAULT_LANGS, dead = false, lastLang = "arduino";
@@ -266,7 +271,7 @@
         var upd = function () { cnt.textContent = Math.round(ta.value.length / 102.4) / 10 + " KB"; };
         ta.addEventListener("input", function () { it.code = ta.value; upd(); }); upd();
         var row = h("div", { "class": "esn-ed-row" }, [ls, title, ctlBtn("◀", _t('ct.przesunWczesniej'), function () { mv(i, -1); }, i === 0), ctlBtn("▶", _t('ct.przesunPozniej'), function () { mv(i, 1); }, i === items.length - 1),
-          ctlBtn("🗑", _t('ct.usunPrzyklad'), function () { confirmDel(_t('ct.usunacTenPrzykladKodu'), _t('ct.usuwanie')).then(function (ok) { if (ok) { items.splice(i, 1); render(); } }); })]);
+          ctlBtn("fa:trash", _t('ct.usunPrzyklad'), function () { confirmDel(_t('ct.usunacTenPrzykladKodu'), _t('ct.usuwanie')).then(function (ok) { if (ok) { items.splice(i, 1); render(); } }); })]);
         list.appendChild(h("div", { "class": "esn-ed-card" }, [row, ta, cnt]));
       });
     }
@@ -344,7 +349,7 @@
         : (it.url || ""); 
       var line1 = h("div", { "class": "esn-ed-row" }, [h("span", { "class": "esn-badge", text: it.kind === "file" ? _t("ct.plik").toUpperCase() : _t("ct.link").toUpperCase() }), ts, label,
         ctlBtn("◀", _t('ct.przesunWczesniej'), function () { move(listRef, i, -1, persisted); }, i === 0), ctlBtn("▶", _t('ct.przesunPozniej'), function () { move(listRef, i, 1, persisted); }, i === listRef.length - 1),
-        ctlBtn("🗑", _t('ct.usun'), function () { confirmDel(_t('ct.usunacTenZasob'), _t('ct.usuwanie')).then(function (ok) { if (!ok) return; if (persisted) api.delRes(it.id).then(reload).catch(fail); else { listRef.splice(i, 1); render(); } }); })]);
+        ctlBtn("fa:trash", _t('ct.usun'), function () { confirmDel(_t('ct.usunacTenZasob'), _t('ct.usuwanie')).then(function (ok) { if (!ok) return; if (persisted) api.delRes(it.id).then(reload).catch(fail); else { listRef.splice(i, 1); render(); } }); })]);
       var c = h("div", { "class": "esn-ed-card" + (it.err ? " is-err" : "") }, [line1, h("div", { "class": "esn-ed-note", text: info })]);
       if (!persisted) c.appendChild(h("div", { "class": "esn-ed-note" + (it.err ? " err" : ""), text: it.err || _t('ct.oczekujeNaZapis') }));
       return c;

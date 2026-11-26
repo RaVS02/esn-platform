@@ -252,7 +252,11 @@
       s.addEventListener("change", function () { onChange(s.value); });
       return s;
     }
-    function ctlBtn(txt, label, fn, dis) { var b = h("button", { type: "button", "class": "esn-mm-ic", "aria-label": label, title: label, text: txt, onclick: fn }); if (dis) b.disabled = true; return b; }
+    function ctlBtn(txt, label, fn, dis) {   // txt "fa:<nazwa>" → ikona Font Awesome (v49)
+      var fa = /^fa:/.test(txt), b = h("button", { type: "button", "class": "esn-mm-ic", "aria-label": label, title: label, text: fa ? "" : txt, onclick: fn });
+      if (fa) { var i = document.createElement("i"); i.className = "fa-solid fa-" + txt.slice(3); i.setAttribute("aria-hidden", "true"); b.appendChild(i); }
+      if (dis) b.disabled = true; return b;
+    }
     function confirmDel(msg) {
       return typeof global.customConfirm === "function" ? global.customConfirm(msg, _t('md.usuwanieZdjecia')) : Promise.resolve(global.confirm(msg));
     }
@@ -291,7 +295,7 @@
       row.appendChild(ctlBtn("◀", _t('md.przesunWczesniej'), function () { move(list, idx, -1, persisted); }, idx === 0));
       row.appendChild(ctlBtn("▶", _t('md.przesunPozniej'), function () { move(list, idx, 1, persisted); }, idx === list.length - 1));
       row.appendChild(h("span", { "class": "esn-mm-sp" }));
-      row.appendChild(ctlBtn("🗑", _t('md.usunZdjecie'), function () { remove(it, persisted); }));
+      row.appendChild(ctlBtn("fa:trash", _t('md.usunZdjecie'), function () { remove(it, persisted); }));
       c.appendChild(row);
       if (!persisted) {
         c.appendChild(h("div", { "class": "esn-mm-state" + (it.err ? " err" : ""), text: it.err ? it.err : it.prog != null ? _t('md.wgrywanie') + " " + Math.round(it.prog * 100) + "%" : _t('md.oczekujeNaZapis') }));

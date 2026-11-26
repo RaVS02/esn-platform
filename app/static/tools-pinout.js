@@ -59,7 +59,7 @@
       var a = h("a", { href: URL.createObjectURL(new Blob([text], { type: type })), download: name });
       document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
     }
-    function doc() { try { var d = P.parseText(src.value); err.textContent = ""; return d; } catch (e) { err.textContent = "⚠ " + e.message; return undefined; } }
+    function doc() { try { var d = P.parseText(src.value); err.textContent = ""; return d; } catch (e) { err.textContent = e.message; return undefined; } }
     function opt(sel, items, val) {
       sel.textContent = ""; items.forEach(function (i) { sel.appendChild(h("option", { value: i[0], text: i[1] })); });
       if (val != null) sel.value = val;
@@ -117,7 +117,7 @@
         try {
           if (t.trim().charAt(0) === "{") { d = JSON.parse(t); if (d.pins) t = P.toText(d); }   /* JSON → format tekstowy */
           src.value = t; previewLang = cur; draw(); ctx.toast(_t("tp.zaimportowano"), "success");
-        } catch (x) { err.textContent = "⚠ " + x.message; }
+        } catch (x) { err.textContent = x.message; }
         fileIn.value = "";
       };
       r.readAsText(f);

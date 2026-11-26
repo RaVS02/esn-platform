@@ -713,7 +713,7 @@ pre { padding: 18px 20px; overflow-x: auto; font-family: var(--mono); font-size:
 .projects-grid {
     display: grid;
     /* POPRAWKA: Kafelki są teraz szersze (z 280px na 340px) */
-    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(400px, 100%), 1fr));   /* min(): na telefonie jedna kolumna bez wychodzenia poza ekran */
     gap: 24px;
     margin-top: 20px;
 }
@@ -1228,3 +1228,14 @@ pre { padding: 18px 20px; overflow-x: auto; font-family: var(--mono); font-size:
 .lf-row { display: flex; gap: 10px; align-items: center; font-family: var(--mono); font-size: 12px; color: var(--text); cursor: pointer; padding: 6px 4px; border-radius: 6px; line-height: 1.3; }
 .lf-row:hover { background: var(--bg2); }
 .lf-row input { accent-color: var(--accent); width: 15px; height: 15px; flex: none; margin: 0; }
+
+/* ─── v49: telefon – wskaźnik kroków się zawija, tooltip nie poszerza strony ─── */
+@media (max-width: 600px) {
+  .steps { flex-wrap: wrap; row-gap: 8px; }
+  .step  { flex: 1 1 45%; min-width: 0; }
+  .step-text { white-space: normal; }
+  .has-tooltip .tooltip { white-space: normal; width: max-content; max-width: 70vw; }
+}
+/* v49: kolor ikony w toaście wg typu */
+.toast > i { flex-shrink: 0; }
+.toast.success > i { color: var(--green); } .toast.error > i { color: var(--red); } .toast.warn > i { color: var(--orange); } .toast.info > i { color: var(--accent); }

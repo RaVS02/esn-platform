@@ -33,7 +33,7 @@
     var ul = h("div", { "class": "shop-list" });
     items.forEach(function (s) {
       var a = h("a", { "class": "shop-link", href: s.url, target: "_blank", rel: "noopener noreferrer nofollow" }, [
-        h("span", { "class": "shop-ic", "aria-hidden": "true", text: "🛒" }),
+        h("i", { "class": "shop-ic fa-solid fa-cart-shopping", "aria-hidden": "true" }),
         h("span", { "class": "shop-main" }, [h("strong", { text: s.name || domain(s.url) }), h("small", { text: domain(s.url) + " ↗" })]),
         s.region ? h("span", { "class": "shop-reg", text: regionName(s.region) }) : null]);
       ul.appendChild(h("div", { "class": "shop-item" }, [a, s.note ? h("p", { "class": "shop-note", text: s.note }) : null]));

@@ -246,7 +246,7 @@
         else if (!state.linkable.length) pick.appendChild(h("span", { "class": "wiring-note", text: _t("wr.brakProjektow") }));
         else {
           var sel = h("select", { "class": "sort-select", "aria-label": _t("wr.podepnij") }, [h("option", { value: "", text: _t("wr.wybierzProjekt") })]
-            .concat(state.linkable.map(function (p) { return h("option", { value: String(p.id), text: p.title + (p.own ? "" : " ✦") }); })));
+            .concat(state.linkable.map(function (p) { return h("option", { value: String(p.id), text: p.title + (p.own ? "" : " (admin)") }); })));
           pick.appendChild(sel);
           pick.appendChild(h("button", { type: "button", "class": "btn-action primary", text: _t("wr.podepnij"), onclick: function () {
             if (!sel.value) return;
@@ -355,7 +355,7 @@
     var info = _t("wr.wPrzegladarce", { s: st.schemas, p: st.parts }) + " · " +
       (st.backup ? _t("wr.ostatniaKopia", { d: fmtDate(st.backup) }) : _t("wr.brakKopii"));
     return h("div", { "class": "wiring-guest warn" + (st.schemas && old ? " stale" : ""), role: "note" }, [
-      h("div", { "class": "wg-head" }, [h("span", { "class": "wg-ic", "aria-hidden": "true", text: "⚠" }), h("strong", { text: _t("wr.goscTytul") })]),
+      h("div", { "class": "wg-head" }, [h("i", { "class": "wg-ic fa-solid fa-triangle-exclamation", "aria-hidden": "true" }), h("strong", { text: _t("wr.goscTytul") })]),
       h("p", { text: _t("wr.trybGoscia") }),
       h("p", { "class": "wg-info" + (st.schemas && old ? " bad" : ""), text: info + (st.schemas && old ? " – " + _t("wr.zrobKopie") : "") }),
       h("div", { "class": "wg-btns" }, [
