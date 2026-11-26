@@ -99,3 +99,4 @@
 - [x] v47: usuwanie projektu z miniaturki i karty (brakowało funkcji deleteProject – przyciski nic nie robiły od początku).
 - [x] v48: „Gdzie kupić” – linki do sklepów przy komponentach katalogu (karta, miniaturka, magazyn) – `docs/SKLEPY.md`.
 - [x] v49: wersja mobilna (zawijanie tagów na karcie komponentu, siatka projektów, tabela poradnika, wskaźnik kroków) + ikony Font Awesome zamiast emoji w interfejsie portalu i magazynu.
+- [x] v50: ikony Font Awesome także zamiast znaków ✕ × ◀ ▶ ‹ › ↗ ← → ▾ (przyciski zamknięcia, przesuwania, linki zewnętrzne, nawigacja Wiedzy, przełącznik języka, rozwijane listy).

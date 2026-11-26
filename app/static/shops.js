@@ -11,15 +11,19 @@
   function h(tag, props, kids) {
     var e = document.createElement(tag);
     for (var k in (props || {})) {
-      if (k === "class") e.className = props[k];
+      if (k === "icon" || k === "iconEnd") continue;
+      else if (k === "class") e.className = props[k];
       else if (k === "text") e.textContent = props[k];
       else if (k === "value") e.value = props[k];
       else if (k.slice(0, 2) === "on") e.addEventListener(k.slice(2), props[k]);
       else if (props[k] !== false && props[k] != null) e.setAttribute(k, props[k]);
     }
     (kids || []).forEach(function (c) { if (c) e.appendChild(typeof c === "string" ? document.createTextNode(c) : c); });
+    if (props && props.icon) e.insertBefore(faIcon(props.icon), e.firstChild);   // v50: ikona Font Awesome (icon / iconEnd)
+    if (props && props.iconEnd) e.appendChild(faIcon(props.iconEnd));
     return e;
   }
+  function faIcon(n) { var i = document.createElement("i"); i.className = "fa-solid fa-" + n; i.setAttribute("aria-hidden", "true"); return i; }
   function okUrl(u) { return /^https?:\/\/[^\s"'<>`]+$/.test(String(u || "").trim()); }
   function domain(u) { try { return new URL(u).hostname.replace(/^www\./, ""); } catch (e) { return ""; } }
   function regionName(r) { var k = "shop.region." + (r || "any"); return _t(k); }   // klucze shop.region.any / pl / eu / world
@@ -34,7 +38,7 @@
     items.forEach(function (s) {
       var a = h("a", { "class": "shop-link", href: s.url, target: "_blank", rel: "noopener noreferrer nofollow" }, [
         h("i", { "class": "shop-ic fa-solid fa-cart-shopping", "aria-hidden": "true" }),
-        h("span", { "class": "shop-main" }, [h("strong", { text: s.name || domain(s.url) }), h("small", { text: domain(s.url) + " ↗" })]),
+        h("span", { "class": "shop-main" }, [h("strong", { text: s.name || domain(s.url) }), h("small", { text: domain(s.url) + " ", iconEnd: "arrow-up-right-from-square" })]),
         s.region ? h("span", { "class": "shop-reg", text: regionName(s.region) }) : null]);
       ul.appendChild(h("div", { "class": "shop-item" }, [a, s.note ? h("p", { "class": "shop-note", text: s.note }) : null]));
     });
@@ -62,7 +66,7 @@
       var check = function () { url.classList.toggle("bad", !!url.value.trim() && !okUrl(url.value)); };
       url.addEventListener("input", check);
       var row = h("div", { "class": "shop-ed-row" }, [name, url, reg, note,
-        h("button", { type: "button", "class": "btn-action shop-del", title: _t("shop.usun"), "aria-label": _t("shop.usun"), text: "✕", onclick: function () {
+        h("button", { type: "button", "class": "btn-action shop-del", title: _t("shop.usun"), "aria-label": _t("shop.usun"), icon: "xmark", onclick: function () {
           rows = rows.filter(function (r) { return r.row !== row; }); row.remove(); add.disabled = rows.length >= MAX; } })]);
       rows.push({ row: row, name: name, url: url, reg: reg, note: note });
       body.appendChild(row); check(); add.disabled = rows.length >= MAX;

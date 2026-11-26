@@ -17,15 +17,19 @@
   function h(tag, props, kids) {
     var e = document.createElement(tag), k;
     for (k in (props || {})) {
-      if (k === "class") e.className = props[k];
+      if (k === "icon" || k === "iconEnd") continue;
+      else if (k === "class") e.className = props[k];
       else if (k === "text") e.textContent = props[k];
       else if (k === "value") e.value = props[k];
       else if (k.slice(0, 2) === "on") e.addEventListener(k.slice(2), props[k]);
       else e.setAttribute(k, props[k]);
     }
     (kids || []).forEach(function (c) { if (c) e.appendChild(c); });
+    if (props && props.icon) e.insertBefore(faIcon(props.icon), e.firstChild);   // v50: ikona Font Awesome (icon / iconEnd)
+    if (props && props.iconEnd) e.appendChild(faIcon(props.iconEnd));
     return e;
   }
+  function faIcon(n) { var i = document.createElement("i"); i.className = "fa-solid fa-" + n; i.setAttribute("aria-hidden", "true"); return i; }
   function notify(msg, type) { if (typeof global.toast === "function") global.toast(msg, type || "info"); else global.alert(msg); }
   function confirmDel(msg, title) { return typeof global.customConfirm === "function" ? global.customConfirm(msg, title || _t('ct.potwierdzenie')) : Promise.resolve(global.confirm(msg)); }
   function sizeText(n) { return n >= 1048576 ? (n / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1024)) + " KB"; }
@@ -163,7 +167,7 @@
           a = h("a", { "class": "esn-res-btn", href: r.url, download: r.name || "plik", text: _t('ct.pobierz') });
         } else {
           if (host(r.url)) meta.push(host(r.url));
-          a = h("a", { "class": "esn-res-btn", href: r.url, target: "_blank", rel: "noopener noreferrer nofollow ugc", text: _t('ct.otworz') });
+          a = h("a", { "class": "esn-res-btn", href: r.url, target: "_blank", rel: "noopener noreferrer nofollow ugc", text: _t('ct.otworz') + " ", iconEnd: "arrow-up-right-from-square" });
         }
         var main = h("div", { "class": "esn-res-main" }, [h("div", { "class": "esn-res-label", text: r.label }), h("div", { "class": "esn-res-meta", text: meta.join(" · ") })]);
         if (r.kind === "file" && r.license_label) {
@@ -204,7 +208,7 @@
           card.appendChild(c.image_main ? h("img", { src: imgSrc(c.image_main), alt: "", loading: "lazy" }) : faPh("microchip"));
           var txt = h("span", { "class": "esn-card-txt" }, [h("strong", { text: partLabel(c.name, c.symbol) })]);
           if (c.note) txt.appendChild(h("span", { "class": "esn-card-note", text: c.note }));
-          txt.appendChild(h("span", { "class": "esn-card-cat", text: [c.category, _t('ct.kartaWKatalogu')].filter(Boolean).join(" · ") }));
+          txt.appendChild(h("span", { "class": "esn-card-cat", text: [c.category, _t('ct.kartaWKatalogu')].filter(Boolean).join(" · ") + " ", iconEnd: "arrow-right" }));
           card.appendChild(txt); grid.appendChild(card);
         });
         box.appendChild(grid);
@@ -270,7 +274,7 @@
         var cnt = h("span", { "class": "esn-ed-note" });
         var upd = function () { cnt.textContent = Math.round(ta.value.length / 102.4) / 10 + " KB"; };
         ta.addEventListener("input", function () { it.code = ta.value; upd(); }); upd();
-        var row = h("div", { "class": "esn-ed-row" }, [ls, title, ctlBtn("◀", _t('ct.przesunWczesniej'), function () { mv(i, -1); }, i === 0), ctlBtn("▶", _t('ct.przesunPozniej'), function () { mv(i, 1); }, i === items.length - 1),
+        var row = h("div", { "class": "esn-ed-row" }, [ls, title, ctlBtn("fa:chevron-left", _t('ct.przesunWczesniej'), function () { mv(i, -1); }, i === 0), ctlBtn("fa:chevron-right", _t('ct.przesunPozniej'), function () { mv(i, 1); }, i === items.length - 1),
           ctlBtn("fa:trash", _t('ct.usunPrzyklad'), function () { confirmDel(_t('ct.usunacTenPrzykladKodu'), _t('ct.usuwanie')).then(function (ok) { if (ok) { items.splice(i, 1); render(); } }); })]);
         list.appendChild(h("div", { "class": "esn-ed-card" }, [row, ta, cnt]));
       });
@@ -310,7 +314,7 @@
         var note = h("input", { type: "text", "class": "esn-ed-in", placeholder: _t('ct.rolaWProjekcieOpcjonalnie'), maxlength: "200", value: s.note || "", "aria-label": _t('ct.rolaWProjekcie') });
         note.addEventListener("input", function () { s.note = note.value; });
         chosen.appendChild(h("div", { "class": "esn-ed-row" }, [h("span", { "class": "esn-chip", text: partLabel(s.name, s.symbol) }), note,
-          ctlBtn("✕", _t('ct.usunPowiazanieZ') + " " + s.name, function () { selected.splice(i, 1); render(); renderSug(); })]));
+          ctlBtn("fa:xmark", _t('ct.usunPowiazanieZ') + " " + s.name, function () { selected.splice(i, 1); render(); renderSug(); })]));
       });
     }
     search.addEventListener("input", renderSug);
@@ -348,7 +352,7 @@
       var info = it.kind === "file" ? (it.name || (it.file && it.file.name) || _t("ct.plik").toLowerCase()) + " · " + sizeText(it.size || (it.file && it.file.size) || 0) + " · " + _L("lic", it.license_label || (pol && pol.licenses[it.license]) || it.license || "")
         : (it.url || ""); 
       var line1 = h("div", { "class": "esn-ed-row" }, [h("span", { "class": "esn-badge", text: it.kind === "file" ? _t("ct.plik").toUpperCase() : _t("ct.link").toUpperCase() }), ts, label,
-        ctlBtn("◀", _t('ct.przesunWczesniej'), function () { move(listRef, i, -1, persisted); }, i === 0), ctlBtn("▶", _t('ct.przesunPozniej'), function () { move(listRef, i, 1, persisted); }, i === listRef.length - 1),
+        ctlBtn("fa:chevron-left", _t('ct.przesunWczesniej'), function () { move(listRef, i, -1, persisted); }, i === 0), ctlBtn("fa:chevron-right", _t('ct.przesunPozniej'), function () { move(listRef, i, 1, persisted); }, i === listRef.length - 1),
         ctlBtn("fa:trash", _t('ct.usun'), function () { confirmDel(_t('ct.usunacTenZasob'), _t('ct.usuwanie')).then(function (ok) { if (!ok) return; if (persisted) api.delRes(it.id).then(reload).catch(fail); else { listRef.splice(i, 1); render(); } }); })]);
       var c = h("div", { "class": "esn-ed-card" + (it.err ? " is-err" : "") }, [line1, h("div", { "class": "esn-ed-note", text: info })]);
       if (!persisted) c.appendChild(h("div", { "class": "esn-ed-note" + (it.err ? " err" : ""), text: it.err || _t('ct.oczekujeNaZapis') }));

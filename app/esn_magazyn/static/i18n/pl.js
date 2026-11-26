@@ -5,7 +5,7 @@ ESNI18n.add("pl", {
   "theme.light": "Motyw: jasny. Kliknij, aby wybrać ciemny.",
   "theme.dark": "Motyw: ciemny. Kliknij, aby wrócić do automatycznego.",
   "nav.theme": "Motyw", "nav.main": "Nawigacja magazynu",
-  "mag.portal": "← Portal", "mag.components": "Komponenty", "mag.projects": "Projekty", "mag.categories": "Kategorie",
+  "mag.portal": "Portal", "mag.components": "Komponenty", "mag.projects": "Projekty", "mag.categories": "Kategorie",
   "mag.ai": "AI", "mag.aiAssistant": "AI Asystent", "mag.portalShort": "Portal",
   /* ── magazyn: pełne UI (v28) ── */
   "mag.szukajKomponentow": "Szukaj komponentów...",

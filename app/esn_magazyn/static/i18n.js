@@ -121,7 +121,8 @@
     var langs = list();
     if (langs.length < 2) return; // jeden język – przełącznik niepotrzebny
     function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
-    var btn = el("button", "lang-btn", lang().toUpperCase() + " \u25BE"), menu = el("div", "lang-menu"), items = [];
+    var btn = el("button", "lang-btn", lang().toUpperCase() + " "), menu = el("div", "lang-menu"), items = [];
+    var caret = el("i", "fa-solid fa-chevron-down lang-caret"); caret.setAttribute("aria-hidden", "true"); btn.appendChild(caret);   // v50: ikona zamiast ▾
     btn.type = "button"; btn.setAttribute("aria-haspopup", "listbox"); btn.setAttribute("aria-expanded", "false");
     btn.setAttribute("data-i18n-attr", "aria-label:lang.label;title:lang.label");
     btn.setAttribute("aria-label", t("lang.label")); btn.title = t("lang.label");

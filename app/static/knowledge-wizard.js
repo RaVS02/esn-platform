@@ -119,7 +119,7 @@
               if (c[1]) { var s = h("select", { "class": "sort-select", "aria-label": c[0] }, c[1].map(function (x) { return h("option", { value: x[0], text: x[1] }); })); s.value = r[ci] || ""; s.addEventListener("change", function () { r[ci] = s.value; push(); }); return s; }
               return inp(r[ci], function (v) { r[ci] = v; push(); }, c[0], 200);
             });
-            grid.appendChild(h("div", { "class": "kn-wiz-row", style: "grid-template-columns:repeat(" + d.cols.length + ",1fr) 34px" }, cs.concat([h("button", { type: "button", "class": "kn-mini", title: _t('wz.usunWiersz'), "aria-label": _t('wz.usunWiersz'), text: "×", onclick: function () { b.rows.splice(ri, 1); draw(); push(); } })])));
+            grid.appendChild(h("div", { "class": "kn-wiz-row", style: "grid-template-columns:repeat(" + d.cols.length + ",1fr) 34px" }, cs.concat([h("button", { type: "button", "class": "kn-mini", title: _t('wz.usunWiersz'), "aria-label": _t('wz.usunWiersz'), icon: "xmark", onclick: function () { b.rows.splice(ri, 1); draw(); push(); } })])));
           });
         };
         box.appendChild(grid); draw();
@@ -132,7 +132,7 @@
           cg.textContent = "";
           b.rows.forEach(function (r, ri) {
             var cb = h("input", { type: "checkbox", "aria-label": _t('wz.zrobione') }); cb.checked = !!r[0]; cb.addEventListener("change", function () { r[0] = cb.checked; push(); });
-            cg.appendChild(h("div", { "class": "kn-wiz-row kn-wiz-check" }, [cb, inp(r[1], function (v) { r[1] = v; push(); }, _t('wz.punktListy'), 200), h("button", { type: "button", "class": "kn-mini", "aria-label": _t('wz.usunPunkt'), text: "×", onclick: function () { b.rows.splice(ri, 1); drawC(); push(); } })]));
+            cg.appendChild(h("div", { "class": "kn-wiz-row kn-wiz-check" }, [cb, inp(r[1], function (v) { r[1] = v; push(); }, _t('wz.punktListy'), 200), h("button", { type: "button", "class": "kn-mini", "aria-label": _t('wz.usunPunkt'), icon: "xmark", onclick: function () { b.rows.splice(ri, 1); drawC(); push(); } })]));
           });
         };
         box.appendChild(cg); drawC();
@@ -159,10 +159,10 @@
         var d = DEFS[b.name], label = d ? d.label : "Blok „" + b.name + "”";
         function mv(delta) { var j = i + delta; if (j < 0 || j >= blocks.length) return; var t = blocks[i]; blocks[i] = blocks[j]; blocks[j] = t; draw(); push(); }
         var head = h("div", { "class": "kn-wiz-head-bar" }, [h("strong", { text: (i + 1) + ". " + label }), h("span", { "class": "kn-wiz-acts" }, [
-          h("button", { type: "button", "class": "kn-mini", title: _t('wz.wGore'), "aria-label": _t('wz.przesunWGore'), text: "↑", disabled: i === 0, onclick: function () { mv(-1); } }),
-          h("button", { type: "button", "class": "kn-mini", title: _t('wz.wDol'), "aria-label": _t('wz.przesunWDol'), text: "↓", disabled: i === blocks.length - 1, onclick: function () { mv(1); } }),
+          h("button", { type: "button", "class": "kn-mini", title: _t('wz.wGore'), "aria-label": _t('wz.przesunWGore'), icon: "arrow-up", disabled: i === 0, onclick: function () { mv(-1); } }),
+          h("button", { type: "button", "class": "kn-mini", title: _t('wz.wDol'), "aria-label": _t('wz.przesunWDol'), icon: "arrow-down", disabled: i === blocks.length - 1, onclick: function () { mv(1); } }),
           h("button", { type: "button", "class": "kn-mini", title: _t('wz.duplikuj'), "aria-label": _t('wz.duplikujBlok'), text: "⧉", onclick: function () { blocks.splice(i + 1, 0, JSON.parse(JSON.stringify(b))); draw(); push(); } }),
-          h("button", { type: "button", "class": "kn-mini kn-mini-del", title: _t('wz.usunBlok'), "aria-label": _t('wz.usunBlok'), text: "×", onclick: function () { blocks.splice(i, 1); draw(); push(); } })])]);
+          h("button", { type: "button", "class": "kn-mini kn-mini-del", title: _t('wz.usunBlok'), "aria-label": _t('wz.usunBlok'), icon: "xmark", onclick: function () { blocks.splice(i, 1); draw(); push(); } })])]);
         list.appendChild(h("div", { "class": "kn-wiz-card" }, [head, body(b)]));
       });
     }

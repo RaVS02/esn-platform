@@ -494,3 +494,6 @@ input[type="number"] {
 .toast.success > i { color: var(--green); } .toast.error > i { color: var(--red); } .toast.warn > i { color: var(--orange); }
 .empty-state .e-icon i { font-size: 28px; color: var(--text3); }
 .detail-icon svg, .detail-icon i { vertical-align: middle; }
+.proj-chevron i { font-size: 11px; }
+.ai-link i, footer a i { font-size: .8em; opacity: .75; margin-left: 2px; }
+.lang-caret { font-size: .7em; opacity: .7; margin-left: 2px; }

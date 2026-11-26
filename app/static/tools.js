@@ -9,15 +9,19 @@
   function h(tag, props, kids) {
     var e = document.createElement(tag);
     for (var k in (props || {})) {
-      if (k === "class") e.className = props[k];
+      if (k === "icon" || k === "iconEnd") continue;
+      else if (k === "class") e.className = props[k];
       else if (k === "text") e.textContent = props[k];
       else if (k === "value") e.value = props[k];
       else if (k.slice(0, 2) === "on") e.addEventListener(k.slice(2), props[k]);
       else if (props[k] !== false && props[k] != null) e.setAttribute(k, props[k]);
     }
     (kids || []).forEach(function (c) { if (c) e.appendChild(typeof c === "string" ? document.createTextNode(c) : c); });
+    if (props && props.icon) e.insertBefore(faIcon(props.icon), e.firstChild);   // v50: ikona Font Awesome (icon / iconEnd)
+    if (props && props.iconEnd) e.appendChild(faIcon(props.iconEnd));
     return e;
   }
+  function faIcon(n) { var i = document.createElement("i"); i.className = "fa-solid fa-" + n; i.setAttribute("aria-hidden", "true"); return i; }
   function toast(m, t) { if (typeof global.toast === "function") global.toast(m, t || "info"); }
   function root() { return document.getElementById("tools-root"); }
   function register(t) { TOOLS = TOOLS.filter(function (x) { return x.id !== t.id; }); TOOLS.push(t); }
@@ -55,7 +59,7 @@
     var t = TOOLS.filter(function (x) { return x.id === parts[0]; })[0];
     if (!t || (t.status && t.status !== "ready")) return home(el);
     el.textContent = "";
-    el.appendChild(h("button", { type: "button", "class": "kn-back", text: _t("tools.narzedzia2"), onclick: function () { go(""); } }));
+    el.appendChild(h("button", { type: "button", "class": "kn-back", icon: "chevron-left", text: " " + _t("tools.narzedzia2"), onclick: function () { go(""); } }));
     /* wspólny nagłówek narzędzia: ikona + nazwa (opis i treść rysuje samo narzędzie) */
     el.appendChild(h("div", { "class": "tl-head" }, [h("span", { "class": "tl-head-ic", "aria-hidden": "true" }, [h("i", { "class": t.icon || "fa-solid fa-wrench" })]),
       h("h2", { "class": "tl-title", text: _t(t.title) })]));

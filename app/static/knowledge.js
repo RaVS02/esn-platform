@@ -14,15 +14,19 @@
   function h(tag, props, kids) {
     var e = document.createElement(tag);
     for (var k in (props || {})) {
-      if (k === "class") e.className = props[k];
+      if (k === "icon" || k === "iconEnd") continue;
+      else if (k === "class") e.className = props[k];
       else if (k === "text") e.textContent = props[k];
       else if (k === "value") e.value = props[k];
       else if (k.slice(0, 2) === "on") e.addEventListener(k.slice(2), props[k]);
       else if (props[k] !== false && props[k] != null) e.setAttribute(k, props[k]);
     }
     (kids || []).forEach(function (c) { if (c) e.appendChild(typeof c === "string" ? document.createTextNode(c) : c); });
+    if (props && props.icon) e.insertBefore(faIcon(props.icon), e.firstChild);   // v50: ikona Font Awesome (icon / iconEnd)
+    if (props && props.iconEnd) e.appendChild(faIcon(props.iconEnd));
     return e;
   }
+  function faIcon(n) { var i = document.createElement("i"); i.className = "fa-solid fa-" + n; i.setAttribute("aria-hidden", "true"); return i; }
   function toast(m, t) { if (typeof global.toast === "function") global.toast(m, t || "info"); else global.alert(m); }
   function askConfirm(msg, title) { return typeof global.customConfirm === "function" ? global.customConfirm(msg, title || _t('kn.potwierdzenie')) : Promise.resolve(global.confirm(msg)); }
   function authH() { var t = localStorage.getItem("token"); return t ? { Authorization: "Bearer " + t } : {}; }
@@ -395,7 +399,7 @@
     el.textContent = "";
     var staff = isStaff();
     var actions = h("div", { "class": "kn-actions" }, [
-      isAdmin() ? h("button", { type: "button", "class": "btn-action", onclick: function () { app.navigate("theory"); }, text: _t('kn.archiwumAdminNiezbednikV1') }) : null,
+      isAdmin() ? h("button", { type: "button", "class": "btn-action", onclick: function () { app.navigate("theory"); }, text: _t('kn.archiwumAdminNiezbednikV1') + " ", iconEnd: "arrow-right" }) : null,
       staff ? h("button", { type: "button", "class": "btn-action primary", onclick: function () { go("redakcja"); }, text: _t('kn.panelRedakcji') }) : null
     ]);
     el.appendChild(h("section", { "class": "hero kn-hero" }, [
@@ -471,7 +475,7 @@
         ])]));
       });
       el.appendChild(h("div", { "class": "full-wrap kn-wrap kn-narrow kn-top" }, [
-        h("button", { type: "button", "class": "kn-back", text: _t('kn.wiedza2'), onclick: function () { go(""); } }),
+        h("button", { type: "button", "class": "kn-back", icon: "chevron-left", text: " " + _t('kn.wiedza2'), onclick: function () { go(""); } }),
         h("div", { "class": "kn-head" }, [h("div", { "class": "kn-card-top" }, [badge(_t('kn.kurs'), "badge-purple"), badge(LEVEL_LABEL[c.level] || c.level_label, "badge-gray")]),
           h("h1", { text: c.title }), h("p", { "class": "hero-sub", text: c.summary }),
           h("div", { "class": "kn-meta", text: _tn('kn.lessons', c.lessons) + " · " + _t('kn.readMin', { n: c.reading_min }) }),
@@ -490,13 +494,13 @@
       el.textContent = "";
       var body = h("div", { "class": "kn-body" });
       var meta = [fmtDate(a.updated_at || a.published_at), _t("kn.readMin", { n: a.reading_min }), a.author ? _t("kn.autorN", { name: a.author }) : ""].filter(Boolean).join(" · ");
-      var crumbs = h("div", { "class": "kn-crumbs" }, [h("button", { type: "button", "class": "kn-back", text: _t('kn.wiedza2'), onclick: function () { go(""); } })]);
+      var crumbs = h("div", { "class": "kn-crumbs" }, [h("button", { type: "button", "class": "kn-back", icon: "chevron-left", text: " " + _t('kn.wiedza2'), onclick: function () { go(""); } })]);
       if (a.course) crumbs.appendChild(h("button", { type: "button", "class": "kn-back", text: _t('kn.kurs2') + " " + a.course.title, onclick: function () { go("kurs/" + a.course.slug); } }));
       var nav = null;
       if (a.course && (a.prev || a.next)) {
         nav = h("div", { "class": "kn-pager" }, [
-          a.prev ? h("button", { type: "button", "class": "kn-pg", onclick: function () { go(a.prev.slug); } }, [h("small", { text: _t('kn.poprzedniaLekcja') }), h("strong", { text: a.prev.title })]) : h("span"),
-          a.next ? h("button", { type: "button", "class": "kn-pg kn-pg-next", onclick: function () { go(a.next.slug); } }, [h("small", { text: _t('kn.nastepnaLekcja') }), h("strong", { text: a.next.title })]) : h("span")
+          a.prev ? h("button", { type: "button", "class": "kn-pg", onclick: function () { go(a.prev.slug); } }, [h("small", { icon: "arrow-left", text: " " + _t('kn.poprzedniaLekcja') }), h("strong", { text: a.prev.title })]) : h("span"),
+          a.next ? h("button", { type: "button", "class": "kn-pg kn-pg-next", onclick: function () { go(a.next.slug); } }, [h("small", { text: _t('kn.nastepnaLekcja') + " ", iconEnd: "arrow-right" }), h("strong", { text: a.next.title })]) : h("span")
         ]);
       }
       el.appendChild(h("div", { "class": "full-wrap kn-wrap kn-narrow kn-top" }, [
@@ -594,7 +598,7 @@
     if (isAdmin()) { T.push(["queue", _t('kn.doZatwierdzenia'), "redakcja/kolejka"]); T.push(["courses", _t('kn.kursy'), "redakcja/kursy"]); }
     T.push(["guide", _t('kn.instrukcja'), "redakcja/instrukcja"]);
     T.forEach(function (t) { tabs.appendChild(h("button", { type: "button", role: "tab", "aria-selected": String(t[0] === tab), text: t[1], onclick: function () { go(t[2]); } })); });
-    var top = h("div", { "class": "kn-actions" }, [h("button", { type: "button", "class": "btn-action", text: _t('kn.wiedza2'), onclick: function () { go(""); } }),
+    var top = h("div", { "class": "kn-actions" }, [h("button", { type: "button", "class": "btn-action", icon: "chevron-left", text: " " + _t('kn.wiedza2'), onclick: function () { go(""); } }),
       h("button", { type: "button", "class": "btn-action primary", text: _t('kn.nowaTresc'), onclick: function () { go("redakcja/nowa"); } })]);
     var body = h("div", {});
     wrap.appendChild(top); wrap.appendChild(tabs); wrap.appendChild(body); el.appendChild(wrap);
@@ -844,7 +848,7 @@
       acts.appendChild(saveInfo);
 
       el.appendChild(wrap);
-      wrap.appendChild(h("div", { "class": "kn-actions" }, [h("button", { type: "button", "class": "btn-action", text: _t('kn.panelRedakcji2'), onclick: function () {
+      wrap.appendChild(h("div", { "class": "kn-actions" }, [h("button", { type: "button", "class": "btn-action", icon: "chevron-left", text: " " + _t('kn.panelRedakcji2'), onclick: function () {
         if (dirty) askConfirm(_t('kn.maszNiezapisaneZmianyWyjsc')).then(function (ok) { if (ok) go("redakcja"); }); else go("redakcja"); } })]));
       wrap.appendChild(h("h1", { "class": "kn-h1", text: isNew ? _t('kn.nowaTresc2') : _t('kn.edycjaTresci') }));
       wrap.appendChild(msg); setStatus();
