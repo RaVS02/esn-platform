@@ -101,3 +101,4 @@
 - [x] v49: wersja mobilna (zawijanie tagów na karcie komponentu, siatka projektów, tabela poradnika, wskaźnik kroków) + ikony Font Awesome zamiast emoji w interfejsie portalu i magazynu.
 - [x] v50: ikony Font Awesome także zamiast znaków ✕ × ◀ ▶ ‹ › ↗ ← → ▾ (przyciski zamknięcia, przesuwania, linki zewnętrzne, nawigacja Wiedzy, przełącznik języka, rozwijane listy).
 - [x] v51: Kalkulatory – szkielet (`calc.js`, `docs/KALKULATORY.md`) + paczka 1: prawo Ohma i moc, dzielnik napięcia (dobór pary z szeregu E), rezystor do LED, kod paskowy rezystora. Dalej paczka 2 (UART/baud, Timer/PWM, RC) i 3 (bateria, LDO, ścieżka PCB, R szeregowo/równolegle, kod kondensatora).
+- [x] v52: Kalkulatory – łączenie R/C/L szeregowo i równolegle (z doborem pary), kod kondensatora, UART/SPI/I²C z błędem baud rate, Timer/PWM, filtr RC. Zostaje paczka 3: bateria, LDO, ścieżka PCB.

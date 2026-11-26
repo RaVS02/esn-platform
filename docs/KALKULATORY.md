@@ -1,4 +1,4 @@
-# Kalkulatory (v51)
+# Kalkulatory (v51–v52)
 
 Narzędzia → Kalkulatory (`#tools/calc`), każdy kalkulator ma własny adres `#tools/calc/<id>` (można linkować z Wiedzy i kart komponentów).
 
@@ -6,6 +6,8 @@ Narzędzia → Kalkulatory (`#tools/calc`), każdy kalkulator ma własny adres `
 - `app/static/calc.js` – rdzeń `ESNCalc`: rejestracja w `ESNTools` (kafelek „calc”), lista/zapowiedzi, nawigacja chipami, api pól i wyników,
   czyste funkcje `ESNCalc.math` (parse z przedrostkami SI i notacją 4k7/2R2, fmt, szeregi E6–E96, `nearest`, `powerRating`).
 - `app/static/calc-basic.js` – paczka 1: `ohm`, `divider`, `led`, `rescode` + funkcje `ESNCalcBasic` (ohm, pickDivider, encode/decode kodu paskowego).
+- `app/static/calc-parts.js` (v52) – `rcombo` (łączenie R/C/L szeregowo i równolegle, dobór pary do wartości), `capcode` (kod kondensatora w obie strony); `ESNCalcParts`.
+- `app/static/calc-comm.js` (v52) – `baud` (UART/SPI/I²C, dzielnik UBRR i USARTDIV z błędem), `timer` (preskaler, TOP, PWM, ESP32 LEDC), `rc` (filtr RC, τ, ładowanie, dobór C); `ESNCalcComm`.
 - `app/static/calc.css` – wygląd (tylko zmienne motywu; fizyczne kolory pasków rezystora w JS).
 - `app/tests/test_calc.py` – matematyka uruchamiana w Node.
 
@@ -26,4 +28,4 @@ ESNCalc.add({ id: "baud", icon: "gauge-high", group: "comm", title: "calc.baud.t
 Liczenie na bieżąco, przedrostki w polu lub z listy, wartości z szeregu E z błędem w %, zapas mocy 2×, ostrzeżenia praktyczne (GPIO, ADC, obciążenie).
 
 ## Plan
-Paczka 2: UART/baud rate, Timer/PWM, filtr RC. Paczka 3: bateria, LDO, szerokość ścieżki PCB, rezystory szeregowo/równolegle, kod kondensatora.
+Paczka 3: czas pracy na baterii, regulator liniowy (straty, temperatura), szerokość ścieżki PCB (IPC-2221).

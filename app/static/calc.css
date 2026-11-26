@@ -94,3 +94,10 @@
   .calc-rx { grid-column: 1; }
   .calc-in, .calc-pref { font-size: 16px; }
 }
+
+/* v52: szkice połączeń R/C/L */
+.calc-cb-sch .calc-schem { max-width: 300px; }
+.calc-s-gap { fill: var(--card); stroke: none; }
+.calc-s-plate { stroke: var(--accent); stroke-width: 3; }
+.calc-s-coil { stroke: var(--accent); }
+@media (min-width: 641px) { .calc-nav { flex-wrap: wrap; overflow: visible; } }
