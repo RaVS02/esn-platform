@@ -72,6 +72,7 @@ class Project(Base):
     components = Column(String(500), nullable=True)  # <--- NOWE: Lista podzespołów (po przecinku)
     markdown_path = Column(String(255), nullable=True) # <--- NOWE: Ścieżka do pliku .md
     status = Column(String(20), default="stable")
+    lang = Column(String(5), nullable=False, default="pl", server_default="pl", index=True)  # język treści projektu
 
 # NOWA TABELA: Zastępuje zapisywanie kodów z HotWheels
 class VerificationCode(Base):
@@ -218,6 +219,8 @@ class KnowledgeCourse(Base):
     level = Column(String(15), default="basic")          # basic | intermediate | advanced
     position = Column(Integer, default=0)
     published = Column(Boolean, default=False)
+    lang = Column(String(5), nullable=False, default="pl", server_default="pl", index=True)   # język treści (pl | en …)
+    translation_group = Column(String(36), nullable=True, index=True)                          # wspólny klucz wersji językowych
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
@@ -238,6 +241,8 @@ class KnowledgeArticle(Base):
     tags = Column(JSON, default=list)
     widgets = Column(JSON, default=dict)                  # nazwa → kod HTML widgetu (renderowany w izolowanym iframe)
     reading_min = Column(Integer, default=1)
+    lang = Column(String(5), nullable=False, default="pl", server_default="pl", index=True)   # język treści (pl | en …)
+    translation_group = Column(String(36), nullable=True, index=True)                          # wspólny klucz wersji językowych (NULL = brak tłumaczeń)
 
     published = Column(Boolean, default=False, index=True)
     published_at = Column(DateTime, nullable=True)

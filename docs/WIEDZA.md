@@ -204,3 +204,14 @@ przy działającej bazie PostgreSQL: `python -m pytest tests/test_knowledge.py -
 
 Postęp w kursach i punkty doświadczenia, komentarze, ścieżki tematyczne jako osobne kolekcje. Interfejs pokazuje przy
 nich etykietę „wkrótce”. Pełny plan: [PLAN.md](PLAN.md).
+
+## Wersje językowe treści (v30)
+
+- Artykuły/lekcje i kursy mają `lang` (`pl`/`en`) oraz `translation_group` (UUID wspólny dla wersji tej samej treści). Każda wersja to osobny wiersz (własny slug, tytuł, treść, workflow szkic → przegląd → publikacja).
+- Jedna grupa może mieć najwyżej jedną wersję w danym języku (409 „Ta treść ma już wersję w tym języku”).
+- Listy: `GET /api/knowledge/items|courses?lang=<kod>&scope=auto|only|all`. `auto` = jedna wersja na grupę (preferowany język użytkownika, inaczej oryginał, z plakietką języka), `only` = tylko wybrany język, `all` = wszystko. W UI wybór zapamiętany w `localStorage` (`esn-kn-scope`).
+- Czytnik: „Dostępne też w:” z linkami do innych wersji (`translations`).
+- Edytor: pole języka, lista wersji i przyciski „Dodaj wersję: X” (`POST /editor/items/{id}/translate`, kopiuje treść jako szkic; lekcja wymaga najpierw przetłumaczonego kursu). Kursy: `POST /editor/courses/{id}/translate`.
+- Panel redakcji: kolumna języków, filtry „Język” i „Brak tłumaczenia”.
+- Pisanie hybrydowe (AI poza platformą wg szablonu/promptów); w platformie brak wbudowanego asystenta pisania.
+- Kolejne kroki: projekty (`lang`), komponenty (`translations` JSON), pinouty, edytor schematów.

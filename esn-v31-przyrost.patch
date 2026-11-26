@@ -1,0 +1,269 @@
+diff -ruN a/TODO.md b/TODO.md
+--- a/TODO.md	2026-11-26 13:50:39.327992453 +0100
++++ b/TODO.md	2026-11-26 13:50:39.329231727 +0100
+@@ -62,6 +62,7 @@
+ - [x] (v27) Projekty, Katalog, Narzędzia, Profil, Kontakt, logowanie/rejestracja, stopka, komunikaty.
+ - [x] (v28) Wiedza (lista, panel redakcji, edytor blokowy, kreator, media, pinout), cały magazyn + `ai-local.js`, etykiety znanych kategorii/zastosowań (`_L`), komunikaty błędów API (`_E`, wzorce `api.*`).
+ - [x] (v30) Wiedza: wersje językowe (lang + translation_group, filtr zakresu, plakietki, tłumaczenie z edytora). Dalej: projekty, komponenty, pinouty, schematy.
++- [x] (v31) Projekty: pole `lang`, filtr języka, plakietki. Dalej: komponenty (`translations`), pinouty, schematy.
+ - [ ] Szablony i przewodnik treści (`knowledge-templates.js`, `knowledge-guide.js`) – wersje EN (razem z treściami wielojęzycznymi).
+ - [ ] Przejście na zmianę języka bez przeładowania strony.
+ - [ ] Treści z polem `lang` (artykuły, kursy, projekty, podzespoły).
+diff -ruN a/app/main.py b/app/main.py
+--- a/app/main.py	2026-11-26 13:50:39.285586488 +0100
++++ b/app/main.py	2026-11-26 13:50:39.286798313 +0100
+@@ -35,6 +35,9 @@
+         _conn.execute(_sql_text("ALTER TABLE " + _tbl + " ADD COLUMN IF NOT EXISTS translation_group VARCHAR(36)"))
+         _conn.execute(_sql_text("CREATE INDEX IF NOT EXISTS ix_" + _tbl + "_lang ON " + _tbl + " (lang)"))
+         _conn.execute(_sql_text("CREATE INDEX IF NOT EXISTS ix_" + _tbl + "_translation_group ON " + _tbl + " (translation_group)"))
++    # Projekty: język treści
++    _conn.execute(_sql_text("ALTER TABLE projects ADD COLUMN IF NOT EXISTS lang VARCHAR(5) NOT NULL DEFAULT 'pl'"))
++    _conn.execute(_sql_text("CREATE INDEX IF NOT EXISTS ix_projects_lang ON projects (lang)"))
+     # Asystent AI (limity dzienne + własny klucz)
+     for _ddl in ("ai_requests_today INTEGER NOT NULL DEFAULT 0", "last_ai_request_date DATE", "ai_provider VARCHAR(20)",
+                  "ai_model VARCHAR(80)", "ai_key_enc TEXT", "ai_key_hint VARCHAR(12)"):
+@@ -474,6 +477,7 @@
+     source: Optional[str] = Query("all"),
+     user_id: Optional[int] = Query(None),
+     sort: str = Query("newest"), # <--- NOWY PARAMETR SORTOWANIA
++    lang: Optional[str] = Query(None),   # filtr języka treści (brak = wszystkie); nie dotyczy source=mine
+     skip: int = 0,
+     limit: int = 20
+ ):
+@@ -492,6 +496,9 @@
+     elif source == "mine" and user_id:
+         query = query.filter(models.Project.owner_id == user_id)
+     
++    if lang and source != "mine":
++        query = query.filter(models.Project.lang == lang)
++
+     # LOGIKA SORTOWANIA (Projekty Oficjalne ZAWSZE na samej górze)
+     if sort == "az":
+         return query.order_by(models.Project.title.asc()).offset(skip).limit(limit).all()
+@@ -517,6 +524,9 @@
+     # 2. Bezpieczne wypakowanie danych (zapobieganie błędowi 'multiple values')
+     project_data = project.dict()
+     project_data.pop("is_official", None) # <--- TO NAPRAWIA TWÓJ BŁĄD!
++    if (project_data.get("lang") or "pl") not in ("pl", "en"):
++        raise HTTPException(status_code=400, detail="Nieobsługiwany język treści")
++    project_data["lang"] = project_data.get("lang") or "pl"
+     project_data["full_content_md"] = _clean_project_md(project_data.get("full_content_md"))
+     for _f in ("image_main", "image_schematic", "image_gallery_1", "image_gallery_2", "markdown_path", "code_snippet", "code_lang"):
+         project_data.pop(_f, None)   # ścieżki plików ustala wyłącznie serwer (system mediów) – nigdy klient
+@@ -562,6 +572,12 @@
+         update_data.pop("full_content_md", None)   # stary klient nie zna tego pola – nie kasujemy opisu
+     # Usuwamy is_official z danych wejściowych, aby nie nadpisać go przypadkiem
+     update_data.pop("is_official", None) 
++    if "lang" in _fs:
++        if (update_data.get("lang") or "pl") not in ("pl", "en"):
++            raise HTTPException(status_code=400, detail="Nieobsługiwany język treści")
++        update_data["lang"] = update_data.get("lang") or "pl"
++    else:
++        update_data.pop("lang", None)   # stary klient nie zna pola – nie zmieniamy języka
+     for _f in ("image_main", "image_schematic", "image_gallery_1", "image_gallery_2", "markdown_path", "code_snippet", "code_lang"):
+         update_data.pop(_f, None)   # ścieżki plików ustala wyłącznie serwer (system mediów) – nigdy klient
+ 
+diff -ruN a/app/models.py b/app/models.py
+--- a/app/models.py	2026-11-26 13:50:39.322087065 +0100
++++ b/app/models.py	2026-11-26 13:50:39.323238633 +0100
+@@ -72,6 +72,7 @@
+     components = Column(String(500), nullable=True)  # <--- NOWE: Lista podzespołów (po przecinku)
+     markdown_path = Column(String(255), nullable=True) # <--- NOWE: Ścieżka do pliku .md
+     status = Column(String(20), default="stable")
++    lang = Column(String(5), nullable=False, default="pl", server_default="pl", index=True)  # język treści projektu
+ 
+ # NOWA TABELA: Zastępuje zapisywanie kodów z HotWheels
+ class VerificationCode(Base):
+diff -ruN a/app/schemas.py b/app/schemas.py
+--- a/app/schemas.py	2026-11-26 13:50:39.303650309 +0100
++++ b/app/schemas.py	2026-11-26 13:50:39.304873385 +0100
+@@ -59,6 +59,7 @@
+     technical_notes: Optional[str] = None
+     code_snippet: Optional[str] = None
+     code_lang: Optional[str] = "cpp"
++    lang: Optional[str] = "pl"           # język treści projektu (pl/en)
+     is_official: bool = False
+     status: Optional[str] = "stable"
+ 
+diff -ruN a/app/static/i18n/en.js b/app/static/i18n/en.js
+--- a/app/static/i18n/en.js	2026-11-26 13:50:39.297780092 +0100
++++ b/app/static/i18n/en.js	2026-11-26 13:50:39.298989307 +0100
+@@ -1017,5 +1017,8 @@
+   "api.taTrescMaJuzWersje": "This content already has a version in this language",
+   "api.kursMaJuzWersje": "This course already has a version in this language",
+   "api.najpierwUtworzWersjeKursu": "Create the course version in this language first",
+-  "api.mozeszTlumaczycTylkoOpublikowane": "You can only translate published or your own content"
++  "api.mozeszTlumaczycTylkoOpublikowane": "You can only translate published or your own content",
++  "projects.scopeOnly": "My language only",
++  "projects.scopeAll": "All languages",
++  "projects.jezykTresci": "Content language"
+ }, { name: "English", locale: "en-GB" });
+diff -ruN a/app/static/i18n/pl.js b/app/static/i18n/pl.js
+--- a/app/static/i18n/pl.js	2026-11-26 13:50:39.291846687 +0100
++++ b/app/static/i18n/pl.js	2026-11-26 13:50:39.293074618 +0100
+@@ -1017,5 +1017,8 @@
+   "api.taTrescMaJuzWersje": "Ta treść ma już wersję w tym języku",
+   "api.kursMaJuzWersje": "Kurs ma już wersję w tym języku",
+   "api.najpierwUtworzWersjeKursu": "Najpierw utwórz wersję kursu w tym języku",
+-  "api.mozeszTlumaczycTylkoOpublikowane": "Możesz tłumaczyć tylko opublikowane lub własne treści"
++  "api.mozeszTlumaczycTylkoOpublikowane": "Możesz tłumaczyć tylko opublikowane lub własne treści",
++  "projects.scopeOnly": "Tylko mój język",
++  "projects.scopeAll": "Wszystkie języki",
++  "projects.jezykTresci": "Język treści"
+ }, { name: "Polski", locale: "pl-PL" });
+diff -ruN a/app/templates/index.html b/app/templates/index.html
+--- a/app/templates/index.html	2026-11-26 13:50:39.309739997 +0100
++++ b/app/templates/index.html	2026-11-26 13:50:39.310995566 +0100
+@@ -4,9 +4,9 @@
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <meta name="color-scheme" content="dark light">
+-<script src="{{ url_for('static', path='/i18n.js') }}?v=6"></script>
+-<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=6"></script>
+-<script src="{{ url_for('static', path='/i18n/en.js') }}?v=6"></script>
++<script src="{{ url_for('static', path='/i18n.js') }}?v=7"></script>
++<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=7"></script>
++<script src="{{ url_for('static', path='/i18n/en.js') }}?v=7"></script>
+ <script src="{{ url_for('static', path='/theme.js') }}?v=4"></script>
+ <title data-i18n="meta.title">Platforma Systemów Wbudowanych</title>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+@@ -175,6 +175,10 @@
+           <span class="search-icon">🔍︎</span>
+           <input type="text" id="searchProjects" class="search-input" placeholder="Szukaj projektu..." data-i18n-attr="placeholder:projects.szukajProjektu" onkeyup="updateProjectsView()">
+         </div>
++        <select id="projLangScope" class="sort-select" onchange="setProjLangScope(this.value)" aria-label="Język treści" data-i18n-attr="aria-label:projects.jezykTresci">
++          <option value="only" data-i18n="projects.scopeOnly">Tylko mój język</option>
++          <option value="all" data-i18n="projects.scopeAll">Wszystkie języki</option>
++        </select>
+         <select id="sortProjects" class="sort-select" onchange="updateProjectsView()">
+           <option value="newest" data-i18n="projects.pokazNajnowsze">Pokaż: Najnowsze</option>
+           <option value="oldest" data-i18n="projects.pokazNajstarsze">Pokaż: Najstarsze</option>
+@@ -555,6 +559,11 @@
+       
+       <input type="text" id="p-github" placeholder="Link do GitHub (opcjonalnie)" data-i18n-attr="placeholder:contact.linkDoGithubOpcjonalnie" class="text-input">
+       <div style="margin-bottom: 5px; font-size: 11px; color: var(--text3); font-family: var(--mono);" data-i18n="contact.statusProjektu">Status Projektu</div>
++      <div style="margin-bottom: 5px; font-size: 11px; color: var(--text3); font-family: var(--mono);" data-i18n="projects.jezykTresci">Język treści</div>
++      <select id="p-lang" class="text-input" style="font-family: var(--mono); font-size: 13px; margin-bottom: 12px;">
++          <option value="pl">Polski</option>
++          <option value="en">English</option>
++      </select>
+       <select id="p-status" class="text-input" style="font-family: var(--mono); font-size: 13px; color: var(--accent);">
+           <option value="stable" style="color: var(--green);" data-i18n="contact.stableUkonczony">🟢 STABLE (Ukończony)</option>
+           <option value="progress" style="color: var(--orange);" data-i18n="contact.inProgressWTrakcie">🟡 IN PROGRESS (W trakcie)</option>
+@@ -712,6 +721,9 @@
+ let displayLimit = 12; // NOWOŚĆ: Ile kafelków wyświetlamy na starcie
+ 
+ // Parametr resetLimit domyślnie na true. Jeśli wpiszemy coś w lupkę lub klikniemy tag, wracamy do 12 kafelków.
++function getProjLangScope() { try { return localStorage.getItem('esn-proj-scope') === 'all' ? 'all' : 'only'; } catch (e) { return 'only'; } }
++function setProjLangScope(v) { try { localStorage.setItem('esn-proj-scope', v); } catch (e) {} updateProjectsView(); }
++
+ async function updateProjectsView(resetLimit = true) {
+     if (resetLimit) displayLimit = 12;
+ 
+@@ -730,6 +742,9 @@
+     const sortVal = document.getElementById('sortProjects') ? document.getElementById('sortProjects').value : 'newest';
+     
+     let url = `/api/projects?limit=500&source=${currentSource}&sort=${sortVal}`;
++    const _ls = document.getElementById('projLangScope');
++    if (_ls) _ls.value = getProjLangScope();
++    if (getProjLangScope() === 'only') url += `&lang=${ESNI18n.lang()}`;
+     if (currentSource === 'mine' && loggedUserId) url += `&user_id=${loggedUserId}`;
+ 
+     try {
+@@ -791,6 +806,8 @@
+                 `<span class="tag" style="font-size:10px; padding:2px 6px;">${esc(tag.trim())}</span>`
+             ).join('') : '';
+ 
++            const langBadge = (project.lang && project.lang !== ESNI18n.lang())
++                ? '<span class="badge badge-blue" style="font-size:10px;">' + esc(project.lang.toUpperCase()) + '</span>' : '';
+             const officialBadge = project.is_official 
+                 ? '<span class="badge badge-green" style="font-size:10px;">✓ ' + _t('badge.official') + '</span>' 
+                 : '<span class="badge badge-orange" style="font-size:10px;">𖨆 ' + _t('badge.community') + '</span>';
+@@ -832,7 +849,7 @@
+                 <div class="thumb">${thumbHtml}</div>
+                 <div style="padding: 16px; display:flex; flex-direction:column; flex:1;">
+                     <div style="display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap;">
+-                        ${statusBadge} ${officialBadge} ${myBadge}
++                        ${statusBadge} ${officialBadge} ${myBadge} ${langBadge}
+                     </div>
+                     <h3 style="font-size:16px; margin-bottom:8px; color:var(--text);">${esc(project.title)}</h3>
+                     
+@@ -993,7 +1010,7 @@
+     document.getElementById('full-view-content').innerHTML = `
+         <div style="background: var(--card);  padding: 10px; border-radius: 16px; margin-bottom: 30px;">
+             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px;">
+-                <div style="display:flex; gap:10px;">${officialBadge} ${myBadge}</div>
++                <div style="display:flex; gap:10px;">${officialBadge} ${myBadge} ${(p.lang && p.lang !== ESNI18n.lang()) ? `<span class="badge badge-blue">${esc(p.lang.toUpperCase())}</span>` : ''}</div>
+                 ${p.github_url ? `<a href="${safeUrl(p.github_url)}" target="_blank" rel="noopener noreferrer" class="btn-action primary" style="font-size: 11px; padding: 4px 10px;">[ github_repo ]</a>` : ''}
+             </div>
+             
+@@ -1268,6 +1285,7 @@
+     document.getElementById('p-notes').value = p.technical_notes || "";
+     document.getElementById('p-components').value = p.components || "";
+     document.getElementById('p-status').value = p.status || 'stable'
++    document.getElementById('p-lang').value = p.lang || 'pl'
+     
+     // Pokazywanie przycisków i czystych nazw plików
+     const fields = ['image_main', 'image_schematic', 'image_gallery_1', 'image_gallery_2', 'markdown_path'];
+@@ -1308,6 +1326,7 @@
+     document.querySelector('#projectModal h2').innerText = _t('projects.nowyProjekt');
+     document.querySelector('#projectModal button[onclick="submitProject()"]').innerText = _t('contact.submitProject');
+     
++    document.getElementById('p-lang').value = ESNI18n.lang();
+     // Czyścimy wszystkie pola tekstowe
+     document.querySelectorAll('#projectModal input, #projectModal textarea').forEach(i => i.value = "");
+     
+@@ -1393,7 +1412,8 @@
+         short_desc: document.getElementById('p-desc').value,
+         github_url: document.getElementById('p-github').value || null,
+         technical_notes: document.getElementById('p-notes').value || null,
+-        status: document.getElementById('p-status').value
++        status: document.getElementById('p-status').value,
++        lang: document.getElementById('p-lang').value
+     };
+     if (projArticle) {
+         if (projArticle.tooLong()) return toast(_t('toast.descTooLong'), 'error');
+diff -ruN a/app/tests/test_knowledge_lang.py b/app/tests/test_knowledge_lang.py
+--- a/app/tests/test_knowledge_lang.py	2026-11-26 13:50:39.316106403 +0100
++++ b/app/tests/test_knowledge_lang.py	2026-11-26 13:50:39.317330650 +0100
+@@ -129,3 +129,30 @@
+     courses = client.get("/api/knowledge/editor/courses", headers=h).json()
+     pl_row = next(c for c in courses if c["id"] == course["id"])
+     assert pl_row["missing_langs"] == [] and pl_row["versions"][0]["lang"] == "en"
++
++
++def test_projects_lang(users):
++    """Projekty: lang (domyślnie pl), walidacja, filtr ?lang=, stary klient nie zmienia języka."""
++    h = users["mod"]["h"]
++    base = {"title": TAG + " proj", "short_desc": "opis", "tags": "t"}
++    r = client.post("/api/projects", json=base, headers=h)
++    assert r.status_code == 200 and r.json()["lang"] == "pl"
++    pid = r.json()["id"]
++    r = client.post("/api/projects", json={**base, "title": TAG + " proj en", "lang": "en"}, headers=h)
++    assert r.status_code == 200 and r.json()["lang"] == "en"
++    eid = r.json()["id"]
++    assert client.post("/api/projects", json={**base, "lang": "xx"}, headers=h).status_code == 400
++    titles = lambda q: [p["title"] for p in client.get("/api/projects?limit=500&search=" + TAG + q).json()]
++    assert len(titles("")) == 2
++    assert titles("&lang=en") == [TAG + " proj en"]
++    assert titles("&lang=pl") == [TAG + " proj"]
++    # stary klient (bez pola lang) nie zmienia języka
++    r = client.put(f"/api/projects/{eid}", json={"title": TAG + " proj en", "short_desc": "nowy", "tags": "t"}, headers=h)
++    assert r.status_code == 200
++    assert titles("&lang=en") == [TAG + " proj en"]
++    r = client.put(f"/api/projects/{eid}", json={**base, "title": TAG + " proj en", "lang": "pl"}, headers=h)
++    assert r.status_code == 200 and len(titles("&lang=pl")) == 2
++    db = SessionLocal()
++    db.query(models.Project).filter(models.Project.id.in_([pid, eid])).delete(synchronize_session=False)
++    db.commit()
++    db.close()
+diff -ruN a/docs/I18N.md b/docs/I18N.md
+--- a/docs/I18N.md	2026-11-26 13:50:39.333957451 +0100
++++ b/docs/I18N.md	2026-11-26 13:50:39.335109792 +0100
+@@ -49,3 +49,6 @@
+ 
+ ## Treści wielojęzyczne (v30)
+ Interfejs (słowniki) i treści użytkowników to osobne warstwy. Treści Wiedzy mają wersje językowe jako osobne wiersze (patrz `docs/WIEDZA.md`). Zasada dla kolejnych modułów: projekty – pole `lang`; komponenty – jeden rekord z `translations` (JSON), bo ID komponentu jest referencją dla magazynu i schematów; pinouty – tłumaczenia przy komponencie.
++
++### Projekty (v31)
++`projects.lang` (`pl`/`en`, domyślnie `pl`, migracja automatyczna). `GET /api/projects?lang=` filtruje (pominięte dla `source=mine`, żeby autor widział własne). UI: selektor „Tylko mój język / Wszystkie języki” (`localStorage` `esn-proj-scope`, domyślnie mój język), plakietka języka na kafelku i w szczegółach, pole języka w formularzu (domyślnie język interfejsu). Edycja starym klientem bez pola `lang` nie zmienia języka. Projekty nie mają grup tłumaczeń – wersja w innym języku to osobny projekt.

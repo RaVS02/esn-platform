@@ -36,7 +36,9 @@ LIM = {"title": 150, "summary": 400, "body": 200_000, "tags": 8, "tag_len": 30,
        "widgets": 8, "widget_bytes": 60_000, "widgets_total": 200_000, "note": 500}
 WIDGET_NAME = re.compile(r"^[a-z0-9][a-z0-9_-]{0,29}$")
 WIDGET_REF = re.compile(r"^:::[ \t]*widget[ \t]+([A-Za-z0-9_-]+)", re.M)
-CONTENT_KEYS = ("kind", "course_id", "position", "title", "summary", "body", "level", "tags", "widgets")
+CONTENT_KEYS = ("kind", "course_id", "position", "title", "summary", "body", "level", "tags", "widgets", "lang")
+LANGS = ("pl", "en")                                   # obsługiwane języki treści (dopisz kod, gdy dojdzie język interfejsu)
+SCOPES = ("auto", "only", "all")
 
 _PL = str.maketrans("ąćęłńóśźżĄĆĘŁŃÓŚŹŻ", "acelnoszzACELNOSZZ")
 
@@ -77,6 +79,7 @@ class ArticleIn(BaseModel):
     widgets: Dict[str, str] = {}
     course_id: Optional[int] = None
     position: int = 0
+    lang: str = "pl"
 
 
 class CourseIn(BaseModel):
@@ -85,6 +88,11 @@ class CourseIn(BaseModel):
     level: str = "basic"
     position: int = 0
     published: bool = False
+    lang: str = "pl"
+
+
+class TranslateIn(BaseModel):
+    lang: str
 
 
 class NoteIn(BaseModel):
@@ -102,6 +110,8 @@ def clean_content(db: Session, data: ArticleIn) -> dict:
         raise HTTPException(400, "Nieprawidłowy typ treści")
     if data.level not in LEVELS:
         raise HTTPException(400, "Nieprawidłowy poziom")
+    if data.lang not in LANGS:
+        raise HTTPException(400, "Nieobsługiwany język treści")
     title = (data.title or "").strip()
     if not title:
         raise HTTPException(400, "Tytuł jest wymagany")
@@ -148,21 +158,27 @@ def clean_content(db: Session, data: ArticleIn) -> dict:
     else:
         course_id = None
     return {"kind": data.kind, "course_id": course_id, "position": max(-9999, min(9999, int(data.position or 0))),
-            "title": title, "summary": summary, "body": body, "level": data.level, "tags": tags, "widgets": widgets}
+            "title": title, "summary": summary, "body": body, "level": data.level, "tags": tags, "widgets": widgets,
+            "lang": data.lang}
 
 
 def live_content(a: models.KnowledgeArticle) -> dict:
     return {"kind": a.kind, "course_id": a.course_id, "position": a.position or 0, "title": a.title, "summary": a.summary or "",
-            "body": a.body or "", "level": a.level, "tags": list(a.tags or []), "widgets": dict(a.widgets or {})}
+            "body": a.body or "", "level": a.level, "tags": list(a.tags or []), "widgets": dict(a.widgets or {}),
+            "lang": a.lang or "pl"}
 
 
 def effective_content(a: models.KnowledgeArticle) -> dict:
-    return dict(a.draft) if a.draft else live_content(a)
+    if not a.draft:
+        return live_content(a)
+    d = dict(a.draft)
+    d.setdefault("lang", a.lang or "pl")                  # robocze wersje sprzed pola języka
+    return d
 
 
 def apply_live(a: models.KnowledgeArticle, c: dict):
     for k in CONTENT_KEYS:
-        setattr(a, k, c[k])
+        setattr(a, k, c.get(k, getattr(a, k, None)) if k == "lang" else c[k])
     a.reading_min = reading_minutes(c["body"])
 
 
@@ -199,9 +215,44 @@ def can_edit(u, a) -> bool:
 # ─────────────────────────────────────────────────────────────────────────────
 # Serializacja
 # ─────────────────────────────────────────────────────────────────────────────
-def item_card(a: models.KnowledgeArticle, course: Optional[models.KnowledgeCourse] = None) -> dict:
+def sibling_map(db: Session, model, published_only: bool = True) -> dict:
+    """{translation_group: [{id, lang, slug, title}]} dla wersji językowych (tylko wpisy z grupą)."""
+    qry = db.query(model).filter(model.translation_group.isnot(None))
+    if published_only:
+        qry = qry.filter(model.published.is_(True))
+    out: dict = {}
+    for r in qry.order_by(model.id).all():
+        out.setdefault(r.translation_group, []).append({"id": r.id, "lang": r.lang or "pl", "slug": r.slug, "title": r.title})
+    return out
+
+
+def translations_of(row, sib: Optional[dict]) -> list:
+    if not row.translation_group or not sib:
+        return []
+    return [x for x in sib.get(row.translation_group, []) if x["id"] != row.id]
+
+
+def apply_scope(rows: list, lang: str, scope: str) -> list:
+    """Filtr języka listy (rows: obiekty z .lang i .translation_group; zachowuje kolejność).
+    all  – wszystkie wersje; only – tylko wskazany język;
+    auto – jedna wersja na grupę: w języku użytkownika, a gdy jej brak – dowolna dostępna (z plakietką języka)."""
+    if lang not in LANGS or scope not in SCOPES or scope == "all":
+        return rows
+    if scope == "only":
+        return [r for r in rows if (r.lang or "pl") == lang]
+    best: dict = {}
+    for r in rows:
+        key = r.translation_group or f"#{r.id}"
+        cur = best.get(key)
+        if cur is None or ((r.lang or "pl") == lang and (cur.lang or "pl") != lang):
+            best[key] = r
+    keep = {id(v) for v in best.values()}
+    return [r for r in rows if id(r) in keep]
+
+
+def item_card(a: models.KnowledgeArticle, course: Optional[models.KnowledgeCourse] = None, sib: Optional[dict] = None) -> dict:
     lab, rank = level_info(a.level)
-    return {"id": a.id, "slug": a.slug, "kind": a.kind, "kind_label": KINDS.get(a.kind, a.kind), "title": a.title, "summary": a.summary or "",
+    return {"lang": a.lang or "pl", "translations": translations_of(a, sib), "id": a.id, "slug": a.slug, "kind": a.kind, "kind_label": KINDS.get(a.kind, a.kind), "title": a.title, "summary": a.summary or "",
             "level": a.level, "level_label": lab, "level_rank": rank, "tags": list(a.tags or []), "reading_min": a.reading_min or 1,
             "position": a.position or 0, "course": ({"slug": course.slug, "title": course.title} if course else None),
             "published_at": a.published_at.isoformat() if a.published_at else None,
@@ -353,10 +404,10 @@ def build_router(get_db, get_current_user) -> APIRouter:
     # ── publiczne ────────────────────────────────────────────────────────────
     @router.get("/api/knowledge/meta")
     def meta():
-        return {"kinds": KINDS, "levels": {k: v[0] for k, v in LEVELS.items()}, "limits": LIM}
+        return {"kinds": KINDS, "levels": {k: v[0] for k, v in LEVELS.items()}, "limits": LIM, "langs": list(LANGS)}
 
     @router.get("/api/knowledge/items")
-    def list_items(kind: str = "", level: str = "", q: str = "", db: Session = Depends(get_db)):
+    def list_items(kind: str = "", level: str = "", q: str = "", lang: str = "", scope: str = "all", db: Session = Depends(get_db)):
         pub_courses = {c.id: c for c in db.query(C).filter(C.published.is_(True)).all()}
         qry = db.query(K).filter(K.published.is_(True))
         if kind and kind in KINDS:
@@ -370,34 +421,33 @@ def build_router(get_db, get_current_user) -> APIRouter:
             like = f"%{q.lower()}%"
             from sqlalchemy import func
             qry = qry.filter(or_(func.lower(K.title).like(like), func.lower(K.summary).like(like), func.lower(K.body).like(like)))
-        out = []
-        for a in qry.all():
-            if a.kind == "lesson" and a.course_id not in pub_courses:
-                continue
-            out.append(item_card(a, pub_courses.get(a.course_id)))
+        rows = [a for a in qry.all() if not (a.kind == "lesson" and a.course_id not in pub_courses)]
         if q:   # tagi: dopasowanie po tagu (JSON) robimy w Pythonie
             ql = q.lower()
-            have = {c["id"] for c in out}
+            have = {a.id for a in rows}
             for a in db.query(K).filter(K.published.is_(True)).all():
                 if a.id not in have and ql in [t.lower() for t in (a.tags or [])] and (a.kind != "lesson" or a.course_id in pub_courses) \
                         and (not kind or a.kind == kind) and (level not in LEVELS or a.level == level):
-                    out.append(item_card(a, pub_courses.get(a.course_id)))
+                    rows.append(a)
+        sib = sibling_map(db, K)
+        out = [item_card(a, pub_courses.get(a.course_id), sib) for a in apply_scope(rows, lang, scope)]
         out.sort(key=sort_key)
         return out
 
-    def course_card(c, lessons):
+    def course_card(c, lessons, sib=None):
         lab, rank = level_info(c.level)
-        return {"id": c.id, "slug": c.slug, "title": c.title, "summary": c.summary or "", "level": c.level, "level_label": lab,
+        return {"lang": c.lang or "pl", "translations": translations_of(c, sib), "id": c.id, "slug": c.slug, "title": c.title, "summary": c.summary or "", "level": c.level, "level_label": lab,
                 "level_rank": rank, "lessons": len(lessons), "reading_min": sum((l.reading_min or 1) for l in lessons)}
 
     def published_lessons(db, course_id):
         return db.query(K).filter(K.course_id == course_id, K.kind == "lesson", K.published.is_(True)).order_by(K.position, K.id).all()
 
     @router.get("/api/knowledge/courses")
-    def list_courses(db: Session = Depends(get_db)):
+    def list_courses(lang: str = "", scope: str = "all", db: Session = Depends(get_db)):
         out = []
-        for c in db.query(C).filter(C.published.is_(True)).order_by(C.position, C.id).all():
-            out.append(course_card(c, published_lessons(db, c.id)))
+        sib = sibling_map(db, C)
+        for c in apply_scope(db.query(C).filter(C.published.is_(True)).order_by(C.position, C.id).all(), lang, scope):
+            out.append(course_card(c, published_lessons(db, c.id), sib))
         out.sort(key=lambda x: x["level_rank"])
         return out
 
@@ -407,7 +457,7 @@ def build_router(get_db, get_current_user) -> APIRouter:
         if not c:
             raise HTTPException(404, "Nie znaleziono kursu")
         lessons = published_lessons(db, c.id)
-        d = course_card(c, lessons)
+        d = course_card(c, lessons, sibling_map(db, C))
         d["items"] = [item_card(l, c) for l in lessons]
         return d
 
@@ -419,7 +469,7 @@ def build_router(get_db, get_current_user) -> APIRouter:
         course = db.query(C).filter(C.id == a.course_id).first() if a.course_id else None
         if a.kind == "lesson" and (not course or not course.published):
             raise HTTPException(404, "Nie znaleziono treści")
-        d = item_card(a, course)
+        d = item_card(a, course, sibling_map(db, K))
         d.update({"body": a.body or "", "widgets": dict(a.widgets or {}), "prev": None, "next": None})
         if a.author_id:
             u = db.query(models.User).filter(models.User.id == a.author_id).first()
@@ -437,8 +487,17 @@ def build_router(get_db, get_current_user) -> APIRouter:
         return d
 
     # ── redakcja ─────────────────────────────────────────────────────────────
-    def editor_row(a, db, users=None, courses=None):
+    def group_langs(a, db, sib=None):
+        """Wszystkie wersje językowe (także nieopublikowane) i brakujące języki."""
+        if sib is None:
+            sib = sibling_map(db, K, published_only=False)
+        mine = [x for x in sib.get(a.translation_group, []) if x["id"] != a.id] if a.translation_group else []
+        have = {a.lang or "pl"} | {x["lang"] for x in mine}
+        return [{"id": x["id"], "lang": x["lang"], "title": x["title"]} for x in mine], [l for l in LANGS if l not in have]
+
+    def editor_row(a, db, users=None, courses=None, sib=None):
         c = effective_content(a)
+        versions, missing = group_langs(a, db, sib)
         author = None
         if a.author_id:
             u = (users or {}).get(a.author_id) or db.query(models.User).filter(models.User.id == a.author_id).first()
@@ -446,7 +505,8 @@ def build_router(get_db, get_current_user) -> APIRouter:
         return {"id": a.id, "slug": a.slug, "kind": c["kind"], "kind_label": KINDS.get(c["kind"], c["kind"]), "title": c["title"],
                 "level": c["level"], "published": bool(a.published), "state": a.draft_state or "none", "status": status_label(a),
                 "has_pending": bool(a.draft), "author": author, "author_id": a.author_id, "review_note": a.review_note or "",
-                "course_id": c["course_id"], "position": c["position"],
+                "course_id": c["course_id"], "position": c["position"], "lang": c.get("lang") or a.lang or "pl",
+                "versions": versions, "missing_langs": missing,
                 "summary": c.get("summary") or "", "tags": c.get("tags") or [],
                 "updated_at": a.updated_at.isoformat() if a.updated_at else None}
 
@@ -457,7 +517,8 @@ def build_router(get_db, get_current_user) -> APIRouter:
             qry = qry.filter(K.author_id == user.id)
         rows = qry.order_by(K.updated_at.desc()).all()
         users = {u.id: u for u in db.query(models.User).filter(models.User.id.in_([r.author_id for r in rows if r.author_id] or [0])).all()}
-        return [editor_row(a, db, users) for a in rows]
+        sib = sibling_map(db, K, published_only=False)
+        return [editor_row(a, db, users, sib=sib) for a in rows]
 
     @router.get("/api/knowledge/editor/queue")
     def editor_queue(db: Session = Depends(get_db), user=Depends(require_admin)):
@@ -476,6 +537,48 @@ def build_router(get_db, get_current_user) -> APIRouter:
                            "user": (db.query(models.User.username).filter(models.User.id == h.user_id).scalar() if h.user_id else None)}
                           for h in db.query(R).filter(R.article_id == a.id).order_by(R.id.desc()).limit(15).all()]
         return row
+
+    def ensure_lang_free(db, model, group, lang, exclude_id=None, msg="Ta treść ma już wersję w tym języku"):
+        if not group:
+            return
+        q = db.query(model.id).filter(model.translation_group == group, model.lang == lang)
+        if exclude_id:
+            q = q.filter(model.id != exclude_id)
+        if q.first():
+            raise HTTPException(409, msg)
+
+    @router.post("/api/knowledge/editor/items/{article_id}/translate")
+    def editor_translate(article_id: int, data: TranslateIn, db: Session = Depends(get_db), user=Depends(require_staff)):
+        """Tworzy roboczą wersję językową: kopia treści (do przetłumaczenia) powiązana grupą z oryginałem."""
+        import uuid
+        src = get_or_404(db, article_id)
+        if data.lang not in LANGS:
+            raise HTTPException(400, "Nieobsługiwany język treści")
+        if not (src.published or can_edit(user, src)):
+            raise HTTPException(403, "Możesz tłumaczyć tylko opublikowane lub własne treści")
+        if (src.lang or "pl") == data.lang:
+            raise HTTPException(409, "Ta treść ma już wersję w tym języku")
+        ensure_lang_free(db, K, src.translation_group, data.lang)
+        c = dict(live_content(src) if src.published else effective_content(src))
+        c["lang"] = data.lang
+        if c["kind"] == "lesson":
+            course = db.query(C).filter(C.id == c["course_id"]).first() if c["course_id"] else None
+            target = db.query(C).filter(C.translation_group == course.translation_group, C.lang == data.lang).first() \
+                if course and course.translation_group else None
+            if not target:
+                raise HTTPException(400, "Najpierw utwórz wersję kursu w tym języku")
+            c["course_id"] = target.id
+        if not src.translation_group:
+            src.translation_group = str(uuid.uuid4())
+        a = K(slug=unique_slug(db, K, slugify(c["title"]) + "-" + data.lang), published=False, draft_state="draft",
+              author_id=user.id, translation_group=src.translation_group)
+        apply_live(a, c)
+        db.add(a)
+        db.flush()
+        log(db, a, user, "create", "wersja językowa: " + data.lang)
+        db.commit()
+        db.refresh(a)
+        return editor_row(a, db)
 
     @router.post("/api/knowledge/editor/items")
     def editor_create(data: ArticleIn, db: Session = Depends(get_db), user=Depends(require_staff)):
@@ -497,6 +600,7 @@ def build_router(get_db, get_current_user) -> APIRouter:
         if a.draft_state == "review" and not is_admin(user):
             raise HTTPException(409, "Treść czeka na przegląd – poczekaj na decyzję administratora")
         c = clean_content(db, data)
+        ensure_lang_free(db, K, a.translation_group, c["lang"], a.id)
         if a.published:
             a.draft = c                                   # nowy słownik → SQLAlchemy zauważy zmianę
         else:
@@ -528,6 +632,7 @@ def build_router(get_db, get_current_user) -> APIRouter:
     def approve(db, a, user, note=None, action="approve"):
         c = effective_content(a)
         check_ready(c)
+        ensure_lang_free(db, K, a.translation_group, c.get("lang") or a.lang or "pl", a.id)
         apply_live(a, c)
         a.draft = None
         a.draft_state = "none"
@@ -553,6 +658,7 @@ def build_router(get_db, get_current_user) -> APIRouter:
         a = get_or_404(db, article_id)
         if data.content is not None:
             c = clean_content(db, data.content)
+            ensure_lang_free(db, K, a.translation_group, c["lang"], a.id)
             if a.published:
                 a.draft = c
             else:
@@ -620,10 +726,17 @@ def build_router(get_db, get_current_user) -> APIRouter:
     def course_row(c, db):
         n = db.query(K.id).filter(K.course_id == c.id).count()
         lab, _ = level_info(c.level)
+        sib = sibling_map(db, C, published_only=False)
+        mine = [x for x in sib.get(c.translation_group, []) if x["id"] != c.id] if c.translation_group else []
+        have = {c.lang or "pl"} | {x["lang"] for x in mine}
         return {"id": c.id, "slug": c.slug, "title": c.title, "summary": c.summary or "", "level": c.level, "level_label": lab,
-                "position": c.position or 0, "published": bool(c.published), "lessons_total": n}
+                "position": c.position or 0, "published": bool(c.published), "lessons_total": n, "lang": c.lang or "pl",
+                "versions": [{"id": x["id"], "lang": x["lang"], "title": x["title"]} for x in mine],
+                "missing_langs": [l for l in LANGS if l not in have]}
 
     def clean_course(data: CourseIn):
+        if data.lang not in LANGS:
+            raise HTTPException(400, "Nieobsługiwany język treści")
         title = (data.title or "").strip()
         if not title:
             raise HTTPException(400, "Tytuł kursu jest wymagany")
@@ -642,7 +755,7 @@ def build_router(get_db, get_current_user) -> APIRouter:
     @router.post("/api/knowledge/editor/courses")
     def course_create(data: CourseIn, db: Session = Depends(get_db), user=Depends(require_admin)):
         title, summary = clean_course(data)
-        c = C(slug=unique_slug(db, C, slugify(title)), title=title, summary=summary, level=data.level,
+        c = C(slug=unique_slug(db, C, slugify(title)), title=title, summary=summary, level=data.level, lang=data.lang,
               position=max(-9999, min(9999, data.position)), published=bool(data.published))
         db.add(c)
         db.commit()
@@ -655,8 +768,31 @@ def build_router(get_db, get_current_user) -> APIRouter:
         if not c:
             raise HTTPException(404, "Nie znaleziono kursu")
         c.title, c.summary = clean_course(data)
+        ensure_lang_free(db, C, c.translation_group, data.lang, c.id, "Kurs ma już wersję w tym języku")
+        c.lang = data.lang
         c.level, c.position, c.published = data.level, max(-9999, min(9999, data.position)), bool(data.published)
         db.commit()
+        return course_row(c, db)
+
+    @router.post("/api/knowledge/editor/courses/{course_id}/translate")
+    def course_translate(course_id: int, data: TranslateIn, db: Session = Depends(get_db), user=Depends(require_admin)):
+        """Nowa (nieopublikowana) wersja językowa kursu; lekcje tłumaczy się osobno i przypisuje do tego kursu."""
+        import uuid
+        src = db.query(C).filter(C.id == course_id).first()
+        if not src:
+            raise HTTPException(404, "Nie znaleziono kursu")
+        if data.lang not in LANGS:
+            raise HTTPException(400, "Nieobsługiwany język treści")
+        if (src.lang or "pl") == data.lang:
+            raise HTTPException(409, "Kurs ma już wersję w tym języku")
+        ensure_lang_free(db, C, src.translation_group, data.lang, None, "Kurs ma już wersję w tym języku")
+        if not src.translation_group:
+            src.translation_group = str(uuid.uuid4())
+        c = C(slug=unique_slug(db, C, slugify(src.title) + "-" + data.lang), title=src.title, summary=src.summary, level=src.level,
+              position=src.position, published=False, lang=data.lang, translation_group=src.translation_group)
+        db.add(c)
+        db.commit()
+        db.refresh(c)
         return course_row(c, db)
 
     @router.delete("/api/knowledge/editor/courses/{course_id}")

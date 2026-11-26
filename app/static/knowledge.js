@@ -55,10 +55,26 @@
   var LEVEL_LABEL = { basic: _t('kn.podstawy'), intermediate: _t('kn.sredni'), advanced: _t('kn.zaawansowany') };
   var LEVEL_ORDER = ["basic", "intermediate", "advanced"];
 
+  /* wersje językowe treści: scope auto = mój język + nieprzetłumaczone, only = tylko mój język, all = wszystkie */
+  var LANG_NAME = { pl: "Polski", en: "English" }, LANG_LIST = ["pl", "en"];
+  function curLang() { return (global.ESNI18n && global.ESNI18n.lang()) || "pl"; }
+  function getScope() { try { var v = localStorage.getItem("esn-kn-scope"); return ["auto", "only", "all"].indexOf(v) >= 0 ? v : "auto"; } catch (e) { return "auto"; } }
+  function setScope(v) { try { localStorage.setItem("esn-kn-scope", v); } catch (e) { /* brak storage */ } }
+  function langQ() { return "lang=" + curLang() + "&scope=" + getScope(); }
+  function langBadge(l) { return l && l !== curLang() ? badge((l || "").toUpperCase(), "badge-blue") : null; }
+  function langLinks(list) {
+    if (!list || !list.length) return null;
+    var box = h("div", { "class": "kn-inline kn-langs" }, [h("span", { "class": "kn-meta", text: _t('kn.dostepnaTezW') })]);
+    list.forEach(function (x) { box.appendChild(h("button", { type: "button", "class": "btn-action", title: x.title, text: LANG_NAME[x.lang] || x.lang, onclick: function () { go((x.kind === "course" || x.is_course ? "kurs/" : "") + x.slug); } })); });
+    return box;
+  }
+
   var api = {
-    items: function (q) { return jfetch("/api/knowledge/items" + (q ? "?" + q : "")); },
+    items: function (q) { return jfetch("/api/knowledge/items?" + (q ? q + "&" : "") + langQ()); },
     item: function (slug) { return jfetch("/api/knowledge/items/" + encodeURIComponent(slug)); },
-    courses: function () { return jfetch("/api/knowledge/courses"); },
+    courses: function () { return jfetch("/api/knowledge/courses?" + langQ()); },
+    eTranslate: function (id, lang) { return jfetch("/api/knowledge/editor/items/" + id + "/translate", jbody("POST", { lang: lang })); },
+    cTranslate: function (id, lang) { return jfetch("/api/knowledge/editor/courses/" + id + "/translate", jbody("POST", { lang: lang })); },
     course: function (slug) { return jfetch("/api/knowledge/courses/" + encodeURIComponent(slug)); },
     eList: function () { return jfetch("/api/knowledge/editor/items", { headers: authH() }); },
     eQueue: function () { return jfetch("/api/knowledge/editor/queue", { headers: authH() }); },
@@ -360,7 +376,7 @@
   function itemCard(it, opts) {
     var meta = [it.reading_min + " min"].concat((it.tags || []).slice(0, 3).map(function (t) { return "#" + t })).join(" · ");
     var c = h("button", { type: "button", "class": "kn-card", onclick: function () { go(it.slug); } }, [
-      h("span", { "class": "kn-card-top" }, [badge(KIND_LABEL[it.kind] || it.kind_label, KIND_BADGE[it.kind] || "badge-gray"), (opts && opts.noLevel) ? null : badge(LEVEL_LABEL[it.level] || it.level_label, "badge-gray")]),
+      h("span", { "class": "kn-card-top" }, [badge(KIND_LABEL[it.kind] || it.kind_label, KIND_BADGE[it.kind] || "badge-gray"), (opts && opts.noLevel) ? null : badge(LEVEL_LABEL[it.level] || it.level_label, "badge-gray"), langBadge(it.lang)]),
       h("strong", { "class": "kn-card-title", text: (opts && opts.no ? opts.no + ". " : "") + it.title }),
       it.summary ? h("span", { "class": "kn-card-sum", text: it.summary }) : null,
       h("span", { "class": "kn-card-meta", text: meta })
@@ -369,7 +385,7 @@
   }
   function courseCard(c) {
     return h("button", { type: "button", "class": "kn-card kn-course", onclick: function () { go("kurs/" + c.slug); } }, [
-      h("span", { "class": "kn-card-top" }, [badge(_t('kn.kurs'), "badge-purple"), badge(LEVEL_LABEL[c.level] || c.level_label, "badge-gray")]),
+      h("span", { "class": "kn-card-top" }, [badge(_t('kn.kurs'), "badge-purple"), badge(LEVEL_LABEL[c.level] || c.level_label, "badge-gray"), langBadge(c.lang)]),
       h("strong", { "class": "kn-card-title", text: c.title }),
       c.summary ? h("span", { "class": "kn-card-sum", text: c.summary }) : null,
       h("span", { "class": "kn-card-meta", text: _tn('kn.lessons', c.lessons) + " · ~" + c.reading_min + " " + _t('kn.min') })
@@ -386,7 +402,7 @@
     ]);
     el.appendChild(h("section", { "class": "hero kn-hero" }, [
       h("div", { "class": "hero-tag", text: _t('kn.bazaWiedzy') }),
-      h("h1", {}, [_t('kn.wiedza') + " ", h("em", { text: "od podstaw" })]),
+      h("h1", {}, [_t('kn.wiedza') + " ", h("em", { text: _t("kn.odPodstaw") })]),
       h("p", { "class": "hero-sub", text: _t('kn.niezbednikiPoradnikiArtykulyI') }),
       actions
     ]));
@@ -397,6 +413,9 @@
     var search = h("input", { type: "search", "class": "text-input kn-search", placeholder: _t('kn.szukajWWiedzy'), "aria-label": _t('kn.szukaj'), value: state.q });
     var levels = h("select", { "class": "sort-select", "aria-label": _t('kn.poziom') }, [h("option", { value: "", text: _t('kn.wszystkiePoziomy') })].concat(LEVEL_ORDER.map(function (l) { return h("option", { value: l, text: LEVEL_LABEL[l] }); })));
     levels.value = state.level;
+    var scopeSel = h("select", { "class": "sort-select", "aria-label": _t('kn.jezykTresci') }, [["auto", _t('kn.scopeAuto')], ["only", _t('kn.scopeOnly', { lang: LANG_NAME[curLang()] || curLang() })], ["all", _t('kn.scopeAll')]].map(function (o) { return h("option", { value: o[0], text: o[1] }); }));
+    scopeSel.value = getScope();
+    scopeSel.addEventListener("change", function () { setScope(scopeSel.value); load(); });
     var btns = TABS.map(function (t) {
       var b = h("button", { type: "button", role: "tab", text: t[1], onclick: function () { state.tab = t[0]; mark(); load(); } });
       tabs.appendChild(b); return b;
@@ -406,7 +425,7 @@
     search.addEventListener("input", function () { clearTimeout(timer); timer = setTimeout(function () { state.q = search.value.trim(); load(); }, 250); });
     levels.addEventListener("change", function () { state.level = levels.value; load(); });
     wrap.appendChild(tabs);
-    wrap.appendChild(h("div", { "class": "controls-bar kn-controls" }, [h("div", { "class": "search-wrap" }, [search]), levels]));
+    wrap.appendChild(h("div", { "class": "controls-bar kn-controls" }, [h("div", { "class": "search-wrap" }, [search]), levels, scopeSel]));
     wrap.appendChild(results);
     el.appendChild(wrap);
     mark();
@@ -458,7 +477,8 @@
         h("button", { type: "button", "class": "kn-back", text: _t('kn.wiedza2'), onclick: function () { go(""); } }),
         h("div", { "class": "kn-head" }, [h("div", { "class": "kn-card-top" }, [badge(_t('kn.kurs'), "badge-purple"), badge(LEVEL_LABEL[c.level] || c.level_label, "badge-gray")]),
           h("h1", { text: c.title }), h("p", { "class": "hero-sub", text: c.summary }),
-          h("div", { "class": "kn-meta", text: _tn('kn.lessons', c.lessons) + " · " + _t('kn.readMin', { n: c.reading_min }) })]),
+          h("div", { "class": "kn-meta", text: _tn('kn.lessons', c.lessons) + " · " + _t('kn.readMin', { n: c.reading_min }) }),
+          langLinks((c.translations || []).map(function (x) { return Object.assign({ is_course: true }, x); }))]),
         c.items.length ? h("div", { "class": "kn-actions" }, [h("button", { type: "button", "class": "btn-action primary", onclick: function () { go(c.items[0].slug); }, text: _t('kn.zacznijKurs') }),
           h("button", { type: "button", "class": "btn-action", disabled: "disabled", title: _t('kn.taFunkcjaPojawiSie'), text: _t('kn.sledzeniePostepuWkrotce') })]) : null,
         c.items.length ? list : h("div", { "class": "kn-empty", text: _t('kn.tenKursNieMa') })
@@ -487,7 +507,8 @@
         h("div", { "class": "kn-head" }, [
           h("div", { "class": "kn-card-top" }, [badge(KIND_LABEL[a.kind] || a.kind_label, KIND_BADGE[a.kind] || "badge-gray"), badge(LEVEL_LABEL[a.level] || a.level_label, "badge-gray"),
             a.lesson_no ? badge(_t('kn.lekcjaZ', { n: a.lesson_no, m: a.lesson_total }), "badge-purple") : null].concat((a.tags || []).map(function (t) { return h("span", { "class": "kn-tag", text: "#" + t }); }))),
-          h("h1", { text: a.title }), a.summary ? h("p", { "class": "hero-sub", text: a.summary }) : null, h("div", { "class": "kn-meta", text: meta })
+          h("h1", { text: a.title }), a.summary ? h("p", { "class": "hero-sub", text: a.summary }) : null, h("div", { "class": "kn-meta", text: meta }),
+          langLinks(a.translations)
         ]),
         body, nav
       ]));
@@ -582,7 +603,7 @@
     (tab === "queue" ? api.eQueue() : api.eList()).then(function (rows) {
       body.textContent = "";
       if (!rows.length) { body.appendChild(h("div", { "class": "kn-empty", text: tab === "queue" ? _t('kn.nicNieCzekaNa') : _t('kn.nieMaszJeszczeZadnych') })); return; }
-      var F = { q: "", kind: "", level: "", status: "", sort: "updated", dir: -1 };
+      var F = { q: "", kind: "", lang: "", missing: "", level: "", status: "", sort: "updated", dir: -1 };
       function uniq(f) { var m = {}; rows.forEach(function (r) { m[r[f]] = 1; }); return Object.keys(m).sort(); }
       function sel(label, field, opts) {
         var s = h("select", { "class": "sort-select", "aria-label": label }, [h("option", { value: "", text: _t("kn.filtrWszystkie", { label: label }) })].concat(opts.map(function (o) { return h("option", { value: o[0], text: o[1] }); })));
@@ -592,13 +613,13 @@
       var qt = null; q.addEventListener("input", function () { clearTimeout(qt); qt = setTimeout(function () { F.q = q.value.trim().toLowerCase(); draw(); }, 200); });
       var sortSel = h("select", { "class": "sort-select", "aria-label": _t('kn.sortowanie') }, [["updated:-1", _t('kn.najnowszeZmiany')], ["updated:1", _t('kn.najstarszeZmiany')], ["title:1", _t('kn.tytulAz')], ["title:-1", _t('kn.tytulZa')], ["level:1", _t('kn.poziomRosnaco')], ["status:1", _t('kn.status')]].map(function (o) { return h("option", { value: o[0], text: o[1] }); }));
       sortSel.addEventListener("change", function () { var p = sortSel.value.split(":"); F.sort = p[0]; F.dir = +p[1]; draw(); });
-      var bar = h("div", { "class": "kn-filterbar" }, [q, sel(_t('kn.typ'), "kind", uniq("kind").map(function (x) { return [x, KIND_LABEL[x] || x]; })), sel(_t('kn.poziom'), "level", LEVEL_ORDER.map(function (l) { return [l, LEVEL_LABEL[l]]; })),
+      var bar = h("div", { "class": "kn-filterbar" }, [q, sel(_t('kn.typ'), "kind", uniq("kind").map(function (x) { return [x, KIND_LABEL[x] || x]; })), sel(_t('kn.jezyk'), "lang", LANG_LIST.map(function (l) { return [l, LANG_NAME[l]]; })), sel(_t('kn.brakTlumaczenia'), "missing", LANG_LIST.map(function (l) { return [l, LANG_NAME[l]]; })), sel(_t('kn.poziom'), "level", LEVEL_ORDER.map(function (l) { return [l, LEVEL_LABEL[l]]; })),
         sel(_t('kn.status'), "status", ["draft", "review", "rejected", "pub", "pub_draft", "pub_review", "pub_rejected"].filter(function (k) { return rows.some(function (r) { return statusKey(r) === k; }); }).map(function (k) { return [k, _t("kn.st_" + k)]; })), sortSel]);
       var count = h("div", { "class": "kn-meta kn-count" }), holder = h("div", {});
       body.appendChild(bar); body.appendChild(count); body.appendChild(holder);
       function draw() {
         var ql = F.q, list = rows.filter(function (r) {
-          if (F.kind && r.kind !== F.kind) return false; if (F.level && r.level !== F.level) return false; if (F.status && statusKey(r) !== F.status) return false;
+          if (F.kind && r.kind !== F.kind) return false; if (F.level && r.level !== F.level) return false; if (F.lang && r.lang !== F.lang) return false; if (F.missing && (r.missing_langs || []).indexOf(F.missing) < 0) return false; if (F.status && statusKey(r) !== F.status) return false;
           if (ql && ((r.title || "") + " " + (r.summary || "") + " " + (r.tags || []).join(" ") + " " + (r.author || "") + " " + (r.slug || "")).toLowerCase().indexOf(ql) < 0) return false; return true;
         });
         var rank = function (l) { var i = LEVEL_ORDER.indexOf(l); return i < 0 ? 99 : i; };
@@ -612,10 +633,11 @@
         holder.appendChild(tableOf(list));
       }
       function tableOf(list) {
-      var t = h("table", { "class": "comp-table kn-table" }, [h("thead", {}, [h("tr", {}, [_t('kn.tytul'), _t('kn.typ'), _t('kn.poziom'), _t('kn.status'), _t('kn.autor'), _t('kn.zmiana')].map(function (x) { return h("th", { text: x }); }))])]);
+      var t = h("table", { "class": "comp-table kn-table" }, [h("thead", {}, [h("tr", {}, [_t('kn.tytul'), _t('kn.jezyk'), _t('kn.typ'), _t('kn.poziom'), _t('kn.status'), _t('kn.autor'), _t('kn.zmiana')].map(function (x) { return h("th", { text: x }); }))])]);
       var tb = h("tbody"); t.appendChild(tb);
       list.forEach(function (it) {
         var tr = h("tr", { "class": "kn-row", tabindex: "0" }, [h("td", {}, [h("strong", { text: it.title }), it.review_note && it.state === "rejected" ? h("div", { "class": "kn-note-bad", text: _t('kn.odrzucone') + " " + it.review_note }) : null]),
+          h("td", {}, [h("strong", { text: (it.lang || "pl").toUpperCase() })].concat((it.versions || []).map(function (v) { return h("span", { "class": "kn-meta", text: " " + v.lang.toUpperCase() }); })).concat(it.state !== "draft" && (it.missing_langs || []).length ? [h("span", { "class": "kn-meta", title: _t('kn.brakTlumaczenia'), text: " ·" + it.missing_langs.map(function (l) { return " −" + l.toUpperCase(); }).join("") })] : [])),
           h("td", { text: KIND_LABEL[it.kind] || it.kind_label }), h("td", { text: LEVEL_LABEL[it.level] || it.level }), h("td", {}, [statusBadge(it)]), h("td", { text: it.author || "—" }), h("td", { text: fmtDate(it.updated_at) })]);
         var open = function () { go("redakcja/edytuj/" + it.id); };
         tr.addEventListener("click", open); tr.addEventListener("keydown", function (e) { if (e.key === "Enter") open(); });
@@ -633,13 +655,14 @@
       var sum = h("input", { "class": "text-input", value: c ? c.summary : "", placeholder: _t('kn.krotkiOpis'), maxlength: 400, "aria-label": _t('kn.opisKursu') });
       var lvl = h("select", { "class": "sort-select", "aria-label": _t('kn.poziom') }, LEVEL_ORDER.map(function (l) { return h("option", { value: l, text: LEVEL_LABEL[l] }); })); lvl.value = c ? c.level : "basic";
       var pos = h("input", { type: "number", "class": "text-input kn-num", value: c ? c.position : 0, "aria-label": _t('kn.kolejnosc') });
+      var langSel = h("select", { "class": "sort-select", "aria-label": _t('kn.jezyk') }, LANG_LIST.map(function (l) { return h("option", { value: l, text: LANG_NAME[l] }); })); langSel.value = c ? (c.lang || "pl") : curLang();
       var pub = h("input", { type: "checkbox" }); pub.checked = !!(c && c.published);
       var save = h("button", { type: "button", "class": "btn-action primary", text: c ? _t('kn.zapiszKurs') : _t('kn.dodajKurs') });
       save.addEventListener("click", function () {
-        var d = { title: title.value, summary: sum.value, level: lvl.value, position: parseInt(pos.value, 10) || 0, published: pub.checked };
+        var d = { title: title.value, summary: sum.value, level: lvl.value, position: parseInt(pos.value, 10) || 0, published: pub.checked, lang: langSel.value };
         (c ? api.cSave(c.id, d) : api.cCreate(d)).then(function () { toast(_t('kn.zapisanoKurs'), "success"); done(); }).catch(function (e) { toast(e.message, "error"); });
       });
-      return h("div", { "class": "kn-cform" }, [title, sum, h("div", { "class": "kn-inline" }, [lvl, h("label", {}, [_t('kn.kolejnosc') + " ", pos]), h("label", { "class": "kn-chk" }, [pub, " opublikowany"]), save])]);
+      return h("div", { "class": "kn-cform" }, [title, sum, h("div", { "class": "kn-inline" }, [lvl, langSel, h("label", {}, [_t('kn.kolejnosc') + " ", pos]), h("label", { "class": "kn-chk" }, [pub, " " + _t('kn.opublikowany')]), save])]);
     }
     function draw() {
       body.textContent = ""; body.appendChild(h("h3", { "class": "section-title", text: _t('kn.nowyKurs') })); body.appendChild(form(null, draw));
@@ -650,11 +673,16 @@
         if (!rows.length) list.appendChild(h("div", { "class": "kn-empty", text: _t('kn.brakKursow') }));
         rows.forEach(function (c) {
           var box = h("div", { "class": "card kn-ccard" });
-          var head = h("div", { "class": "kn-inline" }, [h("strong", { text: c.title }), badge(c.published ? _t('kn.opublikowany') : _t('kn.ukryty'), c.published ? "badge-green" : "badge-gray"), h("span", { "class": "kn-meta", text: c.lessons_total + " lekcji" }),
+          var head = h("div", { "class": "kn-inline" }, [h("strong", { text: c.title }), badge(c.published ? _t('kn.opublikowany') : _t('kn.ukryty'), c.published ? "badge-green" : "badge-gray"), h("span", { "class": "kn-meta", text: _tn('kn.lessons', c.lessons_total) }),
             h("button", { type: "button", "class": "btn-action", text: _t('kn.edytuj'), onclick: function () { box.appendChild(form(c, draw)); this.disabled = true; } }),
             h("button", { type: "button", "class": "btn-action", text: _t('kn.usun'), onclick: function () {
               askConfirm(_t('kn.usunacKurs') + c.title + "”?").then(function (ok) { if (ok) api.cDel(c.id).then(function () { toast(_t('kn.usunietoKurs'), "success"); draw(); }).catch(function (e) { toast(e.message, "error"); }); });
             } })]);
+          head.insertBefore(badge((c.lang || "pl").toUpperCase(), "badge-blue"), head.children[1]);
+          (c.missing_langs || []).forEach(function (l) {
+            head.appendChild(h("button", { type: "button", "class": "btn-action", text: _t('kn.dodajWersje', { lang: LANG_NAME[l] || l }), onclick: function () {
+              api.cTranslate(c.id, l).then(function () { toast(_t('kn.utworzonoWersje'), "success"); draw(); }).catch(function (e) { toast(e.message, "error"); }); } }));
+          });
           box.appendChild(head); list.appendChild(box);
         });
       }).catch(function (e) { errBox(list, e); });
@@ -667,7 +695,7 @@
     loading(el);
     Promise.all([isNew ? null : api.eGet(id), api.eCourses()]).then(function (r) {
       if (!el.isConnected) return;
-      var rec = r[0], courses = r[1], c = rec ? rec.content : { kind: "article", title: "", summary: "", body: "", level: "basic", tags: [], widgets: {}, course_id: null, position: 0 };
+      var rec = r[0], courses = r[1], c = rec ? rec.content : { kind: "article", title: "", summary: "", body: "", level: "basic", tags: [], widgets: {}, course_id: null, position: 0, lang: curLang() };
       var widgets = JSON.parse(JSON.stringify(c.widgets || {}));
       var dirty = false;
       el.textContent = "";
@@ -685,6 +713,7 @@
       var level = h("select", { "class": "sort-select", "aria-label": _t('kn.poziom') }, LEVEL_ORDER.map(function (l) { return h("option", { value: l, text: LEVEL_LABEL[l] }); })); level.value = c.level;
       var course = h("select", { "class": "sort-select", "aria-label": _t('kn.kurs') }, [h("option", { value: "", text: _t('kn.wybierzKurs') })].concat(courses.map(function (k) { return h("option", { value: String(k.id), text: k.title }); })));
       course.value = c.course_id ? String(c.course_id) : "";
+      var langSel = h("select", { "class": "sort-select", "aria-label": _t('kn.jezykTresci') }, LANG_LIST.map(function (l) { return h("option", { value: l, text: LANG_NAME[l] }); })); langSel.value = c.lang || (rec && rec.lang) || "pl";
       var pos = h("input", { type: "number", "class": "text-input kn-num", value: c.position || 0, "aria-label": _t('kn.pozycjaWKursieNa') });
       var title = h("input", { "class": "text-input", value: c.title, maxlength: 150, placeholder: _t('kn.tytul'), "aria-label": _t('kn.tytul') });
       var sum = h("textarea", { "class": "text-input kn-sum", maxlength: 400, rows: 2, placeholder: _t('kn.krotkiOpisWidocznyNa'), "aria-label": _t('kn.opis') }); sum.value = c.summary || "";
@@ -696,7 +725,7 @@
       kind.addEventListener("change", function () { toggle(); mark(); }); toggle();
       function mark() { dirty = true; saveInfo.textContent = _t('kn.niezapisaneZmiany'); }
       var saveInfo = h("span", { "class": "kn-meta" });
-      [level, course, pos, title, sum, tags].forEach(function (x) { x.addEventListener("input", mark); x.addEventListener("change", mark); });
+      [level, course, langSel, pos, title, sum, tags].forEach(function (x) { x.addEventListener("input", mark); x.addEventListener("change", mark); });
 
       var tbar = h("div", { "class": "kn-snips", role: "toolbar", "aria-label": _t('kn.wstawBlok') }, SNIPPETS.map(function (s) {
         return h("button", { type: "button", "class": "kn-snip", text: s[0], onclick: function () {
@@ -783,7 +812,7 @@
       }
 
       function payload() {
-        return { kind: kind.value, level: level.value, title: title.value, summary: sum.value, body: ta.value, widgets: widgets,
+        return { kind: kind.value, lang: langSel.value, level: level.value, title: title.value, summary: sum.value, body: ta.value, widgets: widgets,
           tags: tags.value.split(",").map(function (x) { return x.trim(); }).filter(Boolean), course_id: kind.value === "lesson" && course.value ? parseInt(course.value, 10) : null, position: parseInt(pos.value, 10) || 0 };
       }
       function after(row, text) {
@@ -821,7 +850,17 @@
       var fieldset = h("fieldset", { "class": "kn-fieldset" });
       if (locked) fieldset.disabled = true;
       fieldset.appendChild(h("div", { "class": "kn-grid3" }, [h("label", { "class": "kn-fld" }, [h("span", { text: _t('kn.typ') }), kind]), h("label", { "class": "kn-fld" }, [h("span", { text: _t('kn.poziom') }), level]), courseRow,
-        h("label", { "class": "kn-fld" }, [h("span", { text: _t('kn.pozycja') }), pos])]));
+        h("label", { "class": "kn-fld" }, [h("span", { text: _t('kn.pozycja') }), pos]), h("label", { "class": "kn-fld" }, [h("span", { text: _t('kn.jezykTresci') }), langSel])]));
+      if (rec) {
+        var vb = h("div", { "class": "kn-inline kn-langs" }, [h("span", { "class": "kn-meta", text: _t('kn.wersjeJezykowe') })]);
+        (rec.versions || []).forEach(function (v) { vb.appendChild(h("button", { type: "button", "class": "btn-action", title: v.title, text: LANG_NAME[v.lang] || v.lang, onclick: function () { go("redakcja/edytuj/" + v.id); } })); });
+        if (rec.published || isStaff()) (rec.missing_langs || []).forEach(function (l) {
+          vb.appendChild(h("button", { type: "button", "class": "btn-action primary", text: _t('kn.dodajWersje', { lang: LANG_NAME[l] || l }), onclick: function () {
+            var go2 = function () { api.eTranslate(rec.id, l).then(function (row) { dirty = false; toast(_t('kn.utworzonoWersje'), "success"); go("redakcja/edytuj/" + row.id); }).catch(function (e) { toast(e.message, "error"); }); };
+            if (dirty) askConfirm(_t('kn.maszNiezapisaneZmianyWyjsc')).then(function (ok) { if (ok) go2(); }); else go2(); } }));
+        });
+        wrap.appendChild(vb);
+      }
       fieldset.appendChild(h("label", { "class": "kn-fld" }, [h("span", { text: _t('kn.tytul') }), title]));
       fieldset.appendChild(h("label", { "class": "kn-fld" }, [h("span", { text: _t('kn.opis') }), sum]));
       fieldset.appendChild(h("label", { "class": "kn-fld" }, [h("span", { text: _t('kn.tagi') }), tags]));

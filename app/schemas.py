@@ -59,6 +59,7 @@ class ProjectBase(BaseModel):
     technical_notes: Optional[str] = None
     code_snippet: Optional[str] = None
     code_lang: Optional[str] = "cpp"
+    lang: Optional[str] = "pl"           # język treści projektu (pl/en)
     is_official: bool = False
     status: Optional[str] = "stable"
 

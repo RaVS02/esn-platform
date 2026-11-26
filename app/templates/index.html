@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="dark light">
-<script src="{{ url_for('static', path='/i18n.js') }}?v=3"></script>
-<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=3"></script>
-<script src="{{ url_for('static', path='/i18n/en.js') }}?v=3"></script>
+<script src="{{ url_for('static', path='/i18n.js') }}?v=7"></script>
+<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=7"></script>
+<script src="{{ url_for('static', path='/i18n/en.js') }}?v=7"></script>
 <script src="{{ url_for('static', path='/theme.js') }}?v=4"></script>
 <title data-i18n="meta.title">Platforma Systemów Wbudowanych</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -32,7 +32,7 @@
 <script src="{{ url_for('static', path='/knowledge-guide.js') }}?v=2"></script>
 <script src="{{ url_for('static', path='/knowledge-blocks.js') }}?v=2"></script>
 <script src="{{ url_for('static', path='/knowledge-wizard.js') }}?v=4"></script>
-<script src="{{ url_for('static', path='/knowledge.js') }}?v=13"></script>
+<script src="{{ url_for('static', path='/knowledge.js') }}?v=14"></script>
 
 </head>
 <body>
@@ -175,6 +175,10 @@
           <span class="search-icon">🔍︎</span>
           <input type="text" id="searchProjects" class="search-input" placeholder="Szukaj projektu..." data-i18n-attr="placeholder:projects.szukajProjektu" onkeyup="updateProjectsView()">
         </div>
+        <select id="projLangScope" class="sort-select" onchange="setProjLangScope(this.value)" aria-label="Język treści" data-i18n-attr="aria-label:projects.jezykTresci">
+          <option value="only" data-i18n="projects.scopeOnly">Tylko mój język</option>
+          <option value="all" data-i18n="projects.scopeAll">Wszystkie języki</option>
+        </select>
         <select id="sortProjects" class="sort-select" onchange="updateProjectsView()">
           <option value="newest" data-i18n="projects.pokazNajnowsze">Pokaż: Najnowsze</option>
           <option value="oldest" data-i18n="projects.pokazNajstarsze">Pokaż: Najstarsze</option>
@@ -555,6 +559,11 @@
       
       <input type="text" id="p-github" placeholder="Link do GitHub (opcjonalnie)" data-i18n-attr="placeholder:contact.linkDoGithubOpcjonalnie" class="text-input">
       <div style="margin-bottom: 5px; font-size: 11px; color: var(--text3); font-family: var(--mono);" data-i18n="contact.statusProjektu">Status Projektu</div>
+      <div style="margin-bottom: 5px; font-size: 11px; color: var(--text3); font-family: var(--mono);" data-i18n="projects.jezykTresci">Język treści</div>
+      <select id="p-lang" class="text-input" style="font-family: var(--mono); font-size: 13px; margin-bottom: 12px;">
+          <option value="pl">Polski</option>
+          <option value="en">English</option>
+      </select>
       <select id="p-status" class="text-input" style="font-family: var(--mono); font-size: 13px; color: var(--accent);">
           <option value="stable" style="color: var(--green);" data-i18n="contact.stableUkonczony">🟢 STABLE (Ukończony)</option>
           <option value="progress" style="color: var(--orange);" data-i18n="contact.inProgressWTrakcie">🟡 IN PROGRESS (W trakcie)</option>
@@ -712,6 +721,9 @@ let activeProjectStatuses = [];
 let displayLimit = 12; // NOWOŚĆ: Ile kafelków wyświetlamy na starcie
 
 // Parametr resetLimit domyślnie na true. Jeśli wpiszemy coś w lupkę lub klikniemy tag, wracamy do 12 kafelków.
+function getProjLangScope() { try { return localStorage.getItem('esn-proj-scope') === 'all' ? 'all' : 'only'; } catch (e) { return 'only'; } }
+function setProjLangScope(v) { try { localStorage.setItem('esn-proj-scope', v); } catch (e) {} updateProjectsView(); }
+
 async function updateProjectsView(resetLimit = true) {
     if (resetLimit) displayLimit = 12;
 
@@ -730,6 +742,9 @@ async function updateProjectsView(resetLimit = true) {
     const sortVal = document.getElementById('sortProjects') ? document.getElementById('sortProjects').value : 'newest';
     
     let url = `/api/projects?limit=500&source=${currentSource}&sort=${sortVal}`;
+    const _ls = document.getElementById('projLangScope');
+    if (_ls) _ls.value = getProjLangScope();
+    if (getProjLangScope() === 'only') url += `&lang=${ESNI18n.lang()}`;
     if (currentSource === 'mine' && loggedUserId) url += `&user_id=${loggedUserId}`;
 
     try {
@@ -791,6 +806,8 @@ async function updateProjectsView(resetLimit = true) {
                 `<span class="tag" style="font-size:10px; padding:2px 6px;">${esc(tag.trim())}</span>`
             ).join('') : '';
 
+            const langBadge = (project.lang && project.lang !== ESNI18n.lang())
+                ? '<span class="badge badge-blue" style="font-size:10px;">' + esc(project.lang.toUpperCase()) + '</span>' : '';
             const officialBadge = project.is_official 
                 ? '<span class="badge badge-green" style="font-size:10px;">✓ ' + _t('badge.official') + '</span>' 
                 : '<span class="badge badge-orange" style="font-size:10px;">𖨆 ' + _t('badge.community') + '</span>';
@@ -832,7 +849,7 @@ async function updateProjectsView(resetLimit = true) {
                 <div class="thumb">${thumbHtml}</div>
                 <div style="padding: 16px; display:flex; flex-direction:column; flex:1;">
                     <div style="display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap;">
-                        ${statusBadge} ${officialBadge} ${myBadge}
+                        ${statusBadge} ${officialBadge} ${myBadge} ${langBadge}
                     </div>
                     <h3 style="font-size:16px; margin-bottom:8px; color:var(--text);">${esc(project.title)}</h3>
                     
@@ -993,7 +1010,7 @@ function openFullProjectView(slug) {
     document.getElementById('full-view-content').innerHTML = `
         <div style="background: var(--card);  padding: 10px; border-radius: 16px; margin-bottom: 30px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px;">
-                <div style="display:flex; gap:10px;">${officialBadge} ${myBadge}</div>
+                <div style="display:flex; gap:10px;">${officialBadge} ${myBadge} ${(p.lang && p.lang !== ESNI18n.lang()) ? `<span class="badge badge-blue">${esc(p.lang.toUpperCase())}</span>` : ''}</div>
                 ${p.github_url ? `<a href="${safeUrl(p.github_url)}" target="_blank" rel="noopener noreferrer" class="btn-action primary" style="font-size: 11px; padding: 4px 10px;">[ github_repo ]</a>` : ''}
             </div>
             
@@ -1268,6 +1285,7 @@ function editProject(slug) {
     document.getElementById('p-notes').value = p.technical_notes || "";
     document.getElementById('p-components').value = p.components || "";
     document.getElementById('p-status').value = p.status || 'stable'
+    document.getElementById('p-lang').value = p.lang || 'pl'
     
     // Pokazywanie przycisków i czystych nazw plików
     const fields = ['image_main', 'image_schematic', 'image_gallery_1', 'image_gallery_2', 'markdown_path'];
@@ -1308,6 +1326,7 @@ function openProjectModal() {
     document.querySelector('#projectModal h2').innerText = _t('projects.nowyProjekt');
     document.querySelector('#projectModal button[onclick="submitProject()"]').innerText = _t('contact.submitProject');
     
+    document.getElementById('p-lang').value = ESNI18n.lang();
     // Czyścimy wszystkie pola tekstowe
     document.querySelectorAll('#projectModal input, #projectModal textarea').forEach(i => i.value = "");
     
@@ -1393,7 +1412,8 @@ async function submitProject() {
         short_desc: document.getElementById('p-desc').value,
         github_url: document.getElementById('p-github').value || null,
         technical_notes: document.getElementById('p-notes').value || null,
-        status: document.getElementById('p-status').value
+        status: document.getElementById('p-status').value,
+        lang: document.getElementById('p-lang').value
     };
     if (projArticle) {
         if (projArticle.tooLong()) return toast(_t('toast.descTooLong'), 'error');

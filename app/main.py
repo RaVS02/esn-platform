@@ -29,6 +29,15 @@ models.Base.metadata.create_all(bind=engine)
 from sqlalchemy import text as _sql_text
 with engine.begin() as _conn:
     _conn.execute(_sql_text("ALTER TABLE official_components ADD COLUMN IF NOT EXISTS pinout JSON"))
+    # Wiedza: wersje językowe treści i kursów
+    for _tbl in ("knowledge_articles", "knowledge_courses"):
+        _conn.execute(_sql_text("ALTER TABLE " + _tbl + " ADD COLUMN IF NOT EXISTS lang VARCHAR(5) NOT NULL DEFAULT 'pl'"))
+        _conn.execute(_sql_text("ALTER TABLE " + _tbl + " ADD COLUMN IF NOT EXISTS translation_group VARCHAR(36)"))
+        _conn.execute(_sql_text("CREATE INDEX IF NOT EXISTS ix_" + _tbl + "_lang ON " + _tbl + " (lang)"))
+        _conn.execute(_sql_text("CREATE INDEX IF NOT EXISTS ix_" + _tbl + "_translation_group ON " + _tbl + " (translation_group)"))
+    # Projekty: język treści
+    _conn.execute(_sql_text("ALTER TABLE projects ADD COLUMN IF NOT EXISTS lang VARCHAR(5) NOT NULL DEFAULT 'pl'"))
+    _conn.execute(_sql_text("CREATE INDEX IF NOT EXISTS ix_projects_lang ON projects (lang)"))
     # Asystent AI (limity dzienne + własny klucz)
     for _ddl in ("ai_requests_today INTEGER NOT NULL DEFAULT 0", "last_ai_request_date DATE", "ai_provider VARCHAR(20)",
                  "ai_model VARCHAR(80)", "ai_key_enc TEXT", "ai_key_hint VARCHAR(12)"):
@@ -468,6 +477,7 @@ def get_projects(
     source: Optional[str] = Query("all"),
     user_id: Optional[int] = Query(None),
     sort: str = Query("newest"), # <--- NOWY PARAMETR SORTOWANIA
+    lang: Optional[str] = Query(None),   # filtr języka treści (brak = wszystkie); nie dotyczy source=mine
     skip: int = 0,
     limit: int = 20
 ):
@@ -486,6 +496,9 @@ def get_projects(
     elif source == "mine" and user_id:
         query = query.filter(models.Project.owner_id == user_id)
     
+    if lang and source != "mine":
+        query = query.filter(models.Project.lang == lang)
+
     # LOGIKA SORTOWANIA (Projekty Oficjalne ZAWSZE na samej górze)
     if sort == "az":
         return query.order_by(models.Project.title.asc()).offset(skip).limit(limit).all()
@@ -511,6 +524,9 @@ def create_project(
     # 2. Bezpieczne wypakowanie danych (zapobieganie błędowi 'multiple values')
     project_data = project.dict()
     project_data.pop("is_official", None) # <--- TO NAPRAWIA TWÓJ BŁĄD!
+    if (project_data.get("lang") or "pl") not in ("pl", "en"):
+        raise HTTPException(status_code=400, detail="Nieobsługiwany język treści")
+    project_data["lang"] = project_data.get("lang") or "pl"
     project_data["full_content_md"] = _clean_project_md(project_data.get("full_content_md"))
     for _f in ("image_main", "image_schematic", "image_gallery_1", "image_gallery_2", "markdown_path", "code_snippet", "code_lang"):
         project_data.pop(_f, None)   # ścieżki plików ustala wyłącznie serwer (system mediów) – nigdy klient
@@ -556,6 +572,12 @@ def update_project(
         update_data.pop("full_content_md", None)   # stary klient nie zna tego pola – nie kasujemy opisu
     # Usuwamy is_official z danych wejściowych, aby nie nadpisać go przypadkiem
     update_data.pop("is_official", None) 
+    if "lang" in _fs:
+        if (update_data.get("lang") or "pl") not in ("pl", "en"):
+            raise HTTPException(status_code=400, detail="Nieobsługiwany język treści")
+        update_data["lang"] = update_data.get("lang") or "pl"
+    else:
+        update_data.pop("lang", None)   # stary klient nie zna pola – nie zmieniamy języka
     for _f in ("image_main", "image_schematic", "image_gallery_1", "image_gallery_2", "markdown_path", "code_snippet", "code_lang"):
         update_data.pop(_f, None)   # ścieżki plików ustala wyłącznie serwer (system mediów) – nigdy klient
 
