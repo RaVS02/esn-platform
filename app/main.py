@@ -35,6 +35,9 @@ with engine.begin() as _conn:
         _conn.execute(_sql_text("ALTER TABLE " + _tbl + " ADD COLUMN IF NOT EXISTS translation_group VARCHAR(36)"))
         _conn.execute(_sql_text("CREATE INDEX IF NOT EXISTS ix_" + _tbl + "_lang ON " + _tbl + " (lang)"))
         _conn.execute(_sql_text("CREATE INDEX IF NOT EXISTS ix_" + _tbl + "_translation_group ON " + _tbl + " (translation_group)"))
+    # Komponenty: język bazowy i tłumaczenia (jeden rekord, wiele wersji językowych)
+    _conn.execute(_sql_text("ALTER TABLE official_components ADD COLUMN IF NOT EXISTS base_lang VARCHAR(5) NOT NULL DEFAULT 'pl'"))
+    _conn.execute(_sql_text("ALTER TABLE official_components ADD COLUMN IF NOT EXISTS translations JSON"))
     # Projekty: język treści
     _conn.execute(_sql_text("ALTER TABLE projects ADD COLUMN IF NOT EXISTS lang VARCHAR(5) NOT NULL DEFAULT 'pl'"))
     _conn.execute(_sql_text("CREATE INDEX IF NOT EXISTS ix_projects_lang ON projects (lang)"))
@@ -770,7 +773,93 @@ PINOUT_LAYOUTS = {"quad", "dual", "sip", "to92", "to220", "sot23", "axial", "boa
 PINOUT_SHAPES = {"rect", "circle", "text"}
 PINOUT_SHAPE_KINDS = {"pcb", "chip", "conn", "btn", "led", "part"}
 
-def clean_pinout(p):
+COMP_LANGS = ("pl", "en")   # obsługiwane języki treści komponentów (dopisz kod, gdy dojdzie język interfejsu)
+
+def _clean_pinout_translations(raw, base, pins, groups, shapes, s):
+    """Warstwa tłumaczeń pinoutu: struktura (piny, układ, współrzędne) jest wspólna – tłumaczone są tylko teksty.
+    {lang: {view, notes, pins:{nr:{type,fn,note}}, groups:{nazwa bazowa:{name,note}}, shapes:{etykieta bazowa:etykieta}}}"""
+    if raw in (None, "", {}):
+        return {}
+    if not isinstance(raw, dict):
+        raise HTTPException(status_code=400, detail="Nieobsługiwany język treści")
+    nums = {x["n"] for x in pins}
+    gnames = {g["name"] for g in groups}
+    slabels = {x["label"] for x in shapes if x.get("label")}
+    out = {}
+    for lang, ov in raw.items():
+        if lang not in COMP_LANGS or lang == base:
+            raise HTTPException(status_code=400, detail="Nieobsługiwany język treści")
+        if not isinstance(ov, dict):
+            continue
+        o = {}
+        if s(ov.get("view"), 40): o["view"] = s(ov.get("view"), 40)
+        if s(ov.get("notes"), 3000): o["notes"] = s(ov.get("notes"), 3000)
+        ps = {}
+        for n, v in (ov.get("pins") or {}).items() if isinstance(ov.get("pins"), dict) else []:
+            if str(n) in nums and isinstance(v, dict):
+                e = {k: s(v.get(k), lim) for k, lim in (("type", 60), ("fn", 300), ("note", 1200)) if s(v.get(k), lim)}
+                if e: ps[str(n)] = e
+        if ps: o["pins"] = ps
+        gs = {}
+        for n, v in (ov.get("groups") or {}).items() if isinstance(ov.get("groups"), dict) else []:
+            if str(n) in gnames and isinstance(v, dict):
+                e = {k: s(v.get(k), lim) for k, lim in (("name", 80), ("note", 400)) if s(v.get(k), lim)}
+                if e: gs[str(n)] = e
+        if gs: o["groups"] = gs
+        ss = {}
+        for n, v in (ov.get("shapes") or {}).items() if isinstance(ov.get("shapes"), dict) else []:
+            if str(n) in slabels and s(v, 40):
+                ss[str(n)] = s(v, 40)
+        if ss: o["shapes"] = ss
+        if o:
+            out[lang] = o
+    return out
+
+def clean_comp_translations(raw, base):
+    """Tłumaczenia pól komponentu: {lang: {name, description, specs:{klucz bazowy: etykieta}}}."""
+    if raw in (None, "", {}):
+        return None
+    if not isinstance(raw, dict):
+        raise HTTPException(status_code=400, detail="Nieobsługiwany język treści")
+    out = {}
+    for lang, v in raw.items():
+        if lang not in COMP_LANGS or lang == base:
+            raise HTTPException(status_code=400, detail="Nieobsługiwany język treści")
+        if not isinstance(v, dict):
+            continue
+        e = {}
+        if str(v.get("name") or "").strip(): e["name"] = str(v["name"]).strip()[:200]
+        if str(v.get("description") or "").strip(): e["description"] = str(v["description"]).strip()[:5000]
+        sp = v.get("specs")
+        if isinstance(sp, dict):
+            m = {str(k)[:80]: str(x).strip()[:80] for k, x in list(sp.items())[:60] if str(x or "").strip()}
+            if m: e["specs"] = m
+        if e: out[lang] = e
+    return out or None
+
+def _comp_base(v):
+    v = v or "pl"
+    if v not in COMP_LANGS:
+        raise HTTPException(status_code=400, detail="Nieobsługiwany język treści")
+    return v
+
+def resolve_comp(d: dict, base: str, tr: Optional[dict], lang: Optional[str]) -> dict:
+    """Scala pola komponentu z tłumaczeniem w danym języku (brakujące pola → oryginał).
+    Dodaje base_lang, langs (dostępne wersje) i lang_used."""
+    langs = [base] + [l for l in (tr or {}) if l != base]
+    d["base_lang"] = base
+    d["langs"] = langs
+    d["lang_used"] = base
+    if lang and lang != base and tr and lang in tr:
+        t = tr[lang]
+        d["lang_used"] = lang
+        if t.get("name"): d["name"] = t["name"]
+        if t.get("description"): d["description"] = t["description"]
+        if t.get("specs") and isinstance(d.get("technical_specs"), dict):
+            d["technical_specs"] = {t["specs"].get(k, k): v for k, v in d["technical_specs"].items()}
+    return d
+
+def clean_pinout(p, default_lang="pl"):
     """Walidacja i czyszczenie pinoutu (admin wpisuje dane, które trafiają do widoku publicznego)."""
     if p in (None, "", {}):
         return None
@@ -841,8 +930,14 @@ def clean_pinout(p):
             if refs:
                 groups.append({"name": s(x.get("name"), 80), "pins": refs, "note": s(x.get("note"), 400)})
 
+    base = p.get("lang") or default_lang
+    if base not in COMP_LANGS:
+        raise HTTPException(status_code=400, detail="Nieobsługiwany język treści")
     out = {"package": s(p.get("package"), 40), "view": s(p.get("view"), 40), "pins": pins,
-           "sources": sources, "notes": s(p.get("notes"), 3000)}
+           "sources": sources, "notes": s(p.get("notes"), 3000), "lang": base}
+    tr = _clean_pinout_translations(p.get("translations"), base, pins, groups, shapes, s)
+    if tr:
+        out["translations"] = tr
     if p.get("layout") in PINOUT_LAYOUTS:
         out["layout"] = p["layout"]
     if p.get("default_tab") in ("interactive", "image"):
@@ -873,6 +968,7 @@ def list_catalog(
     tag: Optional[str] = Query(None),
     skip: int = Query(0, ge=0),          # Paginacja: start
     limit: int = Query(12, ge=1, le=1000), # Paginacja: zwiększony limit # Paginacja: limit
+    lang: Optional[str] = Query(None),   # język wyniku (tłumaczenia nazwy/opisu/parametrów, fallback = oryginał)
     db: Session = Depends(get_db)
 ):
     """Publiczny endpoint – lista komponentów katalogu z filtrami i paginacją."""
@@ -882,7 +978,8 @@ def list_catalog(
         query = query.filter(
             models.OfficialComponent.name.ilike(f"%{q}%") |
             models.OfficialComponent.symbol.ilike(f"%{q}%") |
-            models.OfficialComponent.description.ilike(f"%{q}%")
+            models.OfficialComponent.description.ilike(f"%{q}%") |
+            models.OfficialComponent.translations.cast(SAString).ilike(f"%{q}%")
         )
     if category:
         query = query.filter(models.OfficialComponent.inventory_category == category)
@@ -913,6 +1010,7 @@ def list_catalog(
             "pinout_summary": pinout_summary(item),  # pełny pinout tylko w GET /api/catalog/{id}
             "created_at": item.created_at.isoformat() if item.created_at else None,
         }
+        resolve_comp(d, getattr(item, "base_lang", None) or "pl", getattr(item, "translations", None), lang)
         if tag:
             haystack = str(d["applications"]) + str(d["tags"]) + str(list(d["technical_specs"].keys()))
             if tag.lower() not in haystack.lower():
@@ -965,11 +1063,13 @@ def list_catalog_tags(db: Session = Depends(get_db)):
     return sorted(list(tags_set))
 
 @app.get("/api/catalog/{item_id}",tags=["Globalny Katalog Sprzętowy"])
-def get_catalog_item(item_id: int, db: Session = Depends(get_db)):
+def get_catalog_item(item_id: int, lang: Optional[str] = Query(None), db: Session = Depends(get_db)):
     item = db.query(models.OfficialComponent).filter(models.OfficialComponent.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Nie znaleziono komponentu")
-    return {
+    base = getattr(item, "base_lang", None) or "pl"
+    tr = getattr(item, "translations", None)
+    d = {
         "id": item.id,
         "name": item.name,
         "symbol": item.symbol,
@@ -986,6 +1086,10 @@ def get_catalog_item(item_id: int, db: Session = Depends(get_db)):
         "pinout": getattr(item, 'pinout', None),
         "created_at": item.created_at.isoformat() if item.created_at else None,
     }
+    resolve_comp(d, base, tr, lang)
+    if not lang:
+        d["translations"] = tr or {}     # bez ?lang: surowe dane do edycji (formularz)
+    return d
 
 @app.post("/api/catalog", status_code=201,tags=["Globalny Katalog Sprzętowy"])
 def create_catalog_item(
@@ -1002,8 +1106,10 @@ def create_catalog_item(
         technical_specs=data.get("technical_specs", {}),
         description=data.get("description"),
         datasheet_url=data.get("datasheet_url"),
-        pinout=clean_pinout(data.get("pinout"))
+        pinout=clean_pinout(data.get("pinout"), _comp_base(data.get("base_lang"))),
+        base_lang=_comp_base(data.get("base_lang")),
     )
+    item.translations = clean_comp_translations(data.get("translations"), item.base_lang)
     db.add(item)
     db.commit()
     db.refresh(item)
@@ -1024,8 +1130,12 @@ def update_catalog_item(
                   "technical_specs", "description", "datasheet_url"]:
         if field in data:
             setattr(item, field, data[field])
+    if "base_lang" in data:
+        item.base_lang = _comp_base(data["base_lang"])
     if "pinout" in data:
-        item.pinout = clean_pinout(data["pinout"])
+        item.pinout = clean_pinout(data["pinout"], item.base_lang or "pl")
+    if "translations" in data or "base_lang" in data:
+        item.translations = clean_comp_translations(data.get("translations", item.translations), item.base_lang)
 
     db.commit()
     db.refresh(item)

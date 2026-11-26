@@ -79,6 +79,35 @@
     return "none";
   }
 
+  /* ── wersje językowe ─────────────────────────────────────────────────────
+   * Dokument pinoutu: struktura (piny, układ, współrzędne) jest wspólna, tłumaczone są tylko teksty.
+   *   lang: "pl"                       – język tekstów bazowych
+   *   translations: { en: { view, notes, pins: {nr: {type, fn, note}}, groups: {nazwa bazowa: {name, note}}, shapes: {etykieta bazowa: etykieta} } }
+   * resolve(doc, lang) → { doc (płaski, w danym języku; brakujące pola = oryginał), used, base, langs } */
+  function docLangs(src) {
+    var base = str(src && src.lang) || "pl", out = [base], tr = (src && src.translations) || {};
+    Object.keys(tr).forEach(function (l) { if (l !== base && out.indexOf(l) < 0) out.push(l); });
+    return out;
+  }
+  function resolve(src, lang) {
+    var base = str(src && src.lang) || "pl", langs = docLangs(src), ov = src && src.translations && lang && lang !== base ? src.translations[lang] : null;
+    if (!src || typeof src !== "object") return { doc: src, used: base, base: base, langs: langs };
+    var d = JSON.parse(JSON.stringify(src));
+    delete d.translations;
+    d.lang = ov ? lang : base;
+    if (ov && typeof ov === "object") {
+      if (ov.view) d.view = ov.view;
+      if (ov.notes) d.notes = ov.notes;
+      var pins = ov.pins || {};
+      (d.pins || []).forEach(function (p) { var o = pins[str(p.n)]; if (o) ["type", "fn", "note"].forEach(function (k) { if (o[k]) p[k] = o[k]; }); });
+      var gs = ov.groups || {};
+      (d.groups || []).forEach(function (g) { var o = gs[str(g.name)]; if (o) { if (o.name) g.name = o.name; if (o.note) g.note = o.note; } });
+      var ss = ov.shapes || {};
+      (d.shapes || []).forEach(function (x) { if (x && ss[str(x.label)]) x.label = ss[str(x.label)]; });
+    }
+    return { doc: d, used: ov ? lang : base, base: base, langs: langs };
+  }
+
   function normalize(src) {
     var d = { pins: [], sources: [], shapes: [], groups: [], board: { aspect: 1.6, labels: null }, imageAsBackground: false,
               package: "", view: "", notes: "", layout: "none", warning: "" };
@@ -303,7 +332,7 @@
   /* ── render główny ───────────────────────────────────────────────────── */
   function render(root, data, opts) {
     opts = opts || {};
-    var d = normalize(data), id = ++uid;
+    var rs = resolve(data, opts.lang), d = normalize(rs.doc), id = ++uid;
     var image = d.layout === "board" && d.imageAsBackground ? safeImg(str(opts.image)) : "";
     root.textContent = "";
     root.classList.add("pinout");
@@ -314,7 +343,8 @@
     var hasType = d.pins.some(function (p) { return p.type; });
 
     root.appendChild(h("div", { "class": "po-head" }, [
-      h("div", { "class": "po-meta", text: [d.package, d.view].filter(Boolean).concat([d.pins.length + " " + _t('pn.wyprowadzen')]).join(" · ") })
+      h("div", { "class": "po-meta", text: [d.package, d.view].filter(Boolean).concat([d.pins.length + " " + _t('pn.wyprowadzen')]).join(" · ") +
+        (opts.lang && rs.used !== opts.lang ? " · " + _t('pn.brakTlumaczeniaWersja', { lang: rs.used.toUpperCase() }) : "") })
     ]));
     if (d.warning) root.appendChild(h("p", { "class": "po-warn", text: d.warning }));
     root.appendChild(h("p", { "class": "po-help",
@@ -524,8 +554,21 @@
     slot.classList.add("po-section");
     slot.appendChild(h("h3", { "class": "section-title", text: _t('pn.pinoutIOpisWyprowadzen') }));
     var body = h("div", { "class": "po-body-wrap" });
+    var langs = docLangs(pinout), cur = opts.lang || (global.ESNI18n && global.ESNI18n.lang()) || "pl", ctl = null;
+    if (langs.length > 1 && pinout && pinout.pins) {
+      var sw = h("div", { "class": "po-langs", role: "group", "aria-label": _t('pn.jezykOpisu') });
+      langs.forEach(function (l) {
+        var b = h("button", { type: "button", "class": "po-lang", text: l.toUpperCase(), "aria-pressed": String(l === cur) });
+        b.addEventListener("click", function () {
+          cur = l; Array.prototype.forEach.call(sw.children, function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+          ctl = render(body, pinout, { title: opts.title, image: opts.image, lang: cur });
+        });
+        sw.appendChild(b);
+      });
+      slot.appendChild(sw);
+    }
     slot.appendChild(body);
-    var ctl = render(body, pinout, { title: opts.title, image: opts.image });
+    ctl = render(body, pinout, { title: opts.title, image: opts.image, lang: cur });
     if (ctl) return ctl;
     body.appendChild(h("p", { "class": "po-empty", text: _t('pn.tenPodzespolNieMa') }));
     if (opts.isAdmin && typeof opts.onEdit === "function") {
@@ -555,11 +598,33 @@
     text = str(text);
     if (!text) return null;
     if (text.charAt(0) === "{") return JSON.parse(text);
-    var out = { pins: [], sources: [], shapes: [], groups: [] };
+    var out = { pins: [], sources: [], shapes: [], groups: [] }, ov = null;   /* ov – bieżący blok tłumaczenia [xx] */
     text.split(/\r?\n/).forEach(function (raw, i) {
       var line = raw.trim(), ln = _t('pn.linia') + " " + (i + 1) + ": ";
       if (!line || line.charAt(0) === "#") return;
-      var m = line.match(/^(package|view|layout|source|notes|aspect|labels|image_as_background|shape|group)\s*:\s*(.*)$/i);
+      var bl = line.match(/^\[([a-z]{2,5})\]$/i);
+      if (bl) {
+        var lg = bl[1].toLowerCase();
+        if (lg === (out.lang || "pl")) throw new Error(ln + _t('pn.blokJezykaBazowego'));
+        ov = (out.translations = out.translations || {})[lg] = (out.translations[lg] || { pins: {}, groups: {}, shapes: {} });
+        return;
+      }
+      if (ov) {                                    /* wnętrze bloku tłumaczenia: tylko teksty */
+        var mo = line.match(/^(view|notes|group|shape)\s*:\s*(.*)$/i);
+        if (mo) {
+          var ko = mo[1].toLowerCase(), fo = mo[2].split("|").map(function (x) { return x.trim(); });
+          if (ko === "view" || ko === "notes") { if (mo[2].trim()) ov[ko] = mo[2].trim(); }
+          else if (ko === "group") { if (fo[0] && (fo[1] || fo[2])) ov.groups[fo[0]] = { name: fo[1] || "", note: fo.slice(2).join(" / ") }; }
+          else if (fo[0] && fo[1]) ov.shapes[fo[0]] = fo[1];
+          return;
+        }
+        var co = line.split("|").map(function (x) { return x.trim(); });
+        if (co.length < 2) throw new Error(ln + _t('pn.oczekiwanoNrTypFunkcja'));
+        var e = { type: co[1] || "", fn: co[2] || "", note: co.slice(3).join(" / ") };
+        if (e.type || e.fn || e.note) ov.pins[co[0]] = e;
+        return;
+      }
+      var m = line.match(/^(lang|package|view|layout|source|notes|aspect|labels|image_as_background|shape|group)\s*:\s*(.*)$/i);
       if (m) {
         var k = m[1].toLowerCase(), v = m[2].trim(), f = v.split("|").map(function (x) { return x.trim(); });
         if (!v) return;
@@ -575,6 +640,7 @@
           else throw new Error(ln + _t('pn.nieznanyKsztalt') + f[0] + "” (rect, circle, text)");
         }
         else if (k === "group") out.groups.push({ name: f[0], pins: (f[1] || "").split(",").map(function (x) { return x.trim(); }).filter(Boolean), note: f.slice(2).join(" / ") });
+        else if (k === "lang") out.lang = v.toLowerCase();
         else out[k] = v;
         return;
       }
@@ -589,10 +655,14 @@
     return out;
   }
 
-  function toText(p) {
+  /* toText(doc)            – wszystkie języki (blok [xx] na język) – pełny round-trip
+   * toText(doc, {lang:"en"}) – jeden język, spłaszczony (do dokumentacji / przekazania AI do tłumaczenia) */
+  function toText(p, opts) {
     if (!p || !Array.isArray(p.pins)) return "";
+    if (opts && opts.lang) p = resolve(p, opts.lang).doc;
     var clean = function (v) { return str(v).replace(/\|/g, "/").replace(/\s*\n\s*/g, " "); };
     var lines = [];
+    lines.push("lang: " + clean(p.lang || "pl"));
     ["package", "view", "layout"].forEach(function (k) { if (p[k]) lines.push(k + ": " + clean(p[k])); });
     if (p.board && p.board.aspect) lines.push("aspect: " + p.board.aspect);
     if (p.board && typeof p.board.labels === "boolean") lines.push("labels: " + (p.board.labels ? "tak" : "nie"));
@@ -609,9 +679,20 @@
       var n = clean(x.n) + (x.x != null && x.y != null ? " @" + x.x + "," + x.y : "");
       lines.push([n, x.name, x.cat || "other", x.type, x.fn, x.note].map(clean).join(" | "));
     });
+    var tr = (!opts || !opts.lang) && p.translations || {};
+    Object.keys(tr).forEach(function (lg) {
+      var o = tr[lg] || {};
+      lines.push("", "[" + lg + "]");
+      if (o.view) lines.push("view: " + clean(o.view));
+      if (o.notes) lines.push("notes: " + clean(o.notes));
+      Object.keys(o.groups || {}).forEach(function (k) { lines.push("group: " + [clean(k), clean(o.groups[k].name), clean(o.groups[k].note)].join(" | ").replace(/( \| )+$/, "")); });
+      Object.keys(o.shapes || {}).forEach(function (k) { lines.push("shape: " + clean(k) + " | " + clean(o.shapes[k])); });
+      if (Object.keys(o.pins || {}).length) lines.push("# nr | typ | funkcja | uwagi");
+      Object.keys(o.pins || {}).forEach(function (k) { var e = o.pins[k]; lines.push([k, e.type, e.fn, e.note].map(clean).join(" | ").replace(/( \| )+$/, "")); });
+    });
     return lines.join("\n");
   }
 
   global.ESNPinout = { render: render, mountSection: mountSection, parseText: parseText, toText: toText,
-    normalize: normalize, CATS: CATS, LAYOUTS: LAYOUTS, TEMPLATE: TEMPLATE };
+    resolve: resolve, langs: docLangs, normalize: normalize, CATS: CATS, LAYOUTS: LAYOUTS, TEMPLATE: TEMPLATE };
 })(window);

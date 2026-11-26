@@ -122,6 +122,11 @@ class OfficialComponent(Base):
 
     # Interaktywny pinout: {package, view, layout, pins:[{n,name,cat,type,fn,note,pad}], sources, notes}
     pinout = Column(JSON, nullable=True)
+
+    # Wersje językowe w jednym rekordzie (ID komponentu jest referencją dla magazynu i schematów):
+    # base_lang = język pól bazowych (name/description/specs), translations = {lang: {name, description, specs}}
+    base_lang = Column(String(5), nullable=False, default="pl", server_default="pl")
+    translations = Column(JSON, nullable=True)
     
     created_at = Column(DateTime, default=datetime.utcnow)
 class ContactMessage(Base):

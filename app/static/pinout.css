@@ -126,3 +126,34 @@
 .pinout .po-pin rect[stroke-dasharray] + text.po-num { font-size: 12px; letter-spacing: .04em; }
 :root[data-theme="light"] .pinout .po-pin rect[stroke-dasharray] { fill-opacity: .55; }
 :root[data-theme="light"] .pinout .po-chip { color: color-mix(in srgb, var(--c) 62%, #000); }
+
+/* przełącznik języka opisu (wersje językowe pinoutu) */
+.po-langs { display: flex; gap: 6px; margin: 0 0 10px; }
+.po-lang { background: var(--bg2); color: var(--text3); border: 1px solid var(--border2); border-radius: 6px; padding: 4px 10px; font: 600 11px var(--mono); cursor: pointer; }
+.po-lang[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }
+
+/* Narzędzie Pinout (Narzędzia → Pinout) */
+.tp-lead { max-width: 80ch; margin-bottom: 14px; }
+.tp-ex { margin-bottom: 44px; }
+.tp-exh h2 { font: 600 15px var(--mono); color: var(--text); margin-bottom: 4px; }
+.tp-exd { font-size: 13px; color: var(--text2); margin-bottom: 10px; max-width: 90ch; }
+.tp-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+.tp-bar .sort-select { padding: 7px 28px 7px 10px; min-width: 0; font-size: 12px; }
+.tp-lbl { font: 11px var(--mono); color: var(--text3); text-transform: uppercase; letter-spacing: .06em; }
+.tp-file { cursor: pointer; }
+.tp-file input { display: none; }
+.tp-pick { display: flex; gap: 6px; align-items: center; font: 12px var(--mono); color: var(--text2); }
+.tp-ed { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 18px; align-items: start; }
+@media (max-width: 1000px) { .tp-ed { grid-template-columns: minmax(0, 1fr); } }
+.tp-src { width: 100%; min-height: 520px; resize: vertical; font: 12px/1.5 var(--mono); white-space: pre; tab-size: 2; box-sizing: border-box;
+  background: var(--bg2); color: var(--text); border: 1px solid var(--border2); border-radius: 8px; padding: 12px; }
+.tp-err { color: var(--red); font: 12px var(--mono); min-height: 1.4em; margin-top: 6px; }
+.tp-hint { font-size: 12px; color: var(--text3); margin-top: 8px; line-height: 1.5; }
+#tools-root > .kn-back { display: block; margin-bottom: 14px; }
+
+/* tłumaczenia komponentu w formularzu katalogu */
+.ci-hint { font-size: 10px; color: var(--text3); font-family: var(--mono); margin: 0 0 8px; }
+.ci-form { display: grid; gap: 10px; }
+.ci-fld { display: grid; gap: 4px; font-size: 11px; color: var(--text3); font-family: var(--mono); }
+.ci-fld small { color: var(--text3); }
+.ci-specs { font-family: var(--mono); font-size: 12px; }

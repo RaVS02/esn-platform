@@ -4,7 +4,7 @@ Każdy komponent w **Globalnym Katalogu Sprzętowym** może mieć interaktywny o
 tabelę pinów, filtry kategorii, grupy złączy (Qwiic, I²C, I²S, USB…), uwagi weryfikacyjne i źródła.
 Widać go w pełnej karcie komponentu, w sekcji **„Pinout i opis wyprowadzeń”**.
 
-**Najszybszy start:** otwórz `/static/pinout-demo.html` (lub plik `app/static/pinout-demo.html` dwuklikiem).
+**Najszybszy start:** otwórz **Narzędzia → Pinout** (`/#tools/pinout`; stary adres `/static/pinout-demo.html` przekierowuje tutaj).
 Jest tam galeria wszystkich układów rysunku i **edytor na żywo** – piszesz po lewej, po prawej od razu widzisz efekt,
 a gotowy tekst kopiujesz do pola *Pinout* w edycji komponentu.
 
@@ -109,7 +109,7 @@ Ustaw `aspect` zgodnie z proporcjami zdjęcia. **Domyślnie (`nie` lub brak lini
 rysowane są kształty. Dzięki temu obrazek główny karty może być czymkolwiek, a pinout i tak wygląda tak, jak go opisałeś.
 W edytorze demo zdjęcie wczytasz przyciskiem „Zdjęcie płytki…” (to samo ustawia `image_as_background: tak`).
 
-**Jak znaleźć współrzędne:** w edytorze (`pinout-demo.html` → *Edytor na żywo*) włącz „klik na rysunku = nowy punkt” i klikaj
+**Jak znaleźć współrzędne:** w edytorze (Narzędzia → Pinout → *Edytor na żywo*) włącz „klik na rysunku = nowy punkt” i klikaj
 na płytce – każdy klik dopisuje linię `N @x,y | PINN | other` do tekstu. Zmień nazwę i kategorię i gotowe.
 
 ## 6. Złącza i magistrale (Qwiic, I²C, I²S, USB…)
@@ -154,7 +154,6 @@ i zrób dla nich osobną grupę.
               "pad": false,               // opcjonalnie: pad pod obudową
               "x": 34, "y": 7 } ],        // tylko board: położenie w %
   "image_as_background": false,           // tylko board: czy użyć zdjęcia głównego komponentu jako tła
-  "default_tab": "interactive",           // interactive|image – zakładka startowa, gdy są i rysunek, i obraz
   "board":  { "aspect": 1.6, "labels": true },
   "shapes": [ { "t": "rect", "x": 0, "y": 36, "w": 9, "h": 28, "label": "USB-C", "kind": "conn" } ],
   "groups": [ { "name": "Qwiic", "pins": ["Q1","Q2","Q3","Q4"], "note": "…" } ],
@@ -166,33 +165,7 @@ i zrób dla nich osobną grupę.
 Limity: do 400 pinów, 120 kształtów, 30 grup, 10 źródeł na komponent. Pełny pinout jest zwracany tylko przez
 `GET /api/catalog/{id}`; lista `GET /api/catalog` zawiera jedynie `pinout_summary` (obudowa i liczba pinów), żeby nie rosła.
 
-## 10. Obraz pinoutu: zamiast rysunku interaktywnego albo obok niego
-
-Nie zawsze trzeba rysować pinout w edytorze. Gdy masz gotowy rysunek (np. z datasheetu) albo zdjęcie płytki z opisanymi
-pinami, wgraj go jako zdjęcie komponentu z **rolą „Pinout”** (okno edycji komponentu → panel „Zdjęcia”). **Podpis zdjęcia
-staje się podpisem rysunku** (np. „Figure 3. AGS10 pinout”). Obrazy z tą rolą **nie pojawiają się w ogólnej galerii**,
-są tylko w sekcji Pinout.
-
-Sekcja sama dobiera widok do tego, co komponent ma:
-
-| Co ma komponent | Co widać |
-|---|---|
-| tylko obraz (pole Pinout puste) | obraz z podpisem i miniaturami, bez tabeli |
-| lista pinów (`layout: none`) + obraz | obraz obok tabeli pinów (wyjaśnienie co i jak) |
-| rysunek interaktywny + obraz | **zakładki** „Rysunek interaktywny / Obraz”, tabela pinów wspólna |
-| tylko rysunek interaktywny | jak dotąd |
-
-Zakładką startową rządzi linia **`default_tab: interactive`** (domyślnie) albo **`default_tab: image`**
-(w JSON: `"default_tab"`). Zaznaczenie pinu i filtry kategorii przeżywają przełączanie zakładek.
-Kliknięcie obrazu otwiera podgląd z powiększaniem (tylko obrazy pinoutu).
-
-Format: JPEG/PNG/WebP/GIF, do 5 MB (limity w `docs/MEDIA.md`). Rysunki z białym tłem wyświetlane są na jasnej karcie,
-żeby czarne linie z datasheetów były czytelne.
-
-W `pinout-demo.html` zobaczysz dwa przykłady (rysunek + obraz oraz sam obraz), a w edytorze przycisk „Obraz pinoutu…” pokaże
-podgląd Twojego pliku w zakładce.
-
-## 11. Generowanie opisu przez asystenta AI
+## 10. Generowanie opisu przez asystenta AI
 
 Opis można wygenerować w czacie i wkleić do pola *Pinout*. Wklej asystentowi poniższy prompt razem z tabelą pinów z datasheetu
 (albo załącznikiem PDF) oraz dwoma fragmentami tego README: rozdziałem **3. Format tekstowy** i **4. Układy rysunku**.
@@ -219,9 +192,9 @@ Ważne:
 - **Zawsze porównaj wynik z rysunkiem obudowy w datasheecie** – asystent może pomylić kolejność pinów albo widok (z góry / z dołu).
 - Dla `layout: board` asystent nie ustali współrzędnych punktów na zdjęciu. Wygeneruj opis pinów, a współrzędne dodaj klikając
   w edytorze (rozdział 5).
-- Wynik wklejony do edytora w `pinout-demo.html` od razu pokaże błędy składni, zanim trafi do bazy.
+- Wynik wklejony do edytora w Narzędziach → Pinout od razu pokaże błędy składni, zanim trafi do bazy.
 
-## 12. Co dalej: model 3D z punktami (plan, jeszcze nie zaimplementowane)
+## 11. Co dalej: model 3D z punktami (plan, jeszcze nie zaimplementowane)
 
 Obecny układ `board` to 2D. Widok w stylu esp-labs („Poznaj płytkę”: obracany model z numerowanymi punktami i kartami po bokach)
 da się dołożyć jako osobny `layout: "model3d"` na tych samych danych (`pins`, `groups`, kategorie, tabela), z dodatkowymi:
@@ -233,3 +206,43 @@ da się dołożyć jako osobny `layout: "model3d"` na tych samych danych (`pins`
 3. Edytor punktów 3D (klik w model → pozycja `x y z`) – analogiczny do klikania po płytce 2D.
 
 Dlatego warto już teraz opisywać komponenty w `board`: dane pinów, grupy i kategorie przejdą do 3D bez zmian.
+
+
+## 12. Wersje językowe (v33)
+
+Jeden dokument pinoutu zawiera wszystkie języki: **struktura jest wspólna** (obudowa, `layout`, numery i nazwy pinów, kategorie, współrzędne, kształty),
+a tłumaczone są wyłącznie teksty: `view`, `notes`, `type`/`fn`/`note` pinów, nazwy i uwagi grup oraz etykiety kształtów.
+Brakujące pole w tłumaczeniu jest brane z oryginału, więc można tłumaczyć po kawałku, a zmiana rysunku nie wymaga poprawek w każdym języku.
+
+Format tekstowy: nagłówek `lang: pl` (język tekstów bazowych), potem bloki `[en]`:
+
+```
+lang: pl
+package: SOIC-8
+view: widok z góry
+group: Zasilanie | 1, 8 | uwaga
+1 | VCC | power | Zasilanie | Zasilanie dodatnie | 2,7–5,5 V
+
+[en]
+view: top view
+group: Zasilanie | Power | note        # nazwa bazowa | tłumaczenie nazwy | tłumaczenie uwagi
+shape: Płytka | Board                  # etykieta bazowa | tłumaczenie
+# nr | typ | funkcja | uwagi
+1 | Power | Positive supply | 2.7–5.5 V
+```
+
+JSON: pola `lang` i `translations: {en: {view, notes, pins: {"1": {type, fn, note}}, groups: {"Zasilanie": {name, note}}, shapes: {"Płytka": "Board"}}}`.
+Serwer (`clean_pinout`) odrzuca nieznane języki, tłumaczenie języka bazowego oraz klucze nieistniejących pinów/grup/kształtów.
+
+**Narzędzie (Narzędzia → Pinout)** i formularz komponentu używają tego samego modułu `ESNPinout`:
+- *Język opisu* – zmienia nagłówek `lang:`; *Dodaj tłumaczenie* – dopisuje blok `[xx]` wypełniony tekstami bazowymi do przetłumaczenia.
+- *Eksport*: „wszystkie języki” (jeden plik, pełny round-trip) albo jeden język (opis spłaszczony – do dokumentacji lub do przekazania zewnętrznemu czatowi AI w celu tłumaczenia; wynik wklejasz jako blok `[xx]`). Formaty `.txt` i `.json`.
+- *Import*: plik `.txt`/`.json` (JSON jest zamieniany na format tekstowy) – w narzędziu i w formularzu komponentu (przycisk „Wgraj plik pinoutu”).
+- Widok (karta komponentu, galeria, podgląd) ma przełącznik języka, domyślnie język interfejsu; gdy brak tłumaczenia, pokazuje oryginał z adnotacją.
+
+## 13. Komponent: jeden rekord, wiele języków
+
+ID komponentu jest referencją dla magazynu i schematów, dlatego tłumaczenia są w tym samym rekordzie: `base_lang` (język pól bazowych, domyślnie `pl`)
+oraz `translations: {en: {name, description, specs: {klucz bazowy: etykieta}}}`. `GET /api/catalog` i `GET /api/catalog/{id}` z `?lang=` zwracają wersję scaloną
+(`lang_used`, `langs`; brak tłumaczenia = oryginał); bez `?lang` – surowe dane do edycji. Wyszukiwarka (`q`) przeszukuje także tłumaczenia.
+W formularzu: pole „Język opisu (bazowy)” i panel „Tłumaczenia” (zakładka na każdy pozostały język platformy). Nowy język treści: dopisz kod do `COMP_LANGS` (`main.py`).

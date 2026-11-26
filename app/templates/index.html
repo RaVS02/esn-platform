@@ -4,19 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="dark light">
-<script src="{{ url_for('static', path='/i18n.js') }}?v=9"></script>
-<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=9"></script>
-<script src="{{ url_for('static', path='/i18n/en.js') }}?v=9"></script>
+<script src="{{ url_for('static', path='/i18n.js') }}?v=11"></script>
+<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=11"></script>
+<script src="{{ url_for('static', path='/i18n/en.js') }}?v=11"></script>
 <script src="{{ url_for('static', path='/theme.js') }}?v=4"></script>
 <title data-i18n="meta.title">Platforma Systemów Wbudowanych</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=2.27">
-<link rel="stylesheet" href="{{ url_for('static', path='/pinout.css') }}?v=5">
+<link rel="stylesheet" href="{{ url_for('static', path='/pinout.css') }}?v=7">
 <script src="{{ url_for('static', path='/vendor/marked.umd.js') }}?v=18.2.1"></script>
 <script src="{{ url_for('static', path='/vendor/purify.min.js') }}?v=3.4.18"></script>
-<script src="{{ url_for('static', path='/pinout.js') }}?v=5"></script>
+<script src="{{ url_for('static', path='/pinout.js') }}?v=7"></script>
+<script src="{{ url_for('static', path='/component-i18n.js') }}?v=1"></script>
+<script src="{{ url_for('static', path='/tools.js') }}?v=1"></script>
+<script src="{{ url_for('static', path='/pinout-examples.js') }}?v=1"></script>
+<script src="{{ url_for('static', path='/tools-pinout.js') }}?v=1"></script>
 <link rel="stylesheet" href="{{ url_for('static', path='/media.css') }}?v=1">
 <script src="{{ url_for('static', path='/media.js') }}?v=3"></script>
 <script src="{{ url_for('static', path='/ai-local.js') }}?v=2"></script>
@@ -313,6 +317,10 @@
         </div>
         
         <div style="grid-column:1/-1;">
+          <label class="form-label" data-i18n="components.jezykBazowy">Język opisu (bazowy)</label>
+          <select class="text-input" id="cm-baselang"></select>
+        </div>
+        <div style="grid-column:1/-1;">
           <label class="form-label" data-i18n="components.zastosowanie">Zastosowanie</label>
           <select class="text-input" id="cm-applications"></select>
         </div>
@@ -339,6 +347,7 @@
           <textarea class="text-input" id="cm-description" rows="3"
             placeholder="Krótki opis działania i zastosowań..." data-i18n-attr="placeholder:components.krotkiOpisDzialaniaI" style="resize:vertical;"></textarea>
         </div>
+        <div style="grid-column:1/-1;" id="cm-i18n"></div>
         <div style="grid-column:1/-1;">
           <label class="form-label" data-i18n="components.linkDoDatasheetu">Link do datasheetu</label>
           <input class="text-input" id="cm-datasheet" placeholder="https://...">
@@ -350,8 +359,11 @@
           </label>
           <p style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:6px;">
             <span data-i18n="components.pinoutHelp">Nagłówek (package, layout, source, notes, default_tab, shape, group…), potem linie: nr | nazwa | kategoria | typ | funkcja | uwagi. Układy: quad, dual, sip, to92, to220, sot23, axial, board, none. Obraz pinoutu (np. z datasheetu) dodaj w panelu zdjęć powyżej z rolą „Pinout” – pokaże się obok rysunku jako osobna zakładka (lub sam, jeśli to pole zostawisz puste), a tu wpisz tylko listę pinów. Można też wkleić JSON.</span>
-            <span data-i18n="components.pinoutLive">Projektuj na żywo w</span> <a href="/static/pinout-demo.html" target="_blank" style="color:var(--accent);" data-i18n="components.edytorzeIGaleriiPrzykladow">edytorze i galerii przykładów</a>.
+            <span data-i18n="components.pinoutLive">Projektuj na żywo w</span> <a href="/#tools/pinout" target="_blank" rel="noopener" style="color:var(--accent);" data-i18n="components.edytorzeIGaleriiPrzykladow">edytorze i galerii przykładów</a>.
           </p>
+          <p style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:6px;" data-i18n="components.pinoutLangHint">Tłumaczenia pinoutu to bloki [en] w tym samym polu (struktura i nazwy pinów są wspólne). Gotowy plik opisu możesz wgrać przyciskiem poniżej.</p>
+          <label class="btn-action" style="display:inline-block;margin-bottom:8px;cursor:pointer;font-size:11px;"><span data-i18n="components.wgrajPlikPinout">Wgraj plik pinoutu (.txt / .json)</span>
+            <input type="file" id="cm-pinout-file" accept=".txt,.json,text/plain,application/json" style="display:none;" onchange="importPinoutFile(this)"></label>
           <textarea class="text-input" id="cm-pinout" rows="8" spellcheck="false"
             style="resize:vertical;font-family:var(--mono);font-size:11px;white-space:pre;"></textarea>
         </div>
@@ -381,12 +393,7 @@
     <p class="hero-sub" data-i18n="tools.zestawPraktycznychKalkulatorowI">Zestaw praktycznych kalkulatorów i edytor schematów, z których będzie można korzystać bez wychodzenia z platformy.</p>
   </section>
   <div class="full-wrap kn-wrap">
-    <div class="tl-banner"><div><strong data-i18n="tools.wRozwoju">W rozwoju</strong><span data-i18n="tools.banner">Ta zakładka jest dopiero przygotowywana. Poniżej zapowiedź tego, co się w niej pojawi; kolejne narzędzia będą dodawane etapami.</span></div></div>
-    <div class="grid-cards" style="max-width: 1100px;">
-      <div class="module-card tl-tile"><div class="module-icon"><i class="fa-solid fa-diagram-project"></i></div><h3 data-i18n="tools.edytorSchematow">Edytor schematów</h3><p data-i18n="tools.rysowanieSchematowPolaczenZ">Rysowanie schematów połączeń z użyciem podzespołów z katalogu, z eksportem do projektu.</p><div class="tag" data-i18n="tools.wRozwoju">W rozwoju</div></div>
-      <div class="module-card tl-tile"><div class="module-icon"><i class="fa-solid fa-calculator"></i></div><h3 data-i18n="tools.kalkulatory">Kalkulatory</h3><p data-i18n="tools.dzielnikNapieciaPrawoOhma">Dzielnik napięcia, prawo Ohma, rezystor do diody LED, kody kolorów rezystorów.</p><div class="tag" data-i18n="tools.wkrotce">Wkrótce</div></div>
-      <div class="module-card tl-tile"><div class="module-icon"><i class="fa-solid fa-gauge-high"></i></div><h3 data-i18n="tools.przepustowoscIBaudRate">Przepustowość i baud rate</h3><p data-i18n="tools.szybkieObliczeniaDlaUart">Szybkie obliczenia dla UART, SPI i I²C na podstawie rozmiaru ramki i częstotliwości.</p><div class="tag" data-i18n="tools.wkrotce">Wkrótce</div></div>
-    </div>
+    <div id="tools-root"></div>
   </div>
 </div>
 
@@ -659,6 +666,9 @@ const app = {
     }
     if (targetId === 'knowledge' && window.ESNKnowledge) {
       ESNKnowledge.enter();
+    }
+    if (targetId === 'tools' && window.ESNTools) {
+      ESNTools.enter();
     }
     
     // Ładuj projekty automatycznie przy wejściu w zakładkę!
@@ -1691,7 +1701,7 @@ function closeFullCatalogView() {
 // ── POPRAWIONE ŁADOWANIE (PAGINACJA Z SERWERA) ──
 async function loadCatalog() {
   try {
-    const res = await fetch('/api/catalog?limit=500'); // Pobieramy większą listę dla swobodnego filtrowania
+    const res = await fetch('/api/catalog?limit=500&lang=' + encodeURIComponent(ESNI18n.lang())); // Pobieramy większą listę dla swobodnego filtrowania
     if (!res.ok) throw new Error('API error');
     
     const responseData = await res.json();
@@ -1954,7 +1964,20 @@ async function openCatalogModal(id = null) {
     const appSelect = document.getElementById('cm-applications');
     appSelect.innerHTML = `<option value="">${_t('common.choose')}</option>` + applications.map(a => `<option value="${esc(a)}">${esc(_L('app', a))}</option>`).join('');
 
+    const bl = document.getElementById('cm-baselang');
+    bl.innerHTML = ESNI18n.list().map(l => `<option value="${esc(l.code)}">${esc(l.name)}</option>`).join('');
+    if (!window._cmI18n) {
+        window._cmI18n = ESNCompI18n.mount(document.getElementById('cm-i18n'), { base: () => ({
+            name: document.getElementById('cm-name').value, description: document.getElementById('cm-description').value,
+            specs: Object.keys((() => { try { return parseSpecsToObj(document.getElementById('cm-specs').value); } catch (e) { return {}; } })()) }) });
+        bl.addEventListener('change', () => {
+            _cmI18n.setBaseLang(bl.value);
+            const pt = document.getElementById('cm-pinout');
+            if (/^\s*lang\s*:/m.test(pt.value)) pt.value = pt.value.replace(/^(\s*)lang\s*:.*$/m, '$1lang: ' + bl.value);
+        });
+    }
     if (!id) {
+        bl.value = ESNI18n.lang(); _cmI18n.setBaseLang(bl.value); _cmI18n.set({});
         document.getElementById('cm-name').value = '';
         document.getElementById('cm-symbol').value = '';
         document.getElementById('cm-tags').value = '';
@@ -1976,7 +1999,8 @@ async function openCatalogModal(id = null) {
         document.getElementById('cm-description').value = data.description || '';
         document.getElementById('cm-datasheet').value = data.datasheet_url || '';
         document.getElementById('cm-pinout').value = ESNPinout.toText(data.pinout);
-
+        bl.value = data.base_lang || 'pl';
+        _cmI18n.setBaseLang(bl.value); _cmI18n.set(data.translations || {});
     }
 
     // Zdjęcia: komponent zapisany → wgrywanie od razu; nowy → po pierwszym zapisie
@@ -1994,6 +2018,25 @@ function closeCatalogModal() {
     if (catCodeEd) { catCodeEd.destroy(); catCodeEd = null; }
     if (catResMgr) { catResMgr.destroy(); catResMgr = null; }
     document.getElementById('catalogModal').style.display = 'none';
+}
+
+// Import pliku pinoutu (.txt w formacie edycyjnym lub .json) do pola Pinout
+function importPinoutFile(input) {
+    const f = input.files && input.files[0]; if (!f) return;
+    const rd = new FileReader();
+    rd.onload = () => {
+        try {
+            let t = String(rd.result);
+            if (t.trim().startsWith('{')) { const d = JSON.parse(t); if (d.pins) t = ESNPinout.toText(d); }
+            ESNPinout.parseText(t);   // walidacja składni przed wstawieniem
+            document.getElementById('cm-pinout').value = t;
+            const m = t.match(/^\s*lang\s*:\s*(\S+)/m);
+            if (m && document.getElementById('cm-baselang')) { document.getElementById('cm-baselang').value = m[1].toLowerCase(); _cmI18n.setBaseLang(m[1].toLowerCase()); }
+            toast(_t('tp.zaimportowano'), 'success');
+        } catch (e) { toast('Pinout: ' + e.message, 'error'); }
+        input.value = '';
+    };
+    rd.readAsText(f);
 }
 
 async function saveCatalogItem() {
@@ -2017,7 +2060,11 @@ async function saveCatalogItem() {
     try { pinoutObj = ESNPinout.parseText(document.getElementById('cm-pinout').value); }
     catch(e) { return toast('Pinout: ' + e.message, 'error'); }
 
+    const baseLang = document.getElementById('cm-baselang').value || 'pl';
+    if (pinoutObj && !pinoutObj.lang) pinoutObj.lang = baseLang;
     const payload = {
+        base_lang: baseLang,
+        translations: window._cmI18n ? _cmI18n.get() : {},
         pinout: pinoutObj,
         name: name,
         symbol: document.getElementById('cm-symbol').value,

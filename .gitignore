@@ -24,3 +24,5 @@ env/
 # Pliki systemowe
 .DS_Store
 Thumbs.db
+esn-v*-przyrost.*
+esn-v*-PINOUT-sekcje.md

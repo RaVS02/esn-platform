@@ -183,7 +183,7 @@ Po poprawnym uruchomieniu, platforma jest dostępna pod następującymi adresami
 * Zarządzanie Bazą Danych (Adminer): http://localhost:8080
 
 ## Pinout komponentów
-Interaktywny opis wyprowadzeń i wyglądu podzespołów w katalogu: [docs/PINOUT.md](docs/PINOUT.md) · demo i edytor: `/static/pinout-demo.html`.
+Interaktywny opis wyprowadzeń i wyglądu podzespołów w katalogu: [docs/PINOUT.md](docs/PINOUT.md) · narzędzie (galeria i edytor): Narzędzia → Pinout (`/#tools/pinout`)
 
 ## Zdjęcia (system mediów)
 Wiele zdjęć na projekt/komponent, role, powiększanie, limity i zabezpieczenia: [docs/MEDIA.md](docs/MEDIA.md).
