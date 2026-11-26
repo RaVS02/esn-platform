@@ -73,6 +73,5 @@
 
   /* zapowiedzi kolejnych narzędzi (zastąpi je register() z własnego pliku) */
   register({ id: "schematic", icon: "fa-solid fa-diagram-project", title: "tools.edytorSchematow", desc: "tools.rysowanieSchematowPolaczenZ", status: "dev" });
-  register({ id: "calc", icon: "fa-solid fa-calculator", title: "tools.kalkulatory", desc: "tools.dzielnikNapieciaPrawoOhma", status: "soon" });
-  register({ id: "baud", icon: "fa-solid fa-gauge-high", title: "tools.przepustowoscIBaudRate", desc: "tools.szybkieObliczeniaDlaUart", status: "soon" });
+  /* kalkulatory: calc.js (rejestruje „calc”); baud rate jest jednym z kalkulatorów (v51) */
 })(window);

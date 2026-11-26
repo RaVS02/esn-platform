@@ -1,0 +1,29 @@
+# Kalkulatory (v51)
+
+Narzędzia → Kalkulatory (`#tools/calc`), każdy kalkulator ma własny adres `#tools/calc/<id>` (można linkować z Wiedzy i kart komponentów).
+
+## Pliki
+- `app/static/calc.js` – rdzeń `ESNCalc`: rejestracja w `ESNTools` (kafelek „calc”), lista/zapowiedzi, nawigacja chipami, api pól i wyników,
+  czyste funkcje `ESNCalc.math` (parse z przedrostkami SI i notacją 4k7/2R2, fmt, szeregi E6–E96, `nearest`, `powerRating`).
+- `app/static/calc-basic.js` – paczka 1: `ohm`, `divider`, `led`, `rescode` + funkcje `ESNCalcBasic` (ohm, pickDivider, encode/decode kodu paskowego).
+- `app/static/calc.css` – wygląd (tylko zmienne motywu; fizyczne kolory pasków rezystora w JS).
+- `app/tests/test_calc.py` – matematyka uruchamiana w Node.
+
+## Nowy kalkulator
+```js
+ESNCalc.add({ id: "baud", icon: "gauge-high", group: "comm", title: "calc.baud.t", desc: "calc.baud.d", mount: function (el, api) {
+  var f = api.field({ key: "clk", label: _t("calc.baud.clk"), unit: "Hz", prefixes: ["k", "M"], defPrefix: "M", def: "16" });
+  var res = api.results(), w = api.warn();
+  el.appendChild(api.card([f.el])); el.appendChild(api.card([res.el, w.el, api.formula([["wzór", "opis"]], "notatka")]));
+  api.onChange(function () { res.show([["etykieta", M.fmt(f.get(), "Hz")]]); w.show([["warn", "tekst"]]); });
+} });
+```
+- Grupy: `basic`, `comm`, `power`. Id z listy zapowiedzi (`PLANNED` w calc.js) znika z zapowiedzi po rejestracji.
+- api: `field`, `select`, `modes`, `results`, `warn` (poziomy ok/info/warn/bad), `formula`, `copy`, `card`, `svg`, `keep/kept` (stan w localStorage `esn-calc`).
+- Teksty tylko przez `_t('calc.…')` (literalne klucze – pilnuje test_i18n). Plik dołącz w `index.html` po `calc.js`, podbij `?v=`.
+
+## Zasady
+Liczenie na bieżąco, przedrostki w polu lub z listy, wartości z szeregu E z błędem w %, zapas mocy 2×, ostrzeżenia praktyczne (GPIO, ADC, obciążenie).
+
+## Plan
+Paczka 2: UART/baud rate, Timer/PWM, filtr RC. Paczka 3: bateria, LDO, szerokość ścieżki PCB, rezystory szeregowo/równolegle, kod kondensatora.
