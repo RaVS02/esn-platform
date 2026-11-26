@@ -21,13 +21,13 @@
     if (title) w.appendChild(H.h("div", { "class": "diagram-title", text: title }));
     w.appendChild(svg); return w;
   }
-  function warn(H, msg) { return H.h("div", { "class": "callout callout-warn" }, [H.h("h3", { text: "Błąd diagramu" }), msg]); }
+  function warn(H, msg) { return H.h("div", { "class": "callout callout-warn" }, [H.h("h3", { text: _t('kb.bladDiagramu') }), msg]); }
   function arrowDefs(svg) {
     var d = sv("defs"), m = sv("marker", { id: "kd-ar", viewBox: "0 0 10 10", refX: "9", refY: "5", markerWidth: "7", markerHeight: "7", orient: "auto-start-reverse" });
     m.appendChild(sv("path", { d: "M0 0 L10 5 L0 10 z", "class": "dg-arrow" })); d.appendChild(m); svg.appendChild(d);
   }
   function newSvg(w, h, label) {
-    var s = sv("svg", { viewBox: "0 0 " + w + " " + h, width: w, role: "img", "aria-label": label || "Diagram" });
+    var s = sv("svg", { viewBox: "0 0 " + w + " " + h, width: w, role: "img", "aria-label": label || _t('kb.diagram') });
     s.style.maxWidth = "100%"; s.style.height = "auto"; return s;
   }
 
@@ -45,12 +45,12 @@
       if (m) { if (!nodes[m[2]]) { nodes[m[2]] = { id: m[2], kind: m[1] === "(" ? "t" : m[1] === "{" ? "d" : "p", label: cut(m[3], 60) }; order.push(m[2]); } return; }
       var e = /^([\w-]+)\s*->\s*([\w-]+)(?:\s*:\s*(.+))?$/.exec(ln.trim());
       if (e) { edges.push({ a: e[1], b: e[2], l: cut(e[3] || "", 24) }); return; }
-      bad = bad || ("Nie rozumiem linii: „" + cut(ln.trim(), 50) + "”");
+      bad = bad || (_t('kb.nieRozumiemLinii') + cut(ln.trim(), 50) + "”");
     });
     if (bad) return warn(H, bad);
-    if (!order.length) return warn(H, "Dodaj węzły, np. (start) Start, [krok] Odczytaj ADC, {ok} Czy poprawne?");
-    if (order.length > MAXN) return warn(H, "Za dużo węzłów (max " + MAXN + ").");
-    for (var i = 0; i < edges.length; i++) if (!nodes[edges[i].a] || !nodes[edges[i].b]) return warn(H, "Strzałka wskazuje nieznany węzeł: " + edges[i].a + " -> " + edges[i].b);
+    if (!order.length) return warn(H, _t('kb.dodajWezlyNpStart'));
+    if (order.length > MAXN) return warn(H, _t('kb.zaDuzoWezlowMax') + " " + MAXN + ").");
+    for (var i = 0; i < edges.length; i++) if (!nodes[edges[i].a] || !nodes[edges[i].b]) return warn(H, _t('kb.strzalkaWskazujeNieznanyWezel') + " " + edges[i].a + " -> " + edges[i].b);
     // poziomy: BFS od pierwszego węzła; krawędzie do już ułożonych węzłów są „powrotne”
     var level = {}; level[order[0]] = 0; var q = [order[0]], fwd = [], back = [];
     var out = {}; edges.forEach(function (e) { (out[e.a] = out[e.a] || []).push(e); });
@@ -74,7 +74,7 @@
       y += rh + GAPY;
     });
     var Hh = y - GAPY + PADY;
-    var svg = newSvg(W, Hh, arg || "Schemat blokowy"); arrowDefs(svg);
+    var svg = newSvg(W, Hh, arg || _t('kb.schematBlokowy')); arrowDefs(svg);
     var maxRight = Math.max.apply(null, order.map(function (id) { return nodes[id].x + nodes[id].w; }));
     function label(x, yy, t) { if (!t) return; svg.appendChild(sv("text", { x: x, y: yy, "class": "dg-elabel", "text-anchor": "middle" }, t)); }
     fwd.forEach(function (e) {
@@ -112,12 +112,12 @@
         var cols = e[2].split(",").map(function (c) { var p = c.trim().split(/\s+/); var tag = /^(PK|FK|UQ)$/i.test(p[p.length - 1]) && p.length > 1 ? p.pop().toUpperCase() : ""; return { n: cut(p.join(" "), 24), t: tag }; }).filter(function (c) { return c.n; });
         if (!ents[e[1]]) order.push(e[1]); ents[e[1]] = { id: e[1], cols: cols.slice(0, 14) }; return;
       }
-      bad = bad || ("Nie rozumiem linii: „" + cut(ln.trim(), 50) + "”");
+      bad = bad || (_t('kb.nieRozumiemLinii') + cut(ln.trim(), 50) + "”");
     });
     if (bad) return warn(H, bad);
-    if (!order.length) return warn(H, "Dodaj tabele, np. users: id PK, login, email");
-    if (order.length > 16) return warn(H, "Za dużo tabel (max 16).");
-    for (var i = 0; i < rels.length; i++) if (!ents[rels[i].a] || !ents[rels[i].b]) return warn(H, "Relacja wskazuje nieznaną tabelę: " + rels[i].a + " / " + rels[i].b);
+    if (!order.length) return warn(H, _t('kb.dodajTabeleNpUsers'));
+    if (order.length > 16) return warn(H, _t('kb.zaDuzoTabelMax'));
+    for (var i = 0; i < rels.length; i++) if (!ents[rels[i].a] || !ents[rels[i].b]) return warn(H, _t('kb.relacjaWskazujeNieznanaTabele') + " " + rels[i].a + " / " + rels[i].b);
     var per = order.length <= 2 ? order.length : order.length <= 6 ? 3 : 4, RH = 20, HH = 28, GX = 90, GY = 56, PAD = 20;
     order.forEach(function (id) { var e = ents[id]; e.w = Math.max(130, tw(id) + 30, Math.max.apply(null, e.cols.map(function (c) { return tw(c.n) + (c.t ? 50 : 24); }).concat([0]))); e.h = HH + Math.max(1, e.cols.length) * RH + 6; });
     var rowsN = Math.ceil(order.length / per), colW = [], rowH = [];
@@ -125,7 +125,7 @@
     var colX = [], x = PAD; colW.forEach(function (w, c) { colX[c] = x; x += w + GX; });
     var rowY = [], yy = PAD + 8; rowH.forEach(function (h2, r) { rowY[r] = yy; yy += h2 + GY; });
     order.forEach(function (id, i) { var e = ents[id], c = i % per, r = Math.floor(i / per); e.x = colX[c] + (colW[c] - e.w) / 2; e.y = rowY[r]; e.cx = e.x + e.w / 2; e.cy = e.y + e.h / 2; });
-    var svg = newSvg(x - GX + PAD, yy - GY + PAD, arg || "Diagram relacji");
+    var svg = newSvg(x - GX + PAD, yy - GY + PAD, arg || _t('kb.diagramRelacji'));
     function cardLabel(c) { return c.replace(/\*/g, "N"); }
     function anchor(a, b) {   // punkt na brzegu prostokąta a w stronę b
       var dx = b.cx - a.cx, dy = b.cy - a.cy, hw = a.w / 2, hh = a.h / 2;
@@ -163,21 +163,21 @@
    * pierwsza linia: uczestnicy po przecinku;  A -> B : treść   (A --> B : odpowiedź, linia przerywana)
    */
   function sequence(arg, text, H) {
-    var L = lines(text); if (L.length < 2) return warn(H, "Pierwsza linia: uczestnicy po przecinku (np. MCU, PC), potem komunikaty: MCU -> PC : dane");
+    var L = lines(text); if (L.length < 2) return warn(H, _t('kb.pierwszaLiniaUczestnicyPo'));
     var parts = L[0].split(",").map(function (s) { return cut(s.trim(), 18); }).filter(Boolean), msgs = [], bad = null;
-    if (parts.length < 2 || parts.length > 8) return warn(H, "Uczestników ma być od 2 do 8.");
+    if (parts.length < 2 || parts.length > 8) return warn(H, _t('kb.uczestnikowMaBycOd'));
     L.slice(1).forEach(function (ln) {
       var m = /^(.+?)\s*(-->|->)\s*(.+?)(?:\s*:\s*(.+))?$/.exec(ln.trim());
-      if (!m) { bad = bad || ("Nie rozumiem linii: „" + cut(ln.trim(), 50) + "”"); return; }
+      if (!m) { bad = bad || (_t('kb.nieRozumiemLinii') + cut(ln.trim(), 50) + "”"); return; }
       var a = parts.indexOf(m[1].trim()), b = parts.indexOf(m[3].trim());
-      if (a < 0 || b < 0) { bad = bad || ("Nieznany uczestnik w linii: „" + cut(ln.trim(), 50) + "”"); return; }
+      if (a < 0 || b < 0) { bad = bad || (_t('kb.nieznanyUczestnikWLinii') + cut(ln.trim(), 50) + "”"); return; }
       msgs.push({ a: a, b: b, dash: m[2] === "-->", t: cut(m[4] || "", 40) });
     });
     if (bad) return warn(H, bad);
-    if (msgs.length > 40) return warn(H, "Za dużo komunikatów (max 40).");
+    if (msgs.length > 40) return warn(H, _t('kb.zaDuzoKomunikatowMax'));
     var colW = Math.max(130, Math.max.apply(null, parts.map(function (p) { return tw(p) + 40; })), Math.max.apply(null, msgs.map(function (m) { return tw(m.t) / Math.max(1, Math.abs(m.a - m.b)) + 24; }).concat([0])));
     var W = parts.length * colW + 20, top = 56, step = 38, Hh = top + msgs.length * step + 26;
-    var svg = newSvg(W, Hh, arg || "Diagram sekwencji"); arrowDefs(svg);
+    var svg = newSvg(W, Hh, arg || _t('kb.diagramSekwencji')); arrowDefs(svg);
     var cx = parts.map(function (_, i) { return 10 + colW * i + colW / 2; });
     parts.forEach(function (p, i) {
       svg.appendChild(sv("line", { x1: cx[i], y1: 40, x2: cx[i], y2: Hh - 10, "class": "dg-life" }));
@@ -223,7 +223,7 @@
     lines(text).slice(0, 20).forEach(function (ln) {
       var c = cells(ln), v = Math.max(0, Math.min(100, parseFloat(c[1]) || 0)), col = { green: "pg-green", orange: "pg-orange", red: "pg-red", accent: "" }[(c[3] || "").toLowerCase()] || "";
       var bar = H.h("div", { "class": "kn-pg-fill " + col }); bar.style.width = v + "%";
-      var track = H.h("div", { "class": "kn-pg-track", role: "progressbar", "aria-valuemin": "0", "aria-valuemax": "100", "aria-valuenow": String(v), "aria-label": c[0] || "postęp" }, [bar]);
+      var track = H.h("div", { "class": "kn-pg-track", role: "progressbar", "aria-valuemin": "0", "aria-valuemax": "100", "aria-valuenow": String(v), "aria-label": c[0] || _t('kb.postep') }, [bar]);
       wrap.appendChild(H.h("div", { "class": "kn-pg-row" }, [H.h("div", { "class": "kn-pg-head" }, [H.h("span", { text: c[0] || "" }), H.h("span", { "class": "kn-pg-val", text: v + "%" })]), track, c[2] ? H.h("div", { "class": "kn-pg-note", text: c[2] }) : null]));
     });
     return wrap;
@@ -247,7 +247,7 @@
     return ul;
   }
   function details(arg, text, H) {    // zwijana sekcja (natywny <details>)
-    var d = H.h("details", { "class": "kn-details" }, [H.h("summary", { text: arg || "Pokaż więcej" })]);
+    var d = H.h("details", { "class": "kn-details" }, [H.h("summary", { text: arg || _t('kb.pokazWiecej') })]);
     d.appendChild(H.h("div", { "class": "kn-details-b" }, [H.md(text)])); return d;
   }
   function tabs(arg, text, H) {       // sekcje oddzielone liniami „=== Tytuł”
@@ -258,7 +258,7 @@
       if (m) { cur = { t: cut(m[1].trim(), 30), lines: [] }; secs.push(cur); return; }
       if (cur) cur.lines.push(ln);
     });
-    secs = secs.slice(0, 8); if (!secs.length) return warn(H, "Zakładki: zacznij każdą sekcję od linii „=== Tytuł”.");
+    secs = secs.slice(0, 8); if (!secs.length) return warn(H, _t('kb.zakladkiZacznijKazdaSekcje'));
     var bar = H.h("div", { "class": "esn-tabs", role: "tablist" }), panels = [], btns = [];
     secs.forEach(function (s, i) {
       var p = H.h("div", { "class": "kn-tab-panel", role: "tabpanel" }, [H.md(s.lines.join("\n"))]);

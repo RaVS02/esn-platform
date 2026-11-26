@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="dark light">
-<script src="{{ url_for('static', path='/i18n.js') }}?v=2"></script>
-<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=2"></script>
-<script src="{{ url_for('static', path='/i18n/en.js') }}?v=2"></script>
+<script src="{{ url_for('static', path='/i18n.js') }}?v=3"></script>
+<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=3"></script>
+<script src="{{ url_for('static', path='/i18n/en.js') }}?v=3"></script>
 <script src="{{ url_for('static', path='/theme.js') }}?v=4"></script>
 <title data-i18n="meta.title">Platforma Systemów Wbudowanych</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,23 +16,23 @@
 <link rel="stylesheet" href="{{ url_for('static', path='/pinout.css') }}?v=5">
 <script src="{{ url_for('static', path='/vendor/marked.umd.js') }}?v=18.2.1"></script>
 <script src="{{ url_for('static', path='/vendor/purify.min.js') }}?v=3.4.18"></script>
-<script src="{{ url_for('static', path='/pinout.js') }}?v=4"></script>
+<script src="{{ url_for('static', path='/pinout.js') }}?v=5"></script>
 <link rel="stylesheet" href="{{ url_for('static', path='/media.css') }}?v=1">
-<script src="{{ url_for('static', path='/media.js') }}?v=2"></script>
-<script src="{{ url_for('static', path='/ai-local.js') }}?v=1"></script>
+<script src="{{ url_for('static', path='/media.js') }}?v=3"></script>
+<script src="{{ url_for('static', path='/ai-local.js') }}?v=2"></script>
 <script src="{{ url_for('static', path='/ai-settings.js') }}?v=1"></script>
 <link rel="stylesheet" href="{{ url_for('static', path='/content.css') }}?v=6">
 <script src="{{ url_for('static', path='/vendor/highlight.min.js') }}?v=11.12.0"></script>
 <script src="{{ url_for('static', path='/vendor/arduino.min.js') }}?v=11.12.0"></script>
 <link rel="stylesheet" href="{{ url_for('static', path='/vendor/vs2015.min.css') }}?v=11.12.0">
-<script src="{{ url_for('static', path='/content.js') }}?v=2"></script>
+<script src="{{ url_for('static', path='/content.js') }}?v=3"></script>
 <link rel="stylesheet" href="{{ url_for('static', path='/knowledge.css') }}?v=13">
 <link rel="stylesheet" href="{{ url_for('static', path='/mobile.css') }}?v=3">
 <script src="{{ url_for('static', path='/knowledge-templates.js') }}?v=2"></script>
 <script src="{{ url_for('static', path='/knowledge-guide.js') }}?v=2"></script>
-<script src="{{ url_for('static', path='/knowledge-blocks.js') }}?v=1"></script>
-<script src="{{ url_for('static', path='/knowledge-wizard.js') }}?v=3"></script>
-<script src="{{ url_for('static', path='/knowledge.js') }}?v=12"></script>
+<script src="{{ url_for('static', path='/knowledge-blocks.js') }}?v=2"></script>
+<script src="{{ url_for('static', path='/knowledge-wizard.js') }}?v=4"></script>
+<script src="{{ url_for('static', path='/knowledge.js') }}?v=13"></script>
 
 </head>
 <body>
@@ -622,7 +622,7 @@ const app = {
     if (targetId === 'theory') {   // archiwum: tylko zalogowany admin (treść pobierana z /api/archiwum)
       let r = '';
       try { r = JSON.parse(atob(localStorage.getItem('token').split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).role; } catch (e) {}
-      if (r !== 'admin') { if (typeof toast === 'function') toast(t('toast.archAdmin'), 'error'); return app.navigate('knowledge', updateHistory); }
+      if (r !== 'admin') { if (typeof toast === 'function') toast(_t('toast.archAdmin'), 'error'); return app.navigate('knowledge', updateHistory); }
       app.loadArchive();
     }
     document.querySelectorAll('.app-view').forEach(v => v.classList.remove('active'));
@@ -766,12 +766,12 @@ async function updateProjectsView(resetLimit = true) {
         // NOWY KOD: Aktualizacja paska licznika
         const bar = document.getElementById('proj-count-bar');
         if (bar) {
-            bar.textContent = t('list.shown', {n: Math.min(displayLimit, totalFiltered), total: totalFiltered});
+            bar.textContent = _t('list.shown', {n: Math.min(displayLimit, totalFiltered), total: totalFiltered});
         }
         
         if (totalFiltered === 0) {
             listContainer.className = ''; 
-            listContainer.innerHTML = '<div style="text-align:center; padding:50px; color:var(--text3); font-family:var(--mono);">[ ] ' + t('projects.none') + '</div>';
+            listContainer.innerHTML = '<div style="text-align:center; padding:50px; color:var(--text3); font-family:var(--mono);">[ ] ' + _t('projects.none') + '</div>';
             // Pamiętaj, żeby wyczyścić pasek, gdy nic nie znaleziono
             if (bar) bar.textContent = ''; 
             return;
@@ -781,7 +781,7 @@ async function updateProjectsView(resetLimit = true) {
         listContainer.innerHTML = '';
 
         projectsToShow.forEach(project => {
-            const authorName = project.owner ? esc(project.owner.username) : t('common.deletedAccount');
+            const authorName = project.owner ? esc(project.owner.username) : _t('common.deletedAccount');
             const authorRole = (project.owner && project.owner.role === 'admin') ? ' 🜲 ' : '';
             
             const dateObj = new Date(project.created_at);
@@ -792,21 +792,21 @@ async function updateProjectsView(resetLimit = true) {
             ).join('') : '';
 
             const officialBadge = project.is_official 
-                ? '<span class="badge badge-green" style="font-size:10px;">✓ ' + t('badge.official') + '</span>' 
-                : '<span class="badge badge-orange" style="font-size:10px;">𖨆 ' + t('badge.community') + '</span>';
+                ? '<span class="badge badge-green" style="font-size:10px;">✓ ' + _t('badge.official') + '</span>' 
+                : '<span class="badge badge-orange" style="font-size:10px;">𖨆 ' + _t('badge.community') + '</span>';
 
             let myBadge = '';
             if (loggedUserId && project.owner_id === loggedUserId) {
-                myBadge = '<span class="badge badge-purple" style="font-size:10px;">✦︎ ' + t('badge.yours') + '</span>';
+                myBadge = '<span class="badge badge-purple" style="font-size:10px;">✦︎ ' + _t('badge.yours') + '</span>';
             } else if (isAdmin) {
-                myBadge = '<span class="badge badge-red" style="font-size:10px;">🜲 ' + t('badge.moderation') + '</span>';
+                myBadge = '<span class="badge badge-red" style="font-size:10px;">🜲 ' + _t('badge.moderation') + '</span>';
             }
 
             // NOWOŚĆ: Wizualny znacznik statusu na kafelku
             const sMap = {
-                'stable':   { label: t('status.stable'), cls: 'badge-green', dot: '#00c070' },
-                'progress': { label: t('status.progress'),  cls: 'badge-orange', dot: '#e07800' },
-                'archive':  { label: t('status.archive'), cls: 'badge-red', dot: '#e03050' }
+                'stable':   { label: _t('status.stable'), cls: 'badge-green', dot: '#00c070' },
+                'progress': { label: _t('status.progress'),  cls: 'badge-orange', dot: '#e07800' },
+                'archive':  { label: _t('status.archive'), cls: 'badge-red', dot: '#e03050' }
             };
             const pStat = sMap[project.status] || sMap['stable'];
             const statusBadge = `<span class="badge ${pStat.cls}" style="font-size:10px;"><span class="badge-dot" style="background:${pStat.dot}"></span>${pStat.label}</span>`;
@@ -817,14 +817,14 @@ async function updateProjectsView(resetLimit = true) {
 
             const controls = showControls ? `
                 <div style="margin-top:15px; display:flex; gap:10px; border-top: 1px solid var(--border2); padding-top: 12px;">
-                    <button class="btn-action" style="flex:1; justify-content:center; font-size:11px;" onclick="event.stopPropagation(); editProject('${project.slug}')">✎ ${t('act.edit')}</button>
-                    <button class="btn-action" style="flex:1; justify-content:center; font-size:11px; border-color:var(--red); color:var(--red);" onclick="event.stopPropagation(); deleteProject('${project.id}')">🗑 ${t('act.delete')}</button>
+                    <button class="btn-action" style="flex:1; justify-content:center; font-size:11px;" onclick="event.stopPropagation(); editProject('${project.slug}')">✎ ${_t('act.edit')}</button>
+                    <button class="btn-action" style="flex:1; justify-content:center; font-size:11px; border-color:var(--red); color:var(--red);" onclick="event.stopPropagation(); deleteProject('${project.id}')">🗑 ${_t('act.delete')}</button>
                 </div>
             ` : '';
 
             const thumbHtml = project.image_main 
                 ? `<img src="/static/${project.image_main}" alt="${esc(project.title)}">`
-                : `<span>${t('common.noThumb')}</span>`;
+                : `<span>${_t('common.noThumb')}</span>`;
 
             // Podmiana HTML z dodanym statusem obok plakietek
             listContainer.innerHTML += `
@@ -843,7 +843,7 @@ async function updateProjectsView(resetLimit = true) {
                     <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom: 15px;">${tagsHtml}</div>
                     
                     <div style="margin-top:auto; font-size: 12px; color: var(--text3); display: flex; justify-content: space-between; border-top: 1px solid var(--border2); padding-top: 10px;">
-                        <span>${t('common.author')}: <span style="color:var(--text); font-family:var(--mono);">${authorRole}${authorName}</span></span>
+                        <span>${_t('common.author')}: <span style="color:var(--text); font-family:var(--mono);">${authorRole}${authorName}</span></span>
                         <span style="color:var(--text); font-family:var(--mono);">${formattedDate}</span>
                     </div>
                     ${controls}
@@ -855,7 +855,7 @@ async function updateProjectsView(resetLimit = true) {
             const remaining = totalFiltered - displayLimit;
             listContainer.innerHTML += `
                 <div style="grid-column: 1 / -1; display: flex; justify-content: center; margin-top: 20px; padding-top: 20px; border-top: 1px dashed var(--border2);">
-                    <button class="btn-action" style="padding: 10px 24px; font-family: var(--mono);" onclick="loadMoreProjects()">${t('list.loadMore', {n: remaining})}</button>
+                    <button class="btn-action" style="padding: 10px 24px; font-family: var(--mono);" onclick="loadMoreProjects()">${_t('list.loadMore', {n: remaining})}</button>
                 </div>
             `;
         }
@@ -878,7 +878,7 @@ async function openComponentFromProject(id) {
 async function openCatalogFromHash(id) {
     if (!catalogData.length) await loadCatalog();
     if (catalogData.find(x => x.id === id)) openFullCatalogView(id);
-    else if (typeof toast === 'function') toast(t('toast.compMissing'), 'error');
+    else if (typeof toast === 'function') toast(_t('toast.compMissing'), 'error');
 }
 async function openProjectFromComponent(slug) {
     closeFullCatalogView();
@@ -908,13 +908,13 @@ function openFullProjectView(slug) {
     const tagsHtml = p.tags ? p.tags.split(',').map(tag => `<span class="tag">${esc(tag.trim())}</span>`).join('') : '';
     
     const officialBadge = p.is_official 
-        ? '<span class="badge badge-green">✓ ' + t('badge.official') + '</span>' 
-        : '<span class="badge badge-orange">𖨆 ' + t('badge.community') + '</span>';
+        ? '<span class="badge badge-green">✓ ' + _t('badge.official') + '</span>' 
+        : '<span class="badge badge-orange">𖨆 ' + _t('badge.community') + '</span>';
     let myBadge = '';
     if (loggedUserId && p.owner_id === loggedUserId) {
-        myBadge = '<span class="badge badge-purple">✦︎ ' + t('badge.yourProject') + '</span>';
+        myBadge = '<span class="badge badge-purple">✦︎ ' + _t('badge.yourProject') + '</span>';
     } else if (isAdmin) {
-        myBadge = '<span class="badge badge-red">🜲 ' + t('badge.modMode') + '</span>';
+        myBadge = '<span class="badge badge-red">🜲 ' + _t('badge.modMode') + '</span>';
     }
 
     let showControls = false;
@@ -923,20 +923,20 @@ function openFullProjectView(slug) {
 
     const controlButtonsHtml = showControls ? `
         <div class="cat-admin" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border); display: flex; gap: 15px;">
-            <button class="btn-action" onclick="editProject('${p.slug}')">✎ ${t('act.editProject')}</button>
-            <button class="btn-action" style="border-color:var(--red); color:var(--red);" onclick="deleteProject('${p.id}'); closeFullProjectView();">🗑 ${t('act.deleteProject')}</button>
+            <button class="btn-action" onclick="editProject('${p.slug}')">✎ ${_t('act.editProject')}</button>
+            <button class="btn-action" style="border-color:var(--red); color:var(--red);" onclick="deleteProject('${p.id}'); closeFullProjectView();">🗑 ${_t('act.deleteProject')}</button>
         </div>
     ` : '';
 
     const dateObj = new Date(p.created_at);
     const formattedDate = ESNI18n.date(dateObj, { day: 'numeric', month: 'long', year: 'numeric' });
-    const authorName = p.owner ? esc(p.owner.username) : t('common.deletedAccount');
+    const authorName = p.owner ? esc(p.owner.username) : _t('common.deletedAccount');
 
     const allImages = [
-        { url: p.image_main, caption: t('img.main') },
-        { url: p.image_schematic, caption: t('img.schematic') },
-        { url: p.image_gallery_1, caption: t('img.g1') },
-        { url: p.image_gallery_2, caption: t('img.g2') }
+        { url: p.image_main, caption: _t('img.main') },
+        { url: p.image_schematic, caption: _t('img.schematic') },
+        { url: p.image_gallery_1, caption: _t('img.g1') },
+        { url: p.image_gallery_2, caption: _t('img.g2') }
     ].filter(img => img.url);
 
     currentLightboxImages = allImages;
@@ -951,7 +951,7 @@ function openFullProjectView(slug) {
     // --- SEKCJA INFO GRID (Opis, Podzespoły, Notatki) ---
     const descSection = p.short_desc ? `
         <div>
-            <h3 class="section-title">${t('proj.descTitle')}</h3>
+            <h3 class="section-title">${_t('proj.descTitle')}</h3>
             <p style="font-size: 14px; color: var(--text2); line-height: 1.7; font-family: var(--sans);">
                 ${esc(p.short_desc)}
             </p>
@@ -973,7 +973,7 @@ function openFullProjectView(slug) {
         return `<div class="callout ${i % 2 === 0 ? 'callout-info' : 'callout-warn'}" style="margin-top: 8px; font-size:12px;">${content}</div>`;
     }).join('') : '';
 
-    const notesSection = notesHtml ? `<div><h3 class="section-title">${t('proj.notesTitle')}</h3>${notesHtml}</div>` : '';
+    const notesSection = notesHtml ? `<div><h3 class="section-title">${_t('proj.notesTitle')}</h3>${notesHtml}</div>` : '';
 
     let infoGrid = '';
     if (descSection || notesSection) {
@@ -987,7 +987,7 @@ function openFullProjectView(slug) {
     const codeSection = '<div id="project-parts-slot"></div><div id="project-code-slot"></div><div id="project-res-slot"></div>';
 
     const articleSection = p.full_content_md ? `<div id="project-article-${p.id}" class="kn-body kn-proj-article" style="margin-bottom:30px"></div>` : '';
-    const markdownSection = articleSection + (p.markdown_path ? `<div id="markdown-container-${p.id}" class="markdown-body"><p style="color: var(--text3);">${t('proj.loadingDoc')}</p></div>` : '');
+    const markdownSection = articleSection + (p.markdown_path ? `<div id="markdown-container-${p.id}" class="markdown-body"><p style="color: var(--text3);">${_t('proj.loadingDoc')}</p></div>` : '');
 
     // --- WSTRZYKNIĘCIE DO WIDOKU - NOWY HEADER W STYLU PANELU CZUJNIKÓW ---
     document.getElementById('full-view-content').innerHTML = `
@@ -1042,7 +1042,7 @@ function openFullProjectView(slug) {
         fetch('/static/' + p.markdown_path)
             .then(res => res.text())
             .then(text => { mdContainer.innerHTML = renderMarkdownSafe(text); })
-            .catch(err => { mdContainer.innerHTML = '<p class="text-red">' + t('proj.mdError') + '</p>'; });
+            .catch(err => { mdContainer.innerHTML = '<p class="text-red">' + _t('proj.mdError') + '</p>'; });
     }
 }
 
@@ -1098,7 +1098,7 @@ function updateFilterUI() {
     // NOWOŚĆ: Pokazywanie aktywnych statusów z możliwością ich zgaszenia na pasku (X)
     if (activeProjectStatuses.length > 0) {
         hasFilters = true;
-        const sLabels = {'stable': t('filters.statusStable'), 'progress': t('filters.statusProgress'), 'archive': t('filters.statusArchive')};
+        const sLabels = {'stable': _t('filters.statusStable'), 'progress': _t('filters.statusProgress'), 'archive': _t('filters.statusArchive')};
         activeProjectStatuses.forEach(s => {
             container.innerHTML += `
                 <div class="active-chip" onclick="removeProjectStatus('${escJs(s)}')">
@@ -1109,7 +1109,7 @@ function updateFilterUI() {
 
     if (currentSource !== 'all') {
         hasFilters = true;
-        let label = currentSource === 'official' ? t('filters.official') : (currentSource === 'community' ? t('filters.community') : t('filters.mine'));
+        let label = currentSource === 'official' ? _t('filters.official') : (currentSource === 'community' ? _t('filters.community') : _t('filters.mine'));
         container.innerHTML += `
             <div class="active-chip" onclick="currentSource='all'; resetSourceBtns(); updateFilterUI(); updateProjectsView();">
                 ${label} <span>×</span>
@@ -1117,7 +1117,7 @@ function updateFilterUI() {
     }
 
     if (!hasFilters) {
-        container.innerHTML = '<span style="color:var(--text3); font-size:11px; font-family:var(--mono)">' + t('filters.none') + '</span>';
+        container.innerHTML = '<span style="color:var(--text3); font-size:11px; font-family:var(--mono)">' + _t('filters.none') + '</span>';
     }
 }
 
@@ -1306,7 +1306,7 @@ function openProjectModal() {
     
     // Przywracamy domyślne napisy w modalu
     document.querySelector('#projectModal h2').innerText = "Nowy Projekt";
-    document.querySelector('#projectModal button[onclick="submitProject()"]').innerText = t('contact.submitProject');
+    document.querySelector('#projectModal button[onclick="submitProject()"]').innerText = _t('contact.submitProject');
     
     // Czyścimy wszystkie pola tekstowe
     document.querySelectorAll('#projectModal input, #projectModal textarea').forEach(i => i.value = "");
@@ -1341,7 +1341,7 @@ function closeProjectModal() {
     editingProjectData = null;
     document.getElementById('projectModal').style.display = 'none';
     document.querySelector('#projectModal h2').innerText = "Nowy Projekt";
-    document.querySelector('#projectModal button[onclick="submitProject()"]').innerText = t('contact.submitProject');
+    document.querySelector('#projectModal button[onclick="submitProject()"]').innerText = _t('contact.submitProject');
     document.querySelectorAll('#projectModal input, #projectModal textarea').forEach(i => i.value = "");
     
     // Ukrywamy przyciski usuwania
@@ -1357,7 +1357,7 @@ function closeProjectModal() {
 // NOWOŚĆ: Funkcja do natychmiastowego usuwania pliku
 async function deleteProjectFile(field) {
     if (!editingProjectId) return;
-    const isConfirmed = await customConfirm(t('conf.delFile'), t('conf.delFileTitle'));
+    const isConfirmed = await customConfirm(_t('conf.delFile'), _t('conf.delFileTitle'));
     if (!isConfirmed) return;
     try {
         const res = await fetch(`/api/projects/${editingProjectId}/file/${field}`, {
@@ -1369,13 +1369,13 @@ async function deleteProjectFile(field) {
             document.getElementById('del-' + field).style.display = 'none'; 
             document.getElementById('name-' + field).innerText = ''; // Czyścimy nazwę!
             updateProjectsView();           
-            toast(t('toast.fileDeleted'),"success")
+            toast(_t('toast.fileDeleted'),"success")
         } else {
             const err = await res.json();
-            toast(t('err.delete') + err.detail, "error");
+            toast(_t('err.delete') + _E(err.detail), "error");
         }
     } catch (e) {
-        toast(t('err.connection') + e.message, "error");
+        toast(_t('err.connection') + e.message, "error");
     }
 }
 
@@ -1396,7 +1396,7 @@ async function submitProject() {
         status: document.getElementById('p-status').value
     };
     if (projArticle) {
-        if (projArticle.tooLong()) return toast(t('toast.descTooLong'), 'error');
+        if (projArticle.tooLong()) return toast(_t('toast.descTooLong'), 'error');
         projectData.full_content_md = projArticle.getValue();
     }
 
@@ -1426,7 +1426,7 @@ async function submitProject() {
             }
         } else {
             const err = await res.json();
-            return alert(t('err.saveProject') + JSON.stringify(err));
+            return alert(_t('err.saveProject') + JSON.stringify(err));
         }
 
         // ETAP 2a: plik .md (jeśli wybrano)
@@ -1438,7 +1438,7 @@ async function submitProject() {
             const mdRes = await fetch(`/api/projects/${savedProjectId}/upload`, {
                 method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData
             });
-            if (!mdRes.ok) { const e = await mdRes.json().catch(() => ({})); toast(t('err.mdFile') + (e.detail || t('err.uploadFail')), 'error'); }
+            if (!mdRes.ok) { const e = await mdRes.json().catch(() => ({})); toast(_t('err.mdFile') + (_E(e.detail) || _t('err.uploadFail')), 'error'); }
         }
 
         // ETAP 2b: powiązania z katalogiem, przykłady kodu, zasoby, a na końcu zdjęcia (wszystko po zapisie projektu)
@@ -1450,7 +1450,7 @@ async function submitProject() {
         if (partialErrors.length) {
             editingProjectId = savedProjectId;   // projekt już istnieje – kolejne zapisy to edycja
             document.querySelector('#projectModal h2').innerText = "Edytuj Projekt";
-            toast(t('toast.partial') + partialErrors.join('; '), 'error');
+            toast(_t('toast.partial') + partialErrors.join('; '), 'error');
             updateProjectsView();
             return;
         }
@@ -1460,7 +1460,7 @@ async function submitProject() {
         closeFullProjectView();
         updateProjectsView();
 
-    } catch (e) { alert(t('err.saveConn') + e.message); }
+    } catch (e) { alert(_t('err.saveConn') + e.message); }
 }
 
 // ==========================================
@@ -1532,9 +1532,9 @@ function renderCatalogCard(item, isAdmin) {
     const apps = Array.isArray(item.applications) ? item.applications : [];
     const tags = Array.isArray(item.tags) ? item.tags : [];
     
-    const catBadge = item.inventory_category ? `<span class="badge badge-purple" style="font-size:10px;">${esc(item.inventory_category)}</span>` : '';
+    const catBadge = item.inventory_category ? `<span class="badge badge-purple" style="font-size:10px;">${esc(_L('cat', item.inventory_category))}</span>` : '';
     const pinBadge = item.pinout_summary ? `<span class="badge badge-accent" style="font-size:10px;">⌖ ${item.pinout_summary.count} pin</span>` : '';
-    const appsHtml = apps.slice(0, 2).map(a => `<span class="badge badge-gray" style="font-size:10px;">${esc(a)}</span>`).join(' ');
+    const appsHtml = apps.slice(0, 2).map(a => `<span class="badge badge-gray" style="font-size:10px;">${esc(_L('app', a))}</span>`).join(' ');
     const tagsHtml = tags.slice(0, 5).map(t => `<span class="tag" style="font-size:10px; padding:2px 6px;">${esc(t)}</span>`).join(' ');
 
     const thumbHtml = item.image_main 
@@ -1543,8 +1543,8 @@ function renderCatalogCard(item, isAdmin) {
 
     const adminBtns = isAdmin ? `
         <div style="margin-top:auto; padding-top:12px; border-top: 1px solid var(--border2); display:flex; gap:10px;">
-            <button class="btn-action" style="flex:1; justify-content:center; font-size:11px;" onclick="event.stopPropagation(); editCatalogItem(${item.id})">✎ ${t('act.edit')}</button>
-            <button class="btn-action" style="flex:1; justify-content:center; font-size:11px; border-color:var(--red); color:var(--red);" onclick="event.stopPropagation(); catalogEditingId=${item.id}; deleteCatalogItem();">🗑 ${t('act.delete')}</button>
+            <button class="btn-action" style="flex:1; justify-content:center; font-size:11px;" onclick="event.stopPropagation(); editCatalogItem(${item.id})">✎ ${_t('act.edit')}</button>
+            <button class="btn-action" style="flex:1; justify-content:center; font-size:11px; border-color:var(--red); color:var(--red);" onclick="event.stopPropagation(); catalogEditingId=${item.id}; deleteCatalogItem();">🗑 ${_t('act.delete')}</button>
         </div>` : '<div style="margin-top:auto;"></div>';
 
     return `
@@ -1575,23 +1575,23 @@ function openFullCatalogView(id) {
     const role = getCatalogUserRole();
     const isAdmin = role === 'admin' || role === 'moderator';
 
-    const catBadge = item.inventory_category ? `<span class="badge badge-purple">${esc(item.inventory_category)}</span>` : '';
-    const appsHtml = (item.applications||[]).map(a => `<span class="badge badge-gray">${esc(a)}</span>`).join(' ');
+    const catBadge = item.inventory_category ? `<span class="badge badge-purple">${esc(_L('cat', item.inventory_category))}</span>` : '';
+    const appsHtml = (item.applications||[]).map(a => `<span class="badge badge-gray">${esc(_L('app', a))}</span>`).join(' ');
     const tagsHtml = (item.tags||[]).map(tag => `<span class="tag">${esc(tag.trim())}</span>`).join('');
 
     const allImages = [
-        { url: item.image_main, caption: t('img.main') },
-        { url: item.image_gallery_1, caption: t('img.g1') },
-        { url: item.image_gallery_2, caption: t('img.g2') },
-        { url: item.image_gallery_3, caption: t('img.g3') }
+        { url: item.image_main, caption: _t('img.main') },
+        { url: item.image_gallery_1, caption: _t('img.g1') },
+        { url: item.image_gallery_2, caption: _t('img.g2') },
+        { url: item.image_gallery_3, caption: _t('img.g3') }
     ].filter(img => img.url);
 
     const specsHtml = renderSpecsBlock(item.technical_specs);
 
     let adminBtns = isAdmin ? `
         <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border); display: flex; gap: 15px;">
-            <button class="btn-action" onclick="editCatalogItem(${item.id})">✎ ${t('act.editComponent')}</button>
-            <button class="btn-action" style="border-color:var(--red); color:var(--red);" onclick="catalogEditingId=${item.id}; deleteCatalogItem();">🗑 ${t('act.deleteComponent')}</button>
+            <button class="btn-action" onclick="editCatalogItem(${item.id})">✎ ${_t('act.editComponent')}</button>
+            <button class="btn-action" style="border-color:var(--red); color:var(--red);" onclick="catalogEditingId=${item.id}; deleteCatalogItem();">🗑 ${_t('act.deleteComponent')}</button>
         </div>` : '';
 
     const dsBtn = item.datasheet_url ? `<a href="${safeUrl(item.datasheet_url)}" target="_blank" rel="noopener noreferrer" class="btn-action primary" style="font-size: 11px; padding: 4px 10px;">[ Datasheet ]</a>` : '';
@@ -1614,14 +1614,14 @@ function openFullCatalogView(id) {
         
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; align-items: start; margin-bottom: 40px; background: var(--bg2); padding: 24px; border-radius: 12px;">
             <div>
-                <h3 class="section-title">${t('cat.descTitle')}</h3>
+                <h3 class="section-title">${_t('cat.descTitle')}</h3>
                 <p style="font-size: 14px; color: var(--text2); line-height: 1.7; font-family: var(--sans);white-space: pre-line;">
                     ${esc(item.description) || 'Brak opisu...'}
                 </p>
             </div>
             <div>
-                <h3 class="section-title">${t('cat.specTitle')}</h3>
-                ${specsHtml || '<span style="color:var(--text3); font-size:12px;">' + t('common.noSpecs') + '</span>'}
+                <h3 class="section-title">${_t('cat.specTitle')}</h3>
+                ${specsHtml || '<span style="color:var(--text3); font-size:12px;">' + _t('common.noSpecs') + '</span>'}
             </div>
         </div>
         
@@ -1705,7 +1705,7 @@ async function buildDynamicFilters() {
     const catContainer = document.getElementById('cat-filter-chips');
     if (catContainer) {
         catContainer.innerHTML = categories.map(c => 
-            `<button class="chip-btn" data-group="cat" onclick="toggleCompFilter('${escJs(c)}', this)">${esc(c)}</button>`
+            `<button class="chip-btn" data-group="cat" onclick="toggleCompFilter('${escJs(c)}', this)">${esc(_L('cat', c))}</button>`
         ).join('');
     }
 
@@ -1713,7 +1713,7 @@ async function buildDynamicFilters() {
     const appContainer = document.getElementById('app-filter-chips');
     if (appContainer) {
         appContainer.innerHTML = applications.map(a => 
-            `<button class="chip-btn" data-group="app" onclick="toggleCompFilter('${escJs(a)}', this)">${esc(a)}</button>`
+            `<button class="chip-btn" data-group="app" onclick="toggleCompFilter('${escJs(a)}', this)">${esc(_L('app', a))}</button>`
         ).join('');
     }
     
@@ -1803,7 +1803,7 @@ function renderCatalog(resetLimit = true) {
     });
 
     const bar = document.getElementById('comp-count-bar');
-    if (bar) bar.textContent = t('list.shown', {n: Math.min(catalogVisibleCount, filtered.length), total: filtered.length});
+    if (bar) bar.textContent = _t('list.shown', {n: Math.min(catalogVisibleCount, filtered.length), total: filtered.length});
 
     const list = document.getElementById('components-list');
     
@@ -1811,8 +1811,8 @@ function renderCatalog(resetLimit = true) {
     if (!filtered.length) {
         list.className = '';
         list.innerHTML = `<div style="text-align:center;padding:60px;color:var(--text3);font-family:var(--mono);">
-            ${t('cat.none')}<br>
-            ${isAdmin ? '<button class="btn-action" style="margin-top:12px" onclick="openCatalogModal()">' + t('cat.addFirst') + '</button>' : ''}
+            ${_t('cat.none')}<br>
+            ${isAdmin ? '<button class="btn-action" style="margin-top:12px" onclick="openCatalogModal()">' + _t('cat.addFirst') + '</button>' : ''}
         </div>`;
         return;
     }
@@ -1827,7 +1827,7 @@ function renderCatalog(resetLimit = true) {
         const remaining = filtered.length - catalogVisibleCount;
         html += `
         <div style="grid-column: 1 / -1; display: flex; justify-content: center; margin-top: 20px; padding-top: 20px; border-top: 1px dashed var(--border2);">
-            <button class="btn-action" style="padding: 10px 24px; font-family: var(--mono);" onclick="loadMoreCatalog()">${t('list.loadMore', {n: remaining})}</button>
+            <button class="btn-action" style="padding: 10px 24px; font-family: var(--mono);" onclick="loadMoreCatalog()">${_t('list.loadMore', {n: remaining})}</button>
         </div>`;
     }
 
@@ -1850,7 +1850,7 @@ function toggleCompFilter(val, btn) {
 function renderActiveCompFilters() {
   const c = document.getElementById('activeCompFiltersContainer');
   if (!activeCompFilters.length) {
-    c.innerHTML = '<span style="color:var(--text3);font-size:11px;font-family:var(--mono)">' + t('filters.none') + '</span>';
+    c.innerHTML = '<span style="color:var(--text3);font-size:11px;font-family:var(--mono)">' + _t('filters.none') + '</span>';
     return;
   }
   c.innerHTML = activeCompFilters.map(f =>
@@ -1892,7 +1892,7 @@ function renderCatalogCategories() {
     const container = document.getElementById('cat-filter-chips');
     if (!container) return;
     container.innerHTML = Array.from(catalogCategories).sort().map(cat => 
-        `<button class="chip-btn" onclick="toggleCompFilter('${escJs(cat)}', this)">${esc(cat)}</button>`
+        `<button class="chip-btn" onclick="toggleCompFilter('${escJs(cat)}', this)">${esc(_L('cat', cat))}</button>`
     ).join('');
 }
 
@@ -1903,7 +1903,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── MODAL ADMINA ──────────────────────────────────────────────────
 function handleNewOption(selectElement) {
     if (selectElement.value === "ADD_NEW") {
-        const newVal = prompt(t('prompt.newValue'));
+        const newVal = prompt(_t('prompt.newValue'));
         if (newVal && newVal.trim() !== "") {
             const opt = document.createElement('option');
             opt.value = newVal;
@@ -1929,10 +1929,10 @@ async function openCatalogModal(id = null) {
     const applications = await appRes.json();
 
     const catSelect = document.getElementById('cm-category');
-    catSelect.innerHTML = `<option value="">${t('common.choose')}</option>` + categories.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+    catSelect.innerHTML = `<option value="">${_t('common.choose')}</option>` + categories.map(c => `<option value="${esc(c)}">${esc(_L('cat', c))}</option>`).join('');
 
     const appSelect = document.getElementById('cm-applications');
-    appSelect.innerHTML = `<option value="">${t('common.choose')}</option>` + applications.map(a => `<option value="${esc(a)}">${esc(a)}</option>`).join('');
+    appSelect.innerHTML = `<option value="">${_t('common.choose')}</option>` + applications.map(a => `<option value="${esc(a)}">${esc(_L('app', a))}</option>`).join('');
 
     if (!id) {
         document.getElementById('cm-name').value = '';
@@ -1978,7 +1978,7 @@ function closeCatalogModal() {
 
 async function saveCatalogItem() {
     const name = document.getElementById('cm-name').value;
-    if (!name) return toast(t('err.noName'), 'error');
+    if (!name) return toast(_t('err.noName'), 'error');
 
     const tagsInput = document.getElementById('cm-tags').value;
     const tagsArray = tagsInput.split(',').map(t => t.trim()).filter(t => t !== '');
@@ -1990,7 +1990,7 @@ async function saveCatalogItem() {
     const specsStr = document.getElementById('cm-specs').value;
     if (specsStr.trim()) {
         try { specsObj = parseSpecsToObj(specsStr); } 
-        catch(e) { return toast(t('err.specParse'), 'error'); }
+        catch(e) { return toast(_t('err.specParse'), 'error'); }
     }
 
     let pinoutObj = null;
@@ -2033,22 +2033,22 @@ async function saveCatalogItem() {
             if (catMedia) { const r = await catMedia.flush(savedCatalogId); r.failed.forEach(f => partialErrors.push(`${f.name} (${f.error})`)); }
             if (partialErrors.length) {
                 catalogEditingId = savedCatalogId;   // komponent już istnieje – kolejne zapisy to edycja
-                toast(t('toast.partialCat') + partialErrors.join('; '), 'error');
+                toast(_t('toast.partialCat') + partialErrors.join('; '), 'error');
                 await loadCatalog();
                 return;
             }
 
             closeCatalogModal();
-            toast(t('toast.savedCat'), 'success');
+            toast(_t('toast.savedCat'), 'success');
             await loadCatalog(); 
             // jeśli edytowano z pełnego widoku – odśwież go (m.in. pinout)
             if (document.getElementById('catalog-full-view').style.display === 'block') openFullCatalogView(savedCatalogId);
         } else {
             const err = await res.json();
-            toast(t('err.generic') + (err.detail || t('err.unknown')), 'error');
+            toast(_t('err.generic') + (_E(err.detail) || _t('err.unknown')), 'error');
         }
     } catch(e) {
-        toast(t('err.network'), 'error');
+        toast(_t('err.network'), 'error');
     }
 }
 // Otwieranie lightboxa bezpośrednio z kafelka Katalogu
@@ -2063,7 +2063,7 @@ function editCatalogItem(id) {
 
 async function deleteCatalogItem() {
   if (!catalogEditingId) return;
-  const isConfirmed = await customConfirm(t('conf.delComp'), t('conf.delCompTitle'));
+  const isConfirmed = await customConfirm(_t('conf.delComp'), _t('conf.delCompTitle'));
   if (!isConfirmed) return;
   const token = localStorage.getItem('token');
   try {
@@ -2076,9 +2076,9 @@ async function deleteCatalogItem() {
     closeCatalogModal();
     closeFullCatalogView(); // Zamykamy pełny widok, jeśli był otwarty
     await loadCatalog();
-    toast(t('toast.compDeleted'), "success");
+    toast(_t('toast.compDeleted'), "success");
   } catch(e) {
-    toast(t('err.delete') + e.message, 'error');
+    toast(_t('err.delete') + e.message, 'error');
   }
 }
 document.getElementById('catalogModal')?.addEventListener('click', function(e) {
@@ -2118,7 +2118,7 @@ const auth = {
             if (res.ok) {
                 this.showModal('verify'); // Przejdź do wpisywania kodu
             } else {
-                document.getElementById('reg-error').innerText = data.detail || t('auth.regError');
+                document.getElementById('reg-error').innerText = _E(data.detail) || _t('auth.regError');
             }
         } catch (e) { console.error(e); }
     },
@@ -2138,11 +2138,11 @@ const auth = {
             });
 
             if (res.ok) {
-                toast(t('toast.regActive'), "success");
+                toast(_t('toast.regActive'), "success");
                 this.showModal('login');
             } else {
                 const data = await res.json();
-                document.getElementById('verify-error').innerText = data.detail || t('auth.badCode');
+                document.getElementById('verify-error').innerText = _E(data.detail) || _t('auth.badCode');
             }
         } catch (e) { console.error(e); }
     },
@@ -2167,10 +2167,10 @@ const auth = {
             if (res.ok) {
                 localStorage.setItem('token', data.access_token); // Zapisujemy bilet!
                 location.reload(); // Odświeżamy stronę, by pokazać nick
-                toast(t('toast.loggedIn'), 'success');
+                toast(_t('toast.loggedIn'), 'success');
             } else {
-                document.getElementById('login-error').innerText = data.detail || t('auth.badLogin');
-                toast(t('err.login'), 'error');
+                document.getElementById('login-error').innerText = _E(data.detail) || _t('auth.badLogin');
+                toast(_t('err.login'), 'error');
             }
         } catch (e) { console.error(e); }
     },
@@ -2178,7 +2178,7 @@ const auth = {
     // --- NOWE: LOGIKA ZAPOMNIANEGO HASŁA ---
     handleForgotPassword: async function() {
         const email = document.getElementById('forgot-email').value;
-        if(!email) return toast(t('warn.needEmail'),"warn");
+        if(!email) return toast(_t('warn.needEmail'),"warn");
         
         const res = await fetch('/api/auth/forgot-password', {
             method: 'POST',
@@ -2187,7 +2187,7 @@ const auth = {
         });
         
         if(res.ok) {
-            toast(t('toast.checkMail'), "info");
+            toast(_t('toast.checkMail'), "info");
             this.showModal('reset'); // Przełącza na widok wpisywania kodu
         }
     },
@@ -2197,7 +2197,7 @@ const auth = {
         const code = document.getElementById('reset-code').value;
         const newPass = document.getElementById('reset-pass').value;
         
-        if(!code || !newPass) return toast(t('warn.fillAll'),"warn");
+        if(!code || !newPass) return toast(_t('warn.fillAll'),"warn");
         
         const res = await fetch('/api/auth/reset-password', {
             method: 'POST',
@@ -2206,11 +2206,11 @@ const auth = {
         });
         
         if(res.ok) {
-            toast(t('toast.passReset'),"success");
+            toast(_t('toast.passReset'),"success");
             this.showModal('login');
         } else {
             const err = await res.json();
-            toast(t('err.generic') + err.detail, "error");
+            toast(_t('err.generic') + _E(err.detail), "error");
         }
     },
 
@@ -2241,24 +2241,24 @@ function checkAuth() {
                 return; // Przerywamy rysowanie menu!
             }
             const login = payload.sub;
-            const rola = payload.role === 'admin' ? ' 🜲 ' + t('role.admin') : ' 𖨆 ' + t('role.user');
+            const rola = payload.role === 'admin' ? ' 🜲 ' + _t('role.admin') : ' 𖨆 ' + _t('role.user');
 
             // Budujemy pasek nawigacji
             document.getElementById('navAuth').innerHTML = `
-                <button type="button" class="nav-acc-btn" id="navAccBtn" aria-haspopup="true" aria-expanded="false" aria-controls="navAccMenu" aria-label="${esc(t('nav.account', {login}))}" onclick="navAccToggle(event)">
+                <button type="button" class="nav-acc-btn" id="navAccBtn" aria-haspopup="true" aria-expanded="false" aria-controls="navAccMenu" aria-label="${esc(_t('nav.account', {login}))}" onclick="navAccToggle(event)">
                     <img id="nav-avatar-img-m" alt="" hidden><span id="nav-acc-initial">${esc((login || '?').charAt(0).toUpperCase())}</span>
                 </button>
                 <div class="nav-acc-menu" id="navAccMenu" role="menu">
                     <div class="nav-acc-user"><strong>${esc(login)}</strong><span>${rola}</span></div>
-                    <a role="menuitem" href="/magazyn/">${t('nav.inventory')}</a>
-                    <button type="button" role="menuitem" onclick="navAccGo('profile')">${t('nav.profile')}</button>
-                    <button type="button" role="menuitem" class="nav-acc-out" onclick="auth.logout()">${t('nav.logout')}</button>
+                    <a role="menuitem" href="/magazyn/">${_t('nav.inventory')}</a>
+                    <button type="button" role="menuitem" onclick="navAccGo('profile')">${_t('nav.profile')}</button>
+                    <button type="button" role="menuitem" class="nav-acc-out" onclick="auth.logout()">${_t('nav.logout')}</button>
                 </div>
                 <div class="nav-desk" style="display:flex; align-items:center; gap:0px; height: 100%;">
                     
-                    <a class="nav-link nav-profile" href="/magazyn/" >${t('nav.inventory')}</a>
+                    <a class="nav-link nav-profile" href="/magazyn/" >${_t('nav.inventory')}</a>
                     
-                    <a class="nav-link nav-profile" data-target="profile" onclick="app.navigate('profile'); loadProfileData();">${t('nav.profile')}</a>
+                    <a class="nav-link nav-profile" data-target="profile" onclick="app.navigate('profile'); loadProfileData();">${_t('nav.profile')}</a>
                     
                     <div style="display:flex; align-items:center; gap:12px; padding-left:15px; border-left:1px solid var(--border); height: 100%;">
                         <img id="nav-avatar-img" src="" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border2); display: none;">
@@ -2270,7 +2270,7 @@ function checkAuth() {
                         </div>
                     </div>
                     
-                    <button class="btn-action btn-logout" onclick="auth.logout()">${t('nav.logout')}</button>
+                    <button class="btn-action btn-logout" onclick="auth.logout()">${_t('nav.logout')}</button>
                 </div>
             `;
             
@@ -2332,18 +2332,18 @@ async function submitContactForm() {
 
     // 2. Wstępna walidacja w przeglądarce
     if (!name || !email || !msg) {
-        toast(t('warn.fillRequired'), 'warn');
+        toast(_t('warn.fillRequired'), 'warn');
         return;
     }
     if (!email.includes('@') || !email.includes('.')) {
-        toast(t('warn.badEmail'), 'warn');
+        toast(_t('warn.badEmail'), 'warn');
         return;
     }
 
     // Blokada przycisku, żeby nikt nie naklikał "Wyślij" 10 razy z rzędu
     const btn = document.querySelector('#view-contact .btn-action.primary');
     btn.disabled = true;
-    btn.textContent = t('contact.sending');
+    btn.textContent = _t('contact.sending');
 
     try {
         // 3. Wysłanie danych do Pythona (FastAPI)
@@ -2355,11 +2355,11 @@ async function submitContactForm() {
 
         if (!response.ok) {
             const errData = await response.json();
-            throw new Error(errData.detail || 'Błąd serwera podczas wysyłania.');
+            throw new Error(_E(errData.detail) || _t('err.sendFail'));
         }
 
         // 4. Sukces
-        toast(t('toast.msgSent'), 'success');
+        toast(_t('toast.msgSent'), 'success');
         
         // Czyszczenie formularza
         document.getElementById('contact-name').value = '';
@@ -2375,7 +2375,7 @@ async function submitContactForm() {
     } finally {
         // Odblokowanie przycisku po zakończeniu
         btn.disabled = false;
-        btn.textContent = t('contact.sendMsg');
+        btn.textContent = _t('contact.sendMsg');
     }
 }
 
@@ -2470,10 +2470,10 @@ async function uploadAvatar() {
     
     if(res.ok) {
         const data = await res.json();
-        toast(t('toast.avatarOk'));
+        toast(_t('toast.avatarOk'));
         applyAvatarToUI(data.avatar_path); // Odświeżamy UI natychmiast bez wylogowania!
     } else {
-        toast(t('err.avatar'));
+        toast(_t('err.avatar'));
         document.getElementById('prof-avatar-placeholder').innerText = "⚠";
     }
 }
@@ -2485,7 +2485,7 @@ async function updateNick() {
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') },
         body: JSON.stringify({ username: nick })
     });
-    if(res.ok) { toast(t('toast.nameUpdated'),"success") }
+    if(res.ok) { toast(_t('toast.nameUpdated'),"success") }
 }
 
 
@@ -2495,21 +2495,21 @@ async function requestCode(purpose) {
     if (purpose === 'email') {
         const newEmail = document.getElementById('p-new-email').value.trim();
         if (!newEmail) {
-            return toast(t('warn.needNewEmail'), "warn");
+            return toast(_t('warn.needNewEmail'), "warn");
         }
         // Opcjonalnie: prosta weryfikacja czy w ogóle wpisano małpę
         if (!newEmail.includes('@')) {
-            return toast(t('warn.badEmail2'), "warn");
+            return toast(_t('warn.badEmail2'), "warn");
         }
     } 
     else if (purpose === 'password') {
         const oldPass = document.getElementById('p-old-pass').value;
         const newPass = document.getElementById('p-new-pass').value;
         if (!oldPass || !newPass) {
-            return toast(t('warn.needPasswords'), "warn");
+            return toast(_t('warn.needPasswords'), "warn");
         }
         if (newPass.length < 6) {
-            return toast(t('warn.passShort'), "warn");
+            return toast(_t('warn.passShort'), "warn");
         }
     }
     // ---------------------------------------------------
@@ -2521,7 +2521,7 @@ async function requestCode(purpose) {
     });
     
     if(res.ok) {
-        toast(t('toast.codeSent'),"info");
+        toast(_t('toast.codeSent'),"info");
         if(purpose === 'email') { 
             document.getElementById('btn-email-req').style.display='none'; 
             document.getElementById('email-verify-box').style.display='flex'; 
@@ -2536,7 +2536,7 @@ async function requestCode(purpose) {
         }
     } else {
         const err = await res.json();
-        toast(t('err.generic') + (err.detail || t('err.codeSend')), "error");
+        toast(_t('err.generic') + (_E(err.detail) || _t('err.codeSend')), "error");
     }
 }
 
@@ -2548,8 +2548,8 @@ async function confirmEmailUpdate() {
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') },
         body: JSON.stringify({ new_email: email, code: code })
     });
-    if(res.ok) { toast(t('toast.emailChanged')); loadProfileData(); } 
-    else { const err = await res.json(); toast(err.detail, "error"); }
+    if(res.ok) { toast(_t('toast.emailChanged')); loadProfileData(); } 
+    else { const err = await res.json(); toast(_E(err.detail), "error"); }
 }
 
 async function confirmPasswordUpdate() {
@@ -2561,8 +2561,8 @@ async function confirmPasswordUpdate() {
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') },
         body: JSON.stringify({ old_password: oldP, new_password: newP, code: code })
     });
-    if(res.ok) { toast(t('toast.passChanged'), "success"); auth.logout(); }
-    else { const err = await res.json(); toast(err.detail, "error"); }
+    if(res.ok) { toast(_t('toast.passChanged'), "success"); auth.logout(); }
+    else { const err = await res.json(); toast(_E(err.detail), "error"); }
 }
 
 async function confirmDeleteAccount() {
@@ -2572,8 +2572,8 @@ async function confirmDeleteAccount() {
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') },
         body: JSON.stringify({ code: code })
     });
-    if(res.ok) { toast(t('toast.accDeleted'), "success"); auth.logout(); }
-    else { const err = await res.json(); toast(err.detail, "error"); }
+    if(res.ok) { toast(_t('toast.accDeleted'), "success"); auth.logout(); }
+    else { const err = await res.json(); toast(_E(err.detail), "error"); }
 }
 
 // ── TOAST ─────────────────────────────────────────────────────────
@@ -2599,7 +2599,7 @@ function toast(msg, type = 'success') {
 }
 
 // --- CUSTOM CONFIRM ---
-function customConfirm(msg, title = t('conf.title')) {
+function customConfirm(msg, title = _t('conf.title')) {
   return new Promise((resolve) => {
     const modal = document.getElementById('confirm-modal');
     document.getElementById('confirm-title').textContent = title;
@@ -2804,7 +2804,7 @@ window.addEventListener('load', () => {
         <h4 data-i18n="footer.tworca">Twórca</h4>
         <a href="https://www.rs-projects.ovh" target="_blank" data-i18n="footer.oMniePortfolio">O mnie (Portfolio) ↗</a>
         <a href="javascript:void(0)" onclick="app.navigate('contact')" data-i18n="footer.napiszWiadomosc">Napisz wiadomość</a>
-        <a href="javascript:void(0)" onclick="toast(t('toast.privacy'), 'info')" data-i18n="footer.politykaPrywatnosci">Polityka prywatności</a>
+        <a href="javascript:void(0)" onclick="toast(_t('toast.privacy'), 'info')" data-i18n="footer.politykaPrywatnosci">Polityka prywatności</a>
       </div>
     </div>
 

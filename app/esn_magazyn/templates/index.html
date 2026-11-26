@@ -8,11 +8,11 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <meta name="color-scheme" content="dark light">
-<script src="/magazyn/static/i18n.js?v=2"></script>
-<script src="/magazyn/static/i18n/pl.js?v=1"></script>
-<script src="/magazyn/static/i18n/en.js?v=1"></script>
+<script src="/magazyn/static/i18n.js?v=4"></script>
+<script src="/magazyn/static/i18n/pl.js?v=4"></script>
+<script src="/magazyn/static/i18n/en.js?v=4"></script>
 <script src="/magazyn/static/theme.js?v=4"></script>
-<script src="/magazyn/static/ai-local.js?v=1"></script>
+<script src="/magazyn/static/ai-local.js?v=2"></script>
 <link rel="stylesheet" href="/magazyn/static/magazyn.css?v=1.7">
 <link rel="stylesheet" href="/magazyn/static/mobile.css?v=3">
 </head>
@@ -50,27 +50,27 @@
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-section">
-      <span class="sidebar-label">Widok</span>
+      <span class="sidebar-label" data-i18n="mag.widok">Widok</span>
       <button class="sidebar-btn active" id="sb-components" onclick="switchView('components',this,'sb')">
-        <span class="sico"><i class="fa-solid fa-microchip"></i></span>Komponenty
+        <span class="sico"><i class="fa-solid fa-microchip"></i></span><span data-i18n="mag.components">Komponenty</span>
       </button>
       <button class="sidebar-btn" id="sb-projects" onclick="switchView('projects',this,'sb')">
-        <span class="sico"><i class="fa-solid fa-screwdriver-wrench"></i></span>Projekty
+        <span class="sico"><i class="fa-solid fa-screwdriver-wrench"></i></span><span data-i18n="mag.projects">Projekty</span>
       </button>
     </div>
     <hr class="sidebar-hr">
     <div class="sidebar-section">
-      <span class="sidebar-label">Kategorie</span>
+      <span class="sidebar-label" data-i18n="mag.categories">Kategorie</span>
       <div id="cat-sidebar"></div>
       <button class="sidebar-btn" onclick="openAddCat()" style="color:var(--text3)">
-        <span class="sico">＋</span>Nowa kategoria
+        <span class="sico">＋</span><span data-i18n="mag.nowaKategoria">Nowa kategoria</span>
       </button>
     </div>
     <hr class="sidebar-hr">
     <div class="sidebar-section">
-      <span class="sidebar-label">Filtry</span>
+      <span class="sidebar-label" data-i18n="mag.filtry">Filtry</span>
       <button class="sidebar-btn" id="sb-lowstock" onclick="toggleLowStock(this)">
-      <span class="sico"><i class="fa-solid fa-triangle-exclamation"></i></span>Niski stan
+      <span class="sico"><i class="fa-solid fa-triangle-exclamation"></i></span><span data-i18n="mag.niskiStan">Niski stan</span>
       </button>
     </div>
   </aside>
@@ -82,34 +82,34 @@
     <div class="view active" id="view-components">
       <div class="inv-hero">
         <div>
-          <div class="hero-tag">Mój Magazyn</div>
-          <h1 class="inv-title">Moje Komponenty <em>Elektroniczne</em></h1>
+          <div class="hero-tag" data-i18n="mag.mojMagazyn">Mój Magazyn</div>
+          <h1 class="inv-title"><span data-i18n="mag.mojeKomponenty">Moje Komponenty</span> <em data-i18n="mag.elektroniczne">Elektroniczne</em></h1>
         </div>
-        <button class="btn-action primary" onclick="openAddCompModal()">+ Dodaj komponent</button>
+        <button class="btn-action primary" onclick="openAddCompModal()" data-i18n="mag.dodajKomponent">+ Dodaj komponent</button>
       </div>
 
       <div class="stats-bar">
-        <div class="stat-cell"><div class="stat-val" id="s-components">–</div><div class="stat-label">Komponentów</div></div>
-        <div class="stat-cell"><div class="stat-val" id="s-quantity">–</div><div class="stat-label">Łączna ilość</div></div>
-        <div class="stat-cell warn"><div class="stat-val" id="s-low">–</div><div class="stat-label">Niski stan</div></div>
-        <div class="stat-cell ok"><div class="stat-val" id="s-projects">–</div><div class="stat-label">Aktywne proj.</div></div>
-        <div class="stat-cell"><div class="stat-val" id="s-cats">–</div><div class="stat-label">Kategorii</div></div>
+        <div class="stat-cell"><div class="stat-val" id="s-components">–</div><div class="stat-label" data-i18n="mag.komponentow">Komponentów</div></div>
+        <div class="stat-cell"><div class="stat-val" id="s-quantity">–</div><div class="stat-label" data-i18n="mag.lacznaIlosc">Łączna ilość</div></div>
+        <div class="stat-cell warn"><div class="stat-val" id="s-low">–</div><div class="stat-label" data-i18n="mag.niskiStan">Niski stan</div></div>
+        <div class="stat-cell ok"><div class="stat-val" id="s-projects">–</div><div class="stat-label" data-i18n="mag.aktywneProj">Aktywne proj.</div></div>
+        <div class="stat-cell"><div class="stat-val" id="s-cats">–</div><div class="stat-label" data-i18n="mag.kategorii">Kategorii</div></div>
       </div>
 
       <div class="toolbar">
         <div class="search-wrap">
           <span class="search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
-          <input type="text" id="search-input" placeholder="Szukaj komponentów..." oninput="onSearch(this.value)">
+          <input type="text" id="search-input" placeholder="Szukaj komponentów..." oninput="onSearch(this.value)" data-i18n-attr="placeholder:mag.szukajKomponentow">
         </div>
       </div>
 
       <div class="filter-bar" id="cat-filter-bar">
-        <button class="chip-btn active" onclick="filterCat(null,this)">Wszystkie</button>
+        <button class="chip-btn active" onclick="filterCat(null,this)" data-i18n="mag.wszystkie">Wszystkie</button>
       </div>
 
       <div class="content-area">
         <div class="comp-grid" id="comp-grid">
-          <div class="empty-state"><div class="e-icon">⏳</div><div class="e-text">Ładowanie...</div></div>
+          <div class="empty-state"><div class="e-icon">⏳</div><div class="e-text" data-i18n="mag.ladowanie">Ładowanie...</div></div>
         </div>
       </div>
     </div>
@@ -118,14 +118,14 @@
     <div class="view" id="view-projects">
       <div class="inv-hero">
         <div>
-          <div class="hero-tag">Mój Magazyn</div>
-          <h1 class="inv-title">Projekty <em>&amp; Przypisania</em></h1>
+          <div class="hero-tag" data-i18n="mag.mojMagazyn">Mój Magazyn</div>
+          <h1 class="inv-title"><span data-i18n="mag.projects">Projekty</span> <em data-i18n="mag.przypisania">&amp; Przypisania</em></h1>
         </div>
-        <button class="btn-action primary" onclick="openNewProjModal()">+ Nowy projekt</button>
+        <button class="btn-action primary" onclick="openNewProjModal()" data-i18n="mag.nowyProjekt">+ Nowy projekt</button>
       </div>
       <div class="content-area">
         <div class="project-list" id="project-list">
-          <div class="empty-state"><div class="e-icon">⏳</div><div class="e-text">Ładowanie...</div></div>
+          <div class="empty-state"><div class="e-icon">⏳</div><div class="e-text" data-i18n="mag.ladowanie">Ładowanie...</div></div>
         </div>
       </div>
     </div>
@@ -141,7 +141,7 @@
       <div class="detail-name" id="dp-name"></div>
       <div class="detail-symbol" id="dp-symbol"></div>
     </div>
-    <button class="btn-action" style="font-size:10px;padding:5px 10px" onclick="editCurrentComp()"><i class="fa-solid fa-pen-to-square"></i> Edytuj</button>
+    <button class="btn-action" style="font-size:10px;padding:5px 10px" onclick="editCurrentComp()"><i class="fa-solid fa-pen-to-square"></i> <span data-i18n="mag.edytuj">Edytuj</span></button>
     <button class="close-x" onclick="closeDetail()">✕</button>
   </div>
   <div class="detail-body" id="dp-body"></div>
@@ -152,29 +152,29 @@
   <div class="ai-panel-header">
     <div class="ai-logo-box"><i class="fa-solid fa-robot"></i></div>
     <div style="flex:1">
-      <div class="ai-title-text">ESN Asystent</div>
+      <div class="ai-title-text" data-i18n="mag.esnAsystent">ESN Asystent</div>
       <div class="ai-subtitle" id="ai-provider-label">initializing...</div>
     </div>
     <button class="close-x" onclick="toggleAI()">✕</button>
   </div>
 
   <div class="ai-session-bar">
-    <span class="ai-session-info" id="ai-session-info">Sesja #1 · 0 wiad.</span>
-    <a class="ai-new-session" href="/#profile" title="Własny klucz API lub model lokalny (Ollama)" style="text-decoration:none">⚙ Ustawienia</a>
-    <button class="ai-new-session" onclick="newAISession()" title="Wyczyść historię i zacznij od nowa">⟳ Nowa sesja</button>
+    <span class="ai-session-info" id="ai-session-info" data-i18n="mag.sesja10Wiad">Sesja #1 · 0 wiad.</span>
+    <a class="ai-new-session" href="/#profile" title="Własny klucz API lub model lokalny (Ollama)" style="text-decoration:none" data-i18n-attr="title:mag.wlasnyKluczApiLub"><span data-i18n="mag.ustawienia">⚙ Ustawienia</span></a>
+    <button class="ai-new-session" onclick="newAISession()" title="Wyczyść historię i zacznij od nowa" data-i18n-attr="title:mag.wyczyscHistorieIZacznij"><span data-i18n="mag.nowaSesja">⟳ Nowa sesja</span></button>
   </div>
 
   <div class="ai-messages" id="ai-messages"></div>
 
   <div class="ai-quick-row">
-    <button class="ai-quick-btn" onclick="aiQuick('Co mogę zbudować z dostępnych komponentów?')"><i class="fa-regular fa-lightbulb"></i> Pomysły</button>
-    <button class="ai-quick-btn" onclick="aiQuick('Czego mi brakuje i co powinienem dokupić?')"><i class="fa-solid fa-shopping-cart"></i> Braki</button>
-    <button class="ai-quick-btn" onclick="aiQuick('Sprawdź niskie stany i ostrzeż mnie.')"><i class="fa-solid fa-triangle-exclamation"></i> Stan</button>
-    <button class="ai-quick-btn" onclick="aiQuick('Na co uważać używając moich komponentów?')"><i class="fa-solid fa-question"></i> Uwagi</button>
+    <button class="ai-quick-btn" onclick="aiQuick(_t('mag.qIdeas'))"><i class="fa-regular fa-lightbulb"></i> <span data-i18n="mag.pomysly">Pomysły</span></button>
+    <button class="ai-quick-btn" onclick="aiQuick(_t('mag.qMissing'))"><i class="fa-solid fa-shopping-cart"></i> <span data-i18n="mag.braki">Braki</span></button>
+    <button class="ai-quick-btn" onclick="aiQuick(_t('mag.qStock'))"><i class="fa-solid fa-triangle-exclamation"></i> <span data-i18n="mag.stan">Stan</span></button>
+    <button class="ai-quick-btn" onclick="aiQuick(_t('mag.qNotes'))"><i class="fa-solid fa-question"></i> <span data-i18n="mag.uwagi">Uwagi</span></button>
   </div>
 
   <div class="ai-input-area">
-    <textarea class="ai-textarea" id="ai-input" placeholder="Zapytaj o komponenty, projekt, dobór elementów..." rows="1" onkeydown="aiKeydown(event)"></textarea>
+    <textarea class="ai-textarea" id="ai-input" placeholder="Zapytaj o komponenty, projekt, dobór elementów..." rows="1" onkeydown="aiKeydown(event)" data-i18n-attr="placeholder:mag.zapytajOKomponentyProjekt"></textarea>
     <button class="ai-send" id="ai-send" onclick="sendAI()">➤</button>
   </div>
 </div>
@@ -185,81 +185,81 @@
 <div class="modal-overlay" id="comp-modal">
   <div class="modal">
     <div class="modal-title">
-      <span id="comp-modal-title">Dodaj komponent</span>
+      <span id="comp-modal-title" data-i18n="mag.dodajKomponent2">Dodaj komponent</span>
       <button class="close-x" onclick="closeModal('comp-modal')">✕</button>
     </div>
     <div class="form-group">
-      <label class="form-label"><i class="fa-solid fa-magnifying-glass"></i> Wybierz z katalogu ESN (autouzupełnienie)</label>
+      <label class="form-label"><i class="fa-solid fa-magnifying-glass"></i> <span data-i18n="mag.wybierzZKataloguEsn">Wybierz z katalogu ESN (autouzupełnienie)</span></label>
       <select class="form-control" id="f-catalog-pick" onchange="autofillComponent(this.value)">
-        <option value="">— wpisz ręcznie lub wybierz z katalogu —</option>
+        <option value="" data-i18n="mag.wpiszRecznieLubWybierz">— wpisz ręcznie lub wybierz z katalogu —</option>
       </select>
     </div>
     <div class="form-group">
-      <label class="form-label">Nazwa *</label>
-      <input class="form-control" id="f-name" placeholder="np. Rezystor 10kΩ 1/4W">
+      <label class="form-label" data-i18n="mag.nazwa">Nazwa *</label>
+      <input class="form-control" id="f-name" placeholder="np. Rezystor 10kΩ 1/4W" data-i18n-attr="placeholder:mag.npRezystor10k1">
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Symbol</label>
+        <label class="form-label" data-i18n="mag.symbol">Symbol</label>
         <input class="form-control" id="f-symbol" placeholder="R, C, Q, U...">
       </div>
       <div class="form-group">
-        <label class="form-label">Kategoria *</label>
+        <label class="form-label" data-i18n="mag.kategoria">Kategoria *</label>
         <select class="form-control" id="f-category"></select>
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Ilość całkowita</label>
+        <label class="form-label" data-i18n="mag.iloscCalkowita">Ilość całkowita</label>
         <input type="number" class="form-control" id="f-qty-total" value="0" min="0">
       </div>
       <div class="form-group">
-        <label class="form-label">Dostępne</label>
+        <label class="form-label" data-i18n="mag.dostepne">Dostępne</label>
         <input type="number" class="form-control" id="f-qty-avail" value="0" min="0">
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Jednostka</label>
+        <label class="form-label" data-i18n="mag.jednostka">Jednostka</label>
         <input class="form-control" id="f-unit" value="szt.">
       </div>
       <div class="form-group">
-        <label class="form-label">Min. stan (alarm)</label>
+        <label class="form-label" data-i18n="mag.minStanAlarm">Min. stan (alarm)</label>
         <input type="number" class="form-control" id="f-min-stock" value="0" min="0">
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Zastosowanie</label>
-        <input class="form-control" id="f-applications" list="app-list" placeholder="Wybierz lub wpisz...">
+        <label class="form-label" data-i18n="mag.zastosowanie">Zastosowanie</label>
+        <input class="form-control" id="f-applications" list="app-list" placeholder="Wybierz lub wpisz..." data-i18n-attr="placeholder:mag.wybierzLubWpisz">
         <datalist id="app-list"></datalist>
       </div>
       <div class="form-group">
-        <label class="form-label">Lokalizacja</label>
-        <input class="form-control" id="f-location" placeholder="np. Szuflada A1, Półka C2">
+        <label class="form-label" data-i18n="mag.lokalizacja">Lokalizacja</label>
+        <input class="form-control" id="f-location" placeholder="np. Szuflada A1, Półka C2" data-i18n-attr="placeholder:mag.npSzufladaA1Polka">
       </div>
     </div>
     <div class="form-group">
-      <label class="form-label">Tagi (oddzielone przecinkiem)</label>
-      <div style="margin-bottom: 5px; font-size: 11px; color: var(--text3); font-family: var(--mono);">Szybkie tagi:</div>
+      <label class="form-label" data-i18n="mag.tagiOddzielonePrzecinkiem">Tagi (oddzielone przecinkiem)</label>
+      <div style="margin-bottom: 5px; font-size: 11px; color: var(--text3); font-family: var(--mono);" data-i18n="mag.szybkieTagi">Szybkie tagi:</div>
       <div class="filter-chips" id="magazyn-quick-tags" style="margin-bottom: 8px; display: flex; flex-wrap: wrap; gap: 6px;"></div>
       <input class="form-control" id="f-tags" placeholder="THT, 5V, NPN, SMD">
     </div>
     <div class="form-group">
-      <label class="form-label">Notatki</label>
-      <textarea class="form-control" id="f-notes" rows="2" placeholder="Specyfikacje, uwagi..."></textarea>
+      <label class="form-label" data-i18n="mag.notatki">Notatki</label>
+      <textarea class="form-control" id="f-notes" rows="2" placeholder="Specyfikacje, uwagi..." data-i18n-attr="placeholder:mag.specyfikacjeUwagi"></textarea>
     </div>
       <div class="form-group">
-      <label class="form-label">Specyfikacja techniczna</label>
-      <textarea class="form-control" id="f-specs" rows="4" placeholder="Wpisz linijka pod linijką:&#10;Napięcie: 5V&#10;Interfejs: I2C&#10;&#10;Lub użyj formatu:&#10;[Napięcie: 5V], [Interfejs: I2C]"></textarea>
+      <label class="form-label" data-i18n="mag.specyfikacjaTechniczna">Specyfikacja techniczna</label>
+      <textarea class="form-control" id="f-specs" rows="4" placeholder="Wpisz linijka pod linijką:&#10;Napięcie: 5V&#10;Interfejs: I2C&#10;&#10;Lub użyj formatu:&#10;[Napięcie: 5V], [Interfejs: I2C]" data-i18n-attr="placeholder:mag.wpiszLinijkaPodLinijka"></textarea>
     </div>
     <div class="form-group">
-      <label class="form-label">Link do datasheetu</label>
+      <label class="form-label" data-i18n="mag.linkDoDatasheetu">Link do datasheetu</label>
       <input type="url" class="form-control" id="f-datasheet" placeholder="https://...">
     </div>
     <div class="form-actions">
-      <button class="btn-action" onclick="closeModal('comp-modal')">Anuluj</button>
-      <button class="btn-action primary" onclick="saveComp()">Zapisz komponent</button>
+      <button class="btn-action" onclick="closeModal('comp-modal')" data-i18n="mag.anuluj">Anuluj</button>
+      <button class="btn-action primary" onclick="saveComp()" data-i18n="mag.zapiszKomponent">Zapisz komponent</button>
     </div>
   </div>
 </div>
@@ -268,35 +268,35 @@
 <div class="modal-overlay" id="proj-modal">
   <div class="modal">
     <div class="modal-title">
-      <span id="proj-modal-title">Nowy projekt</span>
+      <span id="proj-modal-title" data-i18n="mag.nowyProjekt2">Nowy projekt</span>
       <button class="close-x" onclick="closeModal('proj-modal')">✕</button>
     </div>
     <div class="form-group">
-      <label class="form-label">Nazwa projektu *</label>
-      <input class="form-control" id="pf-name" placeholder="np. Stacja meteo IoT">
+      <label class="form-label" data-i18n="mag.nazwaProjektu">Nazwa projektu *</label>
+      <input class="form-control" id="pf-name" placeholder="np. Stacja meteo IoT" data-i18n-attr="placeholder:mag.npStacjaMeteoIot">
     </div>
     <div class="form-group">
-      <label class="form-label">Opis</label>
-      <textarea class="form-control" id="pf-desc" rows="2" placeholder="Czym jest ten projekt?"></textarea>
+      <label class="form-label" data-i18n="mag.opis">Opis</label>
+      <textarea class="form-control" id="pf-desc" rows="2" placeholder="Czym jest ten projekt?" data-i18n-attr="placeholder:mag.czymJestTenProjekt"></textarea>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Status</label>
+        <label class="form-label" data-i18n="mag.status">Status</label>
         <select class="form-control" id="pf-status">
-          <option value="planning">Planowanie</option>
-          <option value="active">Aktywny</option>
-          <option value="paused">Wstrzymany</option>
-          <option value="completed">Ukończony</option>
+          <option value="planning" data-i18n="mag.planowanie">Planowanie</option>
+          <option value="active" data-i18n="mag.aktywny">Aktywny</option>
+          <option value="paused" data-i18n="mag.wstrzymany">Wstrzymany</option>
+          <option value="completed" data-i18n="mag.ukonczony">Ukończony</option>
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">Kolor znacznika</label>
+        <label class="form-label" data-i18n="mag.kolorZnacznika">Kolor znacznika</label>
         <input type="color" class="form-control" id="pf-color" value="#56e1fd" style="height:41px;padding:4px 8px">
       </div>
     </div>
     <div class="form-actions">
-      <button class="btn-action" onclick="closeModal('proj-modal')">Anuluj</button>
-      <button class="btn-action primary" onclick="saveProject()">Zapisz projekt</button>
+      <button class="btn-action" onclick="closeModal('proj-modal')" data-i18n="mag.anuluj">Anuluj</button>
+      <button class="btn-action primary" onclick="saveProject()" data-i18n="mag.zapiszProjekt">Zapisz projekt</button>
     </div>
   </div>
 </div>
@@ -304,20 +304,20 @@
 <div class="modal-overlay" id="edit-pc-modal">
   <div class="modal" style="max-width:400px">
     <div class="modal-title">
-      <span>Edytuj komponent w projekcie</span>
+      <span data-i18n="mag.edytujKomponentWProjekcie">Edytuj komponent w projekcie</span>
       <button class="close-x" onclick="closeModal('edit-pc-modal')">✕</button>
     </div>
     <div class="form-group">
-      <label class="form-label" id="epc-qty-label">Ilość</label>
+      <label class="form-label" id="epc-qty-label" data-i18n="mag.ilosc">Ilość</label>
       <input type="number" class="form-control" id="epc-qty" min="1" oninput="if(this.max && parseInt(this.value) > parseInt(this.max)) this.value = this.max;">
     </div>
     <div class="form-group">
-      <label class="form-label">Notatka</label>
+      <label class="form-label" data-i18n="mag.notatka">Notatka</label>
       <textarea class="form-control" id="epc-notes" rows="3"></textarea>
     </div>
     <div class="form-actions">
-      <button class="btn-action" onclick="closeModal('edit-pc-modal')">Anuluj</button>
-      <button class="btn-action primary" onclick="savePCChange()">Zapisz zmiany</button>
+      <button class="btn-action" onclick="closeModal('edit-pc-modal')" data-i18n="mag.anuluj">Anuluj</button>
+      <button class="btn-action primary" onclick="savePCChange()" data-i18n="mag.zapiszZmiany">Zapisz zmiany</button>
     </div>
   </div>
 </div>
@@ -326,33 +326,33 @@
 <div class="modal-overlay" id="assign-modal">
   <div class="modal" style="max-width:400px">
     <div class="modal-title">
-      <span id="assign-modal-title">Przypisz do projektu</span>
+      <span id="assign-modal-title" data-i18n="mag.przypiszDoProjektu">Przypisz do projektu</span>
       <button class="close-x" onclick="closeModal('assign-modal')">✕</button>
     </div>
 
     <div class="callout-note" id="assign-comp-info" style="margin-bottom:14px;font-family:var(--mono);font-size:12px;display:none;"></div>
 
     <div class="form-group" id="group-atp-proj">
-      <label class="form-label">Wybierz Projekt</label>
+      <label class="form-label" data-i18n="mag.wybierzProjekt">Wybierz Projekt</label>
       <select class="form-control" id="atp-proj"></select>
     </div>
 
     <div class="form-group" id="group-atp-comp" style="display:none;">
-      <label class="form-label">Wybierz Komponent</label>
+      <label class="form-label" data-i18n="mag.wybierzKomponent">Wybierz Komponent</label>
       <select class="form-control" id="atp-comp"></select>
     </div>
 
     <div class="form-group">
-      <label class="form-label" id="atp-qty-label">Ilość do użycia</label>
+      <label class="form-label" id="atp-qty-label" data-i18n="mag.iloscDoUzycia">Ilość do użycia</label>
       <input type="number" class="form-control" id="atp-qty" value="1" min="1" oninput="if(this.max && parseInt(this.value) > parseInt(this.max)) this.value = this.max;">
     </div>
     <div class="form-group">
-      <label class="form-label">Notatka (opcjonalnie)</label>
-      <input class="form-control" id="atp-note" placeholder="np. użyte jako wzmacniacz">
+      <label class="form-label" data-i18n="mag.notatkaOpcjonalnie">Notatka (opcjonalnie)</label>
+      <input class="form-control" id="atp-note" placeholder="np. użyte jako wzmacniacz" data-i18n-attr="placeholder:mag.npUzyteJakoWzmacniacz">
     </div>
     <div class="form-actions">
-      <button class="btn-action" onclick="closeModal('assign-modal')">Anuluj</button>
-      <button class="btn-action primary" onclick="doAssign()">Przypisz</button>
+      <button class="btn-action" onclick="closeModal('assign-modal')" data-i18n="mag.anuluj">Anuluj</button>
+      <button class="btn-action primary" onclick="doAssign()" data-i18n="mag.przypisz">Przypisz</button>
     </div>
   </div>
 </div>
@@ -361,30 +361,30 @@
 <div class="modal-overlay" id="cat-modal">
   <div class="modal" style="max-width:380px">
     <div class="modal-title">
-      <span>Nowa kategoria</span>
+      <span data-i18n="mag.nowaKategoria">Nowa kategoria</span>
       <button class="close-x" onclick="closeModal('cat-modal')">✕</button>
     </div>
     <div class="form-group">
-      <label class="form-label">Nazwa</label>
-      <input class="form-control" id="cf-name" placeholder="np. Zasilacze">
+      <label class="form-label" data-i18n="mag.nazwa2">Nazwa</label>
+      <input class="form-control" id="cf-name" placeholder="np. Zasilacze" data-i18n-attr="placeholder:mag.npZasilacze">
     </div>
     <div class="form-row">
       <div class="form-group" style="flex:2">
-        <label class="form-label">Emoji / ikona</label>
-        <input class="form-control" id="cf-icon" placeholder="🔌 lub fa-solid fa-bolt">
+        <label class="form-label" data-i18n="mag.emojiIkona">Emoji / ikona</label>
+        <input class="form-control" id="cf-icon" placeholder="🔌 lub fa-solid fa-bolt" data-i18n-attr="placeholder:mag.lubFaSolidFa">
         <div style="font-family:var(--mono); font-size:9px; color:var(--text3); margin-top:5px; line-height:1.4;">
-          Wklej emotkę (np. 📦) lub wpisz klasę <b>FontAwesome</b> (np. fa-solid fa-robot).
+          <span data-i18n="mag.wklejEmotkeNpLub">Wklej emotkę (np. 📦) lub wpisz klasę</span> <b>FontAwesome</b> <span data-i18n="mag.npFaSolidFa">(np. fa-solid fa-robot).</span>
         </div>
       </div>
       <div class="form-group" style="flex:1">
-        <label class="form-label">Kolor</label>
+        <label class="form-label" data-i18n="mag.kolor">Kolor</label>
         <input type="color" class="form-control" id="cf-color" value="#56e1fd" style="height:41px;padding:4px 8px; width:100%;">
       </div>
     </div>
     <div class="form-actions">
-      <button class="btn-action danger" id="btn-del-cat" style="display:none; margin-right:auto;" onclick="delCat()">Usuń</button>
-      <button class="btn-action" onclick="closeModal('cat-modal')">Anuluj</button>
-      <button class="btn-action primary" id="btn-save-cat" onclick="saveCat()">Utwórz</button>
+      <button class="btn-action danger" id="btn-del-cat" style="display:none; margin-right:auto;" onclick="delCat()" data-i18n="mag.usun">Usuń</button>
+      <button class="btn-action" onclick="closeModal('cat-modal')" data-i18n="mag.anuluj">Anuluj</button>
+      <button class="btn-action primary" id="btn-save-cat" onclick="saveCat()" data-i18n="mag.utworz">Utwórz</button>
     </div>
   </div>
 </div>
@@ -424,7 +424,7 @@ async function loadTags() {
         ).join('');
       }
     }
-  } catch(e) { console.warn("Nie załadowano tagów"); }
+  } catch(e) { console.warn(_t('mag.nieZaladowanoTagow')); }
 }
 
 function addQuickMagazynTag(tag) {
@@ -447,7 +447,7 @@ async function loadApplications() {
         dl.innerHTML = S.applications.map(a => `<option value="${a}">`).join('');
       }
     }
-  } catch(e) { console.warn("Nie załadowano zastosowań"); }
+  } catch(e) { console.warn(_t('mag.nieZaladowanoZastosowan')); }
 }
 
 // ── API ───────────────────────────────────────────────────────────
@@ -467,7 +467,7 @@ async function api(endpoint, options = {}) {
     try {
       // Próbujemy wyciągnąć ludzką wiadomość o błędzie z backendu
       const errData = await res.json();
-      if (errData.error) errMsg = errData.error;
+      if (errData.error) errMsg = _E(errData.error);
     } catch(e) {}
     
     // Zwracamy błąd, aby kod wyżej mógł go złapać w bloku catch i wrzucić do toast()
@@ -499,17 +499,17 @@ function renderCatSidebar() {
 
   let html = official.map(c => `
     <button class="sidebar-btn ${S.filterCat==c.id?'active':''}" style="color:${c.color}" onclick="filterCat(${c.id},this,'sb')">
-      <span class="sico">${renderIcon(c.icon)}</span><span style="flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;">${c.name}</span>
+      <span class="sico">${renderIcon(c.icon)}</span><span style="flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;">${_L('cat', c.name)}</span>
     </button>`).join('');
 
   if (custom.length > 0) {
-    html += `<div class="sidebar-label" style="margin-top:16px;">Własne kategorie</div>`;
+    html += `<div class="sidebar-label" style="margin-top:16px;">${_t('mag.wlasneKategorie')}</div>`;
     html += custom.map(c => `
       <div style="display:flex; align-items:center; width:100%;">
         <button class="sidebar-btn ${S.filterCat==c.id?'active':''}" style="color:${c.color}; flex:1;" onclick="filterCat(${c.id},this,'sb')">
           <span class="sico">${renderIcon(c.icon)}</span></i></span><span style="flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;">${c.name}</span>
         </button>
-        <button onclick="openEditCat(${c.id})" style="background:none; border:none; cursor:pointer; font-size:11px; color:var(--text3); padding:0 8px; transition:0.2s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'" title="Edytuj kategorię"><i class="fa-regular fa-pen"></i></button>
+        <button onclick="openEditCat(${c.id})" style="background:none; border:none; cursor:pointer; font-size:11px; color:var(--text3); padding:0 8px; transition:0.2s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'" title="${_t('mag.edytujKategorie')}"><i class="fa-regular fa-pen"></i></button>
       </div>`).join('');
   }
   document.getElementById('cat-sidebar').innerHTML = html;
@@ -518,24 +518,24 @@ function renderCatSidebar() {
 function renderCatFilters() {
   // Przycisk "Wszystkie" jest teraz czysty, a mapa korzysta z renderIcon()
   document.getElementById('cat-filter-bar').innerHTML =
-    `<button class="chip-btn ${S.filterCat===null?'active':''}" onclick="filterCat(null,this)">Wszystkie</button>` +
-    S.categories.map(c=>`<button class="chip-btn ${S.filterCat==c.id?'active':''}" onclick="filterCat(${c.id},this)">${renderIcon(c.icon)} ${c.name}</button>`).join('') +
-    `<button class="chip-btn ${S.filterLowStock?'active':''}" onclick="toggleLowStock(this)"><i class="fa-solid fa-triangle-exclamation"></i> Niski stan</button>`;
+    `<button class="chip-btn ${S.filterCat===null?'active':''}" onclick="filterCat(null,this)">${_t('mag.wszystkie')}</button>` +
+    S.categories.map(c=>`<button class="chip-btn ${S.filterCat==c.id?'active':''}" onclick="filterCat(${c.id},this)">${renderIcon(c.icon)} ${_L('cat', c.name)}</button>`).join('') +
+    `<button class="chip-btn ${S.filterLowStock?'active':''}" onclick="toggleLowStock(this)"><i class="fa-solid fa-triangle-exclamation"></i> ${_t('mag.niskiStan')}</button>`;
 }
 
 function renderCatSelect() {
   // Naprawione podwójne przypisanie
-  document.getElementById('f-category').innerHTML = S.categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  document.getElementById('f-category').innerHTML = S.categories.map(c=>`<option value="${c.id}">${_L('cat', c.name)}</option>`).join('');
 }
 
 function openAddCat() {
   editingCatId = null;
-  document.querySelector('#cat-modal .modal-title span').textContent = 'Nowa kategoria';
+  document.querySelector('#cat-modal .modal-title span').textContent = _t('mag.nowaKategoria');
   document.getElementById('cf-name').value = '';
   document.getElementById('cf-icon').value = '';
   document.getElementById('cf-color').value = '#56e1fd';
   document.getElementById('btn-del-cat').style.display = 'none'; // Ukrywamy usuwanie przy tworzeniu
-  document.getElementById('btn-save-cat').textContent = 'Utwórz';
+  document.getElementById('btn-save-cat').textContent = _t('mag.utworz');
   openModal('cat-modal');
 }
 
@@ -543,25 +543,25 @@ function openEditCat(id) {
   const c = S.categories.find(x => x.id === id);
   if(!c) return;
   editingCatId = id;
-  document.querySelector('#cat-modal .modal-title span').textContent = 'Edytuj kategorię';
+  document.querySelector('#cat-modal .modal-title span').textContent = _t('mag.edytujKategorie');
   document.getElementById('cf-name').value = c.name;
   document.getElementById('cf-icon').value = c.icon;
   document.getElementById('cf-color').value = c.color;
   document.getElementById('btn-del-cat').style.display = 'block'; // Pokazujemy usuwanie przy edycji
-  document.getElementById('btn-save-cat').textContent = 'Zapisz';
+  document.getElementById('btn-save-cat').textContent = _t('mag.zapisz');
   openModal('cat-modal');
 }
 
 async function delCat() {
   if (!editingCatId) return;
-  if (!confirm('Na pewno usunąć tę kategorię?')) return;
+  if (!confirm(_t('mag.naPewnoUsunacTe'))) return;
   try {
     const res = await api(`/api/categories/${editingCatId}`, {method: 'DELETE'});
     if(res.error) {
       toast(res.error, 'error'); // Wyświetla komunikat z backendu jeśli kategoria nie jest pusta
       return;
     }
-    toast('Kategoria usunięta', 'success');
+    toast(_t('mag.kategoriaUsunieta'), 'success');
     closeModal('cat-modal');
     if (S.filterCat === editingCatId) filterCat(null, null); // Reset filtra jeśli usunęliśmy aktywny
     await loadCategories();
@@ -574,7 +574,7 @@ document.querySelector('#cat-modal .close-x').addEventListener('click', () => { 
 
 async function saveCat() {
   const name = document.getElementById('cf-name').value.trim();
-  if (!name) return toast('Podaj nazwę', 'warn');
+  if (!name) return toast(_t('mag.podajNazwe'), 'warn');
 
   const data = {
     name,
@@ -585,18 +585,18 @@ async function saveCat() {
   try {
     if (editingCatId) {
       await api(`/api/categories/${editingCatId}`, {method: 'PUT', body: JSON.stringify(data)});
-      toast('Kategoria zaktualizowana', 'success');
+      toast(_t('mag.kategoriaZaktualizowana'), 'success');
       editingCatId = null;
     } else {
       await api('/api/categories', {method: 'POST', body: JSON.stringify(data)});
-      toast('Kategoria dodana', 'success');
+      toast(_t('mag.kategoriaDodana'), 'success');
     }
     closeModal('cat-modal');
     document.getElementById('cf-name').value = '';
     document.getElementById('cf-icon').value = '';
 
     // Przywrócenie tytułu okienka
-    document.querySelector('#cat-modal .modal-title span').textContent = 'Nowa kategoria';
+    document.querySelector('#cat-modal .modal-title span').textContent = _t('mag.nowaKategoria');
 
     await loadCategories();
     loadStats();
@@ -618,7 +618,7 @@ async function loadComponents() {
 function renderComps() {
   const grid = document.getElementById('comp-grid');
   if (!S.components.length) {
-    grid.innerHTML=`<div class="empty-state"><div class="e-icon"><i class="fa-solid fa-box-open"></i></div><div class="e-text">Brak komponentów</div></div>`;
+    grid.innerHTML=`<div class="empty-state"><div class="e-icon"><i class="fa-solid fa-box-open"></i></div><div class="e-text">${_t('mag.brakKomponentow')}</div></div>`;
     return;
   }
   grid.innerHTML = S.components.map(c => {
@@ -638,7 +638,7 @@ function renderComps() {
         </div>
       </div>
       
-      ${mainApp ? `<div style="font-size:10px; color:var(--accent); font-family:var(--mono); margin-bottom:8px;"><i class="fa-solid fa-crosshairs"></i> ${mainApp.toUpperCase()}</div>` : ''}
+      ${mainApp ? `<div style="font-size:10px; color:var(--accent); font-family:var(--mono); margin-bottom:8px;"><i class="fa-solid fa-crosshairs"></i> ${_L('app', mainApp).toUpperCase()}</div>` : ''}
 
       <div class="comp-qty-row">
         <div>
@@ -647,7 +647,7 @@ function renderComps() {
         </div>
         <div class="qty-bar"><div class="qty-fill" style="width:${pct}%;background:${c.category_color}"></div></div>
       </div>
-      ${c.low_stock?'<div class="low-badge"><i class="fa-solid fa-triangle-exclamation"></i> niski stan</div>':''}
+      ${c.low_stock?`<div class="low-badge"><i class="fa-solid fa-triangle-exclamation"></i> ${_t('mag.niskiStanMaly')}</div>`:''}
       ${tags.length?`<div class="comp-tags">${tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>`:''}
       <div class="comp-quick-actions" onclick="event.stopPropagation()">
         <button class="btn-action" style="padding:4px 8px;font-size:10px" onclick="quickAdj(${c.id},1)">+1</button>
@@ -670,11 +670,11 @@ async function quickAdj(id, delta) {
 }
 
 async function delComp(id) {
-  if(!confirm('Usunąć komponent?')) return;
+  if(!confirm(_t('mag.usunacKomponent'))) return;
   try {
     await api(`/api/components/${id}`,{method:'DELETE'});
     await loadComponents(); loadStats();
-    toast('Usunięto komponent','success');
+    toast(_t('mag.usunietoKomponent'),'success');
   } catch(e){ toast(e.message,'error'); }
 }
 
@@ -684,13 +684,13 @@ async function openDetail(id) {
   const c = await api(`/api/components/${id}`);
   document.getElementById('dp-icon').innerHTML = renderIcon(c.category_icon);
   document.getElementById('dp-name').textContent   = c.name;
-  document.getElementById('dp-symbol').textContent = `${c.symbol||''} ${c.category||''}`.trim();
+  document.getElementById('dp-symbol').textContent = `${c.symbol||''} ${_L('cat', c.category)||''}`.trim();
 
   const pct = c.quantity_total>0 ? Math.round(c.quantity_available/c.quantity_total*100) : 0;
 
   document.getElementById('dp-body').innerHTML = `
     <div class="detail-section">
-      <div class="section-title">Stan magazynowy</div>
+      <div class="section-title">${_t('mag.stanMagazynowy')}</div>
       <div class="adj-row">
         <button class="adj-btn" onclick="adjDetail(-5)">−5</button>
         <button class="adj-btn" onclick="adjDetail(-1)">−</button>
@@ -704,41 +704,41 @@ async function openDetail(id) {
       <div class="qty-bar" style="margin-top:10px;height:4px">
         <div class="qty-fill" id="dp-bar" style="width:${pct}%;background:${c.category_color}"></div>
       </div>
-      ${c.low_stock?'<div class="low-badge" style="margin-top:10px"><i class="fa-solid fa-triangle-exclamation"></i> Niski stan – uzupełnij zapasy</div>':''}
+      ${c.low_stock?`<div class="low-badge" style="margin-top:10px"><i class="fa-solid fa-triangle-exclamation"></i> ${_t('mag.niskiStanUzupelnijZapasy')}</div>`:''}
     </div>
 
     <div class="detail-section">
-      <div class="section-title">Informacje</div>
+      <div class="section-title">${_t('mag.informacje')}</div>
       <table class="info-table">
         <tbody id="dp-info-table">
-          <tr><td>Kategoria</td><td>${renderIcon(c.category_icon)} ${c.category}</td></tr>
-          <tr><td>Zastosowanie</td><td style="color:var(--text2)">${(c.applications||[]).join(', ') || 'Brak'}</td></tr>
-          ${c.location?`<tr><td>Lokalizacja</td><td>${c.location}</td></tr>`:''}
-          <tr><td>Dostępne</td><td style="color:var(--accent)">${c.quantity_available} ${c.unit}</td></tr>
-          <tr><td>W użyciu</td><td>${c.quantity_used} ${c.unit}</td></tr>
-          <tr><td>Łącznie</td><td>${c.quantity_total} ${c.unit}</td></tr>
-          <tr><td>Min. stan</td><td>${c.min_stock} ${c.unit}</td></tr>
+          <tr><td>${_t('mag.kategoriaLbl')}</td><td>${renderIcon(c.category_icon)} ${_L('cat', c.category)}</td></tr>
+          <tr><td>${_t('mag.zastosowanie')}</td><td style="color:var(--text2)">${(c.applications||[]).map(a=>_L('app',a)).join(', ') || _t('mag.brak')}</td></tr>
+          ${c.location?`<tr><td>${_t('mag.lokalizacja')}</td><td>${c.location}</td></tr>`:''}
+          <tr><td>${_t('mag.dostepne')}</td><td style="color:var(--accent)">${c.quantity_available} ${c.unit}</td></tr>
+          <tr><td>${_t('mag.wUzyciu')}</td><td>${c.quantity_used} ${c.unit}</td></tr>
+          <tr><td>${_t('mag.lacznie')}</td><td>${c.quantity_total} ${c.unit}</td></tr>
+          <tr><td>${_t('mag.minStan')}</td><td>${c.min_stock} ${c.unit}</td></tr>
         </tbody>
       </table>
     </div>
 
-    ${c.notes?`<div class="detail-section"><div class="section-title">Notatki</div><p style="font-size:13px;color:var(--text2);line-height:1.65">${c.notes}</p></div>`:''}
+    ${c.notes?`<div class="detail-section"><div class="section-title">${_t('mag.notatki')}</div><p style="font-size:13px;color:var(--text2);line-height:1.65">${c.notes}</p></div>`:''}
     ${c.specs ? `
     <div class="detail-section">
-      <div class="section-title">Specyfikacja techniczna</div>
+      <div class="section-title">${_t('mag.specyfikacjaTechniczna')}</div>
       ${formatSpecsToTable(c.specs)}
     </div>` : ''}
-    ${(c.tags||[]).length?`<div class="detail-section"><div class="section-title">Tagi</div><div class="comp-tags">${c.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div></div>`:''}
+    ${(c.tags||[]).length?`<div class="detail-section"><div class="section-title">${_t('mag.tagi')}</div><div class="comp-tags">${c.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div></div>`:''}
     ${(c.datasheet_url || c.catalog_item_id)?`<div class="detail-section" style="display:flex;flex-wrap:wrap;gap:10px">
-      ${c.catalog_item_id?`<a href="/#components/${Number(c.catalog_item_id)}" target="_blank" rel="noopener" class="btn-action" id="dp-catalog-link"><i class="fa-solid fa-microchip"></i> Karta na platformie</a>`:''}
-      ${c.datasheet_url?`<a href="${c.datasheet_url}" target="_blank" class="btn-action" ><i class="fa-solid fa-file-pdf"></i> Otwórz datasheet</a>`:''}
+      ${c.catalog_item_id?`<a href="/#components/${Number(c.catalog_item_id)}" target="_blank" rel="noopener" class="btn-action" id="dp-catalog-link"><i class="fa-solid fa-microchip"></i> ${_t('mag.kartaNaPlatformie')}</a>`:''}
+      ${c.datasheet_url?`<a href="${c.datasheet_url}" target="_blank" class="btn-action" ><i class="fa-solid fa-file-pdf"></i> ${_t('mag.otworzDatasheet')}</a>`:''}
     </div>`:''}
 
     <div class="detail-section">
-      <div class="section-title">Przypisane projekty (${c.projects.length})</div>
+      <div class="section-title">${_t('mag.przypisaneProjekty',{n:c.projects.length})}</div>
       ${c.projects.length
         ? `<table class="proj-comp-table" style="table-layout: fixed; width: 100%;">
-            <thead><tr><th style="width: 50%;">Projekt</th><th style="width: 20%;">Ilość</th><th style="width: 30%;">Status</th></tr></thead>
+            <thead><tr><th style="width: 50%;">${_t('mag.projekt')}</th><th style="width: 20%;">${_t('mag.ilosc')}</th><th style="width: 30%;">${_t('mag.status')}</th></tr></thead>
             <tbody>${c.projects.map(pc=>`
               <tr>
                 <td style="font-family:var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${pc.project_name}">
@@ -749,13 +749,13 @@ async function openDetail(id) {
               </tr>`).join('')}
             </tbody>
           </table>`
-        : `<p style="font-family:var(--mono);font-size:11px;color:var(--text3)">Nie przypisano do żadnego projektu</p>`}
-      <button class="btn-action" style="margin-top:10px;font-size:10px" onclick="openAssign(${c.id})">⚲ Przypisz do projektu</button>
+        : `<p style="font-family:var(--mono);font-size:11px;color:var(--text3)">${_t('mag.niePrzypisanoDoZadnego')}</p>`}
+      <button class="btn-action" style="margin-top:10px;font-size:10px" onclick="openAssign(${c.id})">⚲ ${_t('mag.przypiszDoProjektu')}</button>
     </div>
 
     <div style="display:flex;gap:8px;padding-top:14px;border-top:1px solid var(--border)">
-      <button class="btn-action" onclick="editCurrentComp()"><i class="fa-solid fa-pen-to-square"></i> Edytuj</button>
-      <button class="btn-action danger" onclick="delComp(${c.id})"><i class="fa-solid fa-trash"></i> Usuń</button>
+      <button class="btn-action" onclick="editCurrentComp()"><i class="fa-solid fa-pen-to-square"></i> ${_t('mag.edytuj')}</button>
+      <button class="btn-action danger" onclick="delComp(${c.id})"><i class="fa-solid fa-trash"></i> ${_t('mag.usun')}</button>
     </div>
   `;
   document.getElementById('detail-panel').classList.add('open');
@@ -790,13 +790,13 @@ function updateDetailView(c) {
 
   // Odświeżenie tabelki z informacjami
   document.getElementById('dp-info-table').innerHTML = `
-    <tr><td>Kategoria</td><td><span style="color:${c.category_color}">${renderIcon(c.category_icon)}</span> ${c.category}</td></tr>
-    <tr><td>Zastosowanie</td><td style="color:var(--text2)">${(c.applications||[]).join(', ') || 'Brak'}</td></tr>
-    ${c.location?`<tr><td>Lokalizacja</td><td>${c.location}</td></tr>`:''}
-    <tr><td>Dostępne</td><td style="color:var(--accent)">${c.quantity_available} ${c.unit}</td></tr>
-    <tr><td>W użyciu</td><td>${c.quantity_used} ${c.unit}</td></tr>
-    <tr><td>Łącznie</td><td>${c.quantity_total} ${c.unit}</td></tr>
-    <tr><td>Min. stan</td><td>${c.min_stock} ${c.unit}</td></tr>
+    <tr><td>${_t('mag.kategoriaLbl')}</td><td><span style="color:${c.category_color}">${renderIcon(c.category_icon)}</span> ${_L('cat', c.category)}</td></tr>
+    <tr><td>${_t('mag.zastosowanie')}</td><td style="color:var(--text2)">${(c.applications||[]).map(a=>_L('app',a)).join(', ') || _t('mag.brak')}</td></tr>
+    ${c.location?`<tr><td>${_t('mag.lokalizacja')}</td><td>${c.location}</td></tr>`:''}
+    <tr><td>${_t('mag.dostepne')}</td><td style="color:var(--accent)">${c.quantity_available} ${c.unit}</td></tr>
+    <tr><td>${_t('mag.wUzyciu')}</td><td>${c.quantity_used} ${c.unit}</td></tr>
+    <tr><td>${_t('mag.lacznie')}</td><td>${c.quantity_total} ${c.unit}</td></tr>
+    <tr><td>${_t('mag.minStan')}</td><td>${c.min_stock} ${c.unit}</td></tr>
   `;
   const i = S.components.findIndex(x=>x.id===c.id);
   if(i>=0) S.components[i]=c;
@@ -812,7 +812,7 @@ function closeDetail() {
 function openAddCompModal() {
   S.editingCompId = null;
   S.pendingCatalogId = null;
-  document.getElementById('comp-modal-title').textContent='Dodaj komponent';
+  document.getElementById('comp-modal-title').textContent=_t('mag.dodajKomponent2');
   ['f-name','f-symbol','f-location','f-tags','f-notes','f-datasheet','f-specs', 'f-applications'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f-qty-total').value='0';
   document.getElementById('f-qty-avail').value='0';
@@ -825,7 +825,7 @@ async function editCurrentComp() {
   if(!S.selectedCompId) return;
   const c = S.components.find(x=>x.id===S.selectedCompId) || await api(`/api/components/${S.selectedCompId}`);
   S.editingCompId=c.id;
-  document.getElementById('comp-modal-title').textContent='Edytuj komponent';
+  document.getElementById('comp-modal-title').textContent=_t('mag.edytujKomponent');
   document.getElementById('f-name').value      = c.name;
   document.getElementById('f-symbol').value    = c.symbol||'';
   document.getElementById('f-category').value  = c.category_id;
@@ -844,7 +844,7 @@ async function editCurrentComp() {
 
 async function saveComp() {
   const name = document.getElementById('f-name').value.trim();
-  if(!name) return toast('Podaj nazwę komponentu','warn');
+  if(!name) return toast(_t('mag.podajNazweKomponentu'),'warn');
   
   const appVal = document.getElementById('f-applications').value.trim();
   
@@ -866,11 +866,11 @@ async function saveComp() {
   try {
     if(S.editingCompId) {
       await api(`/api/components/${S.editingCompId}`,{method:'PUT',body:JSON.stringify(data)});
-      toast('Zaktualizowano komponent','success');
+      toast(_t('mag.zaktualizowanoKomponent'),'success');
       if(S.selectedCompId===S.editingCompId) setTimeout(()=>openDetail(S.editingCompId),150);
     } else {
       await api('/api/components',{method:'POST',body:JSON.stringify(data)});
-      toast('Komponent dodany!','success');
+      toast(_t('mag.komponentDodany'),'success');
     }
     closeModal('comp-modal');
     await loadComponents(); loadStats();
@@ -886,7 +886,7 @@ async function loadProjects() {
 function renderProjects() {
   const list = document.getElementById('project-list');
   if(!S.projects.length){
-    list.innerHTML=`<div class="empty-state" style="grid-column:unset"><div class="e-icon"><i class="fa-regular fa-screwdriver-wrench"></i></div><div class="e-text">Brak projektów — utwórz pierwszy</div></div>`;
+    list.innerHTML=`<div class="empty-state" style="grid-column:unset"><div class="e-icon"><i class="fa-regular fa-screwdriver-wrench"></i></div><div class="e-text">${_t('mag.brakProjektowUtworzPierwszy')}</div></div>`;
     return;
   }
   list.innerHTML = S.projects.map(p=>`
@@ -898,14 +898,14 @@ function renderProjects() {
           ${p.description?`<div class="proj-desc-small">${p.description.substring(0,80)}${p.description.length>80?'…':''}</div>`:''}
         </div>
         ${pillHtml(p.status)}
-        <span style="font-family:var(--mono);font-size:11px;color:var(--text3)">${p.components_count} komp.</span>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--text3)">${_t('mag.kompN',{n:p.components_count})}</span>
         <button class="btn-action" style="font-size:10px;padding:4px 9px" onclick="event.stopPropagation();openEditProj(${p.id})"><i class="fa-solid fa-pen-to-square"></i></button>
         <button class="btn-action danger" style="font-size:10px;padding:4px 9px" onclick="event.stopPropagation();delProj(${p.id})"><i class="fa-solid fa-trash"></i></button>
         <span class="proj-chevron" id="chev-${p.id}">›</span>
       </div>
       <div class="project-row-body" id="proj-body-${p.id}">
         <div id="proj-comps-${p.id}"></div>
-        <button class="btn-action primary" style="margin-top:10px;font-size:10px" onclick="openAssignForProj(${p.id})">+ Dodaj komponent do projektu</button>
+        <button class="btn-action primary" style="margin-top:10px;font-size:10px" onclick="openAssignForProj(${p.id})">${_t('mag.dodajKomponentDoProjektu')}</button>
       </div>
     </div>`).join('');
 }
@@ -921,16 +921,16 @@ async function toggleProj(id, headerEl) {
 
 async function loadProjComps(id) {
   const el = document.getElementById(`proj-comps-${id}`);
-  el.innerHTML = `<p style="font-family:var(--mono);font-size:11px;color:var(--text3);padding:8px 0">Ładowanie...</p>`;
+  el.innerHTML = `<p style="font-family:var(--mono);font-size:11px;color:var(--text3);padding:8px 0">${_t('mag.ladowanie')}</p>`;
   try {
     const proj = await api(`/api/projects/${id}`);
     if(!proj.components.length){
-      el.innerHTML=`<p style="font-family:var(--mono);font-size:11px;color:var(--text3);padding:8px 0">Brak przypisanych komponentów</p>`;
+      el.innerHTML=`<p style="font-family:var(--mono);font-size:11px;color:var(--text3);padding:8px 0">${_t('mag.brakPrzypisanychKomponentow')}</p>`;
       return;
     }
     el.innerHTML = `
   <table class="proj-comp-table">
-    <thead><tr><th>Komponent</th><th>Ilość</th><th>Status</th><th>Akcje</th></tr></thead>
+    <thead><tr><th>${_t('mag.komponent')}</th><th>${_t('mag.ilosc')}</th><th>${_t('mag.status')}</th><th>${_t('mag.akcje')}</th></tr></thead>
     <tbody>${proj.components.map(pc => `
       <tr>
         <td>
@@ -941,11 +941,11 @@ async function loadProjComps(id) {
         <td>${pillHtml(pc.status)}</td>
         <td>
           <div style="display:flex;gap:4px">
-            <button class="btn-action" style="font-size:10px;padding:3px 7px" data-notes="${pc.notes || ''}" onclick="openEditPC(${id}, ${pc.id}, ${pc.quantity_used}, ${pc.component_available}, this.getAttribute('data-notes'))" title="Edytuj"><i class="fa-solid fa-pen-to-square"></i></button>
+            <button class="btn-action" style="font-size:10px;padding:3px 7px" data-notes="${pc.notes || ''}" onclick="openEditPC(${id}, ${pc.id}, ${pc.quantity_used}, ${pc.component_available}, this.getAttribute('data-notes'))" title="${_t('mag.edytuj')}"><i class="fa-solid fa-pen-to-square"></i></button>
             ${pc.status==='active' ? `
-              <button class="btn-action" style="font-size:10px;padding:3px 7px" onclick="updProjComp(${id},${pc.id},'returned')" title="Zwróć"><i class="fa-solid fa-undo"></i></button>
-              <button class="btn-action danger" style="font-size:10px;padding:3px 7px" onclick="updProjComp(${id},${pc.id},'broken')" title="Uszkodzony"><i class="fa-solid fa-bolt"></i></button>` : ''}
-            <button class="btn-action danger" style="font-size:10px;padding:3px 7px" onclick="delProjComp(${id},${pc.id})" title="Usuń"><i class="fa-solid fa-trash"></i></button>
+              <button class="btn-action" style="font-size:10px;padding:3px 7px" onclick="updProjComp(${id},${pc.id},'returned')" title="${_t('mag.zwroc')}"><i class="fa-solid fa-undo"></i></button>
+              <button class="btn-action danger" style="font-size:10px;padding:3px 7px" onclick="updProjComp(${id},${pc.id},'broken')" title="${_t('mag.uszkodzony')}"><i class="fa-solid fa-bolt"></i></button>` : ''}
+            <button class="btn-action danger" style="font-size:10px;padding:3px 7px" onclick="delProjComp(${id},${pc.id})" title="${_t('mag.usun')}"><i class="fa-solid fa-trash"></i></button>
           </div>
         </td>
       </tr>`).join('')}
@@ -963,17 +963,17 @@ async function updProjComp(projId, pcId, status) {
 }
 
 async function delProjComp(projId, pcId) {
-  if(!confirm('Usunąć komponent z projektu? Zostanie zwrócony do magazynu.')) return;
+  if(!confirm(_t('mag.usunacKomponentZProjektu'))) return;
   try {
     await api(`/api/projects/${projId}/components/${pcId}`,{method:'DELETE'});
     await loadProjComps(projId); loadComponents(); loadStats();
-    toast('Usunięto z projektu','success');
+    toast(_t('mag.usunietoZProjektu'),'success');
   } catch(e){ toast(e.message,'error'); }
 }
 
 function openNewProjModal() {
   S.editingProjId=null;
-  document.getElementById('proj-modal-title').textContent='Nowy projekt';
+  document.getElementById('proj-modal-title').textContent=_t('mag.nowyProjekt2');
   ['pf-name','pf-desc'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('pf-status').value='planning';
   document.getElementById('pf-color').value='#56e1fd';
@@ -983,7 +983,7 @@ function openNewProjModal() {
 function openEditProj(id) {
   const p = S.projects.find(x=>x.id===id); if(!p) return;
   S.editingProjId=id;
-  document.getElementById('proj-modal-title').textContent='Edytuj projekt';
+  document.getElementById('proj-modal-title').textContent=_t('mag.edytujProjekt');
   document.getElementById('pf-name').value   = p.name;
   document.getElementById('pf-desc').value   = p.description||'';
   document.getElementById('pf-status').value = p.status;
@@ -993,7 +993,7 @@ function openEditProj(id) {
 
 async function saveProject() {
   const name = document.getElementById('pf-name').value.trim();
-  if(!name) return toast('Podaj nazwę projektu','warn');
+  if(!name) return toast(_t('mag.podajNazweProjektu'),'warn');
   const data={
     name, description:document.getElementById('pf-desc').value.trim(),
     status:document.getElementById('pf-status').value,
@@ -1002,10 +1002,10 @@ async function saveProject() {
   try {
     if(S.editingProjId){
       await api(`/api/projects/${S.editingProjId}`,{method:'PUT',body:JSON.stringify(data)});
-      toast('Projekt zaktualizowany!','success');
+      toast(_t('mag.projektZaktualizowany'),'success');
     } else {
       await api('/api/projects',{method:'POST',body:JSON.stringify(data)});
-      toast('Projekt utworzony!','success');
+      toast(_t('mag.projektUtworzony'),'success');
     }
     S.editingProjId=null;
     closeModal('proj-modal');
@@ -1014,11 +1014,11 @@ async function saveProject() {
 }
 
 async function delProj(id) {
-  if(!confirm('Usunąć projekt? Komponenty zostaną zwrócone do magazynu.')) return;
+  if(!confirm(_t('mag.usunacProjektKomponentyZostana'))) return;
   try {
     await api(`/api/projects/${id}`,{method:'DELETE'});
     await loadProjects(); loadComponents(); loadStats();
-    toast('Projekt usunięty','success');
+    toast(_t('mag.projektUsuniety'),'success');
   } catch(e){ toast(e.message,'error'); }
 }
 
@@ -1029,10 +1029,10 @@ function openAssign(compId) {
 
   const c = S.components.find(x => x.id === compId);
   const infoEl = document.getElementById('assign-comp-info');
-  infoEl.textContent = c ? `📦 ${c.name} · dostępne: ${c.quantity_available} ${c.unit}` : '';
+  infoEl.textContent = c ? `📦 ${c.name} · ${_t('mag.dostepneN',{n:c.quantity_available,unit:c.unit})}` : '';
   infoEl.style.display = 'block';
 
-  document.getElementById('assign-modal-title').textContent = 'Przypisz komponent do projektu';
+  document.getElementById('assign-modal-title').textContent = _t('mag.przypiszKomponentDoProjektu');
 
   document.getElementById('group-atp-proj').style.display = 'block';
   document.getElementById('group-atp-comp').style.display = 'none';
@@ -1041,7 +1041,7 @@ function openAssign(compId) {
   const qtyInput = document.getElementById('atp-qty');
   qtyInput.value = '1';
   qtyInput.max = c ? c.quantity_available : 1;
-  document.getElementById('atp-qty-label').textContent = `Ilość do użycia (Maks: ${qtyInput.max})`;
+  document.getElementById('atp-qty-label').textContent = _t('mag.iloscDoUzyciaMaks',{n:qtyInput.max});
 
   document.getElementById('atp-note').value = '';
 
@@ -1057,22 +1057,22 @@ function openAssignForProj(projId) {
   infoEl.textContent = p ? `<i class="fa-regular fa-screwdriver-wrench"></i> Projekt: ${p.name}` : '';
   infoEl.style.display = 'block';
 
-  document.getElementById('assign-modal-title').textContent = 'Dodaj komponent do projektu';
+  document.getElementById('assign-modal-title').textContent = _t('mag.dodajKomponentDoProjektu2');
   document.getElementById('group-atp-proj').style.display = 'none';
   document.getElementById('group-atp-comp').style.display = 'block';
 
   const availableComps = S.components.filter(c => c.quantity_available > 0);
   const compSelect = document.getElementById('atp-comp');
   compSelect.innerHTML = availableComps.length
-    ? availableComps.map(c => `<option value="${c.id}" data-avail="${c.quantity_available}">${c.name} (Dostępne: ${c.quantity_available} ${c.unit})</option>`).join('')
-    : `<option value="">Brak dostępnych komponentów w magazynie</option>`;
+    ? availableComps.map(c => `<option value="${c.id}" data-avail="${c.quantity_available}">${c.name} (${_t('mag.dostepneCap',{n:c.quantity_available,unit:c.unit})})</option>`).join('')
+    : `<option value="">${_t('mag.brakDostepnychKomponentowW')}</option>`;
 
   // Aktualizacja max limitu w przypadku zmiany opcji na liście rozwijanej
   const updateMax = () => {
     const opt = compSelect.options[compSelect.selectedIndex];
     if(opt && opt.dataset.avail) {
       document.getElementById('atp-qty').max = opt.dataset.avail;
-      document.getElementById('atp-qty-label').textContent = `Ilość do użycia (Maks: ${opt.dataset.avail})`;
+      document.getElementById('atp-qty-label').textContent = _t('mag.iloscDoUzyciaMaks',{n:opt.dataset.avail});
       document.getElementById('atp-qty').value = '1';
     }
   };
@@ -1089,10 +1089,10 @@ async function doAssign() {
   const compId = S.assigningCompId || parseInt(document.getElementById('atp-comp').value);
 
   if(!compId || isNaN(compId)) {
-    return toast('Brak dostępnych komponentów do przypisania.', 'warn');
+    return toast(_t('mag.brakDostepnychKomponentowDo'), 'warn');
   }
   if(!projId || isNaN(projId)) {
-    return toast('Wybierz poprawny projekt.', 'warn');
+    return toast(_t('mag.wybierzPoprawnyProjekt'), 'warn');
   }
 
   const qty = parseInt(document.getElementById('atp-qty').value) || 1;
@@ -1117,7 +1117,7 @@ async function doAssign() {
         await loadProjComps(projId);
     }
 
-    toast('Przypisano do projektu!', 'success');
+    toast(_t('mag.przypisanoDoProjektu'), 'success');
 
     // Jeśli mieliśmy otwarty panel boczny konkretnego komponentu, odśwież go
     if(S.selectedCompId === compId) openDetail(compId);
@@ -1173,12 +1173,12 @@ function onSearch(q){ S.searchQ=q; clearTimeout(_st); _st=setTimeout(loadCompone
 // ── HELPERS ───────────────────────────────────────────────────────
 function pillHtml(s) {
   const m = {
-    active:    ['pill-active',   'dot-g','Aktywny'],
-    planning:  ['pill-planning', 'dot-p','Planowanie'],
-    paused:    ['pill-paused',   'dot-o','Wstrzymany'],
-    completed: ['pill-completed','dot-b','Ukończony'],
-    returned:  ['pill-returned', 'dot-b','Zwrócony'],
-    broken:    ['pill-broken',   'dot-r','Uszkodzony'],
+    active:    ['pill-active',   'dot-g',_t('mag.aktywny')],
+    planning:  ['pill-planning', 'dot-p',_t('mag.planowanie')],
+    paused:    ['pill-paused',   'dot-o',_t('mag.wstrzymany')],
+    completed: ['pill-completed','dot-b',_t('mag.ukonczony')],
+    returned:  ['pill-returned', 'dot-b',_t('mag.zwrocony')],
+    broken:    ['pill-broken',   'dot-r',_t('mag.uszkodzony')],
   };
   const [c,d,l]=m[s]||['pill-planning','dot-p',s];
   return `<span class="pill ${c}"><span class="pill-dot ${d}"></span>${l}</span>`;
@@ -1277,40 +1277,40 @@ function setAIBadge(d){
   const badge=document.getElementById('ai-provider-badge');
   if(!d||d.limit===undefined) return;
   badge.textContent = d.limit===null ? 'AI ∞' : `AI ${d.remaining}/${d.limit}`;
-  badge.title = d.limit===null ? 'Bez dziennego limitu' : 'Pozostało zapytań dzisiaj (klucz platformy). Własny klucz lub model lokalny: Profil → Asystent AI';
+  badge.title = d.limit===null ? _t('mag.bezDziennegoLimitu') : _t('mag.pozostaloZapytanDzisiajKlucz');
 }
 
 async function loadAIProvider(){
   const label=document.getElementById('ai-provider-label'), badge=document.getElementById('ai-provider-badge');
   const L=window.ESNAILocal&&ESNAILocal.get();
   if(L&&L.enabled){
-    label.textContent='Model lokalny · '+(L.model||'brak nazwy modelu');
-    badge.textContent='LOKALNY'; badge.title='Zapytania idą z tej przeglądarki do Twojego komputera';
+    label.textContent=_t('mag.modelLokalny')+' · '+(L.model||_t('mag.brakNazwyModelu'));
+    badge.textContent=_t('mag.lokalny'); badge.title=_t('mag.zapytaniaIdaZTej');
     return;
   }
   try{
     const d=await api('/api/ai/provider');
-    label.textContent=d.configured?d.name:'AI niedostępne – dodaj własny klucz w Profilu (portal)';
+    label.textContent=d.configured?d.name:_t('mag.aiNiedostepneDodajWlasny');
     setAIBadge(d);
   }catch(e){}
 }
 
 function aiWelcome(){
-  aiAppend('assistant',`Cześć! Jestem Asystent ESN \n\nZnam Twój aktualny stan magazynu. Mogę:\n• Zaproponować projekty z dostępnych komponentów\n• Sprawdzić czy masz wszystko do danego projektu\n• Ostrzec o niskich stanach i pułapkach technicznych\n• Doradzić co warto dokupić\n\nZapytaj mnie o cokolwiek!`);
+  aiAppend('assistant',_t('mag.aiPowitanie'));
   updateSessionInfo();
 }
 
 function newAISession(){
-  if(!confirm('Rozpocząć nową sesję? Historia chatu zostanie wyczyszczona.')) return;
+  if(!confirm(_t('mag.rozpoczacNowaSesjeHistoria'))) return;
   S.aiHistory=[]; S.aiSession++; S.aiMsgCount=0;
   document.getElementById('ai-messages').innerHTML='';
   updateSessionInfo();
   aiWelcome();
-  toast('Nowa sesja AI','success');
+  toast(_t('mag.nowaSesjaAi'),'success');
 }
 
 function updateSessionInfo(){
-  document.getElementById('ai-session-info').textContent=`Sesja #${S.aiSession} · ${S.aiMsgCount} wiad.`;
+  document.getElementById('ai-session-info').textContent=_t('mag.sesjaInfo',{n:S.aiSession,m:S.aiMsgCount});
 }
 
 function aiQuick(msg){ document.getElementById('ai-input').value=msg; sendAI(); }
@@ -1326,7 +1326,7 @@ async function sendAI(){
   S.aiHistory.push({role:'user',content:msg}); S.aiMsgCount++;
   updateSessionInfo();
 
-  const loader=aiAppend('assistant','Analizuję stan magazynu...',true);
+  const loader=aiAppend('assistant',_t('mag.analizujeStanMagazynu'),true);
   try{
     const L=window.ESNAILocal&&ESNAILocal.get();
     let reply;
@@ -1346,7 +1346,7 @@ async function sendAI(){
     S.aiHistory.push({role:'assistant',content:reply}); S.aiMsgCount++;
     updateSessionInfo();
   }catch(e){
-    loader.remove(); aiAppend('assistant','❌ '+(e.message||'Błąd połączenia z AI'));
+    loader.remove(); aiAppend('assistant','❌ '+(e.message||_t('mag.bladPolaczeniaZAi')));
     S.aiHistory.pop(); S.aiMsgCount--; updateSessionInfo();     // nieudane pytanie nie zostaje w historii
   }
   btn.disabled=false; input.focus();
@@ -1391,7 +1391,7 @@ function openEditPC(projId, pcId, qty, available, notes) {
   qtyInput.value = qty;
   qtyInput.max = maxAllowed;
 
-  document.getElementById('epc-qty-label').textContent = `Ilość (Maksymalnie: ${maxAllowed})`;
+  document.getElementById('epc-qty-label').textContent = _t('mag.iloscMaksymalnie',{n:maxAllowed});
   document.getElementById('epc-notes').value = notes;
   openModal('edit-pc-modal');
 }
@@ -1409,7 +1409,7 @@ async function savePCChange() {
     closeModal('edit-pc-modal');
     await loadProjComps(projId); // Odśwież tabelę w projekcie
     loadComponents(); // Odśwież magazyn (jeśli zmieniła się ilość)
-    toast('Zmiany zapisane', 'success');
+    toast(_t('mag.zmianyZapisane'), 'success');
   } catch(e) {
     toast(e.message, 'error');
   }
@@ -1436,7 +1436,7 @@ async function loadCatalog() {
       if (!byCategory[cat]) byCategory[cat] = [];
       byCategory[cat].push(c);
     });
-    sel.innerHTML = '<option value="">— wpisz ręcznie lub wybierz z katalogu —</option>';
+    sel.innerHTML = '<option value="">' + _t('mag.wpiszRecznieLubWybierz') + '</option>';
     Object.entries(byCategory).sort().forEach(([cat, items]) => {
       const grp = document.createElement('optgroup');
       grp.label = cat;
@@ -1449,7 +1449,7 @@ async function loadCatalog() {
       sel.appendChild(grp);
     });
   } catch(e) {
-    console.warn('Katalog niedostępny:', e.message);
+    console.warn(_t('mag.katalogNiedostepny'), e.message);
   }
 }
 
@@ -1486,7 +1486,7 @@ function autofillComponent(catalogId) {
   }
 
   S.pendingCatalogId = comp.id;  // zachowaj powiązanie
-  toast('Dane z katalogu ESN wczytane!', 'success');
+  toast(_t('mag.daneZKataloguWczytane'), 'success');
 }
 
 // ── START ─────────────────────────────────────────────────────────

@@ -60,8 +60,9 @@
 ## Tłumaczenia (i18n)
 - [x] (v26) Rdzeń `i18n.js`, słowniki PL/EN, przełącznik, nawigacja, home, AI w profilu, nawigacja magazynu – `docs/I18N.md`.
 - [x] (v27) Projekty, Katalog, Narzędzia, Profil, Kontakt, logowanie/rejestracja, stopka, komunikaty.
-- [ ] Edytor Wiedzy (kreator, przewodnik, szablony), reszta magazynu, `ai-local.js`, komunikaty API (kody błędów).
-- [ ] Etykiety znanych kategorii/zastosowań katalogu (dane z bazy) z zachowaniem filtrów.
+- [x] (v28) Wiedza (lista, panel redakcji, edytor blokowy, kreator, media, pinout), cały magazyn + `ai-local.js`, etykiety znanych kategorii/zastosowań (`_L`), komunikaty błędów API (`_E`, wzorce `api.*`).
+- [ ] Szablony i przewodnik treści (`knowledge-templates.js`, `knowledge-guide.js`) – wersje EN (razem z treściami wielojęzycznymi).
+- [ ] Przejście na zmianę języka bez przeładowania strony.
 - [ ] Treści z polem `lang` (artykuły, kursy, projekty, podzespoły).
 - [ ] Język w koncie użytkownika.
 - [ ] Kolejne języki (ES, DE) po ustabilizowaniu słowników.

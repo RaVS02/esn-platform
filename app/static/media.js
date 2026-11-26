@@ -12,7 +12,7 @@
 (function (global) {
   "use strict";
 
-  var ROLE_LABELS = { main: "Główne", gallery: "Galeria", schematic: "Schemat", pinout: "Pinout" };
+  var ROLE_LABELS = { main: _t('md.glowne'), gallery: _t('md.galeria'), schematic: _t('md.schemat'), pinout: _t('md.pinout') };
   var ALLOWED = ["image/jpeg", "image/png", "image/webp", "image/gif"];
   var ALLOWED_EXT = /\.(jpe?g|png|webp|gif)$/i;
 
@@ -37,7 +37,7 @@
   function json(res) {
     return res.json().catch(function () { return {}; }).then(function (d) {
       if (!res.ok) {
-        var msg = typeof d.detail === "string" ? d.detail : res.status === 401 ? "Sesja wygasła – zaloguj się ponownie." : "Błąd serwera (" + res.status + ")";
+        var msg = typeof d.detail === "string" ? _E(d.detail) : res.status === 401 ? _t('md.sesjaWygaslaZalogujSie') : _t('md.bladSerwera') + res.status + ")";
         throw new Error(msg);
       }
       return d;
@@ -64,9 +64,9 @@
         xhr.onload = function () {
           var d = {}; try { d = JSON.parse(xhr.responseText); } catch (e) {}
           if (xhr.status >= 200 && xhr.status < 300) resolve(d);
-          else reject(new Error(typeof d.detail === "string" ? d.detail : xhr.status === 413 ? "Plik jest za duży." : xhr.status === 401 ? "Sesja wygasła – zaloguj się ponownie." : "Błąd wgrywania (" + xhr.status + ")"));
+          else reject(new Error(typeof d.detail === "string" ? _E(d.detail) : xhr.status === 413 ? _t('md.plikJestZaDuzy') : xhr.status === 401 ? _t('md.sesjaWygaslaZalogujSie') : _t('md.bladWgrywania') + xhr.status + ")"));
         };
-        xhr.onerror = function () { reject(new Error("Błąd połączenia")); };
+        xhr.onerror = function () { reject(new Error(_t('md.bladPolaczenia'))); };
         xhr.send(fd);
       });
     }
@@ -85,18 +85,18 @@
     var cap = h("div", { "class": "esn-lb-cap" }), cnt = h("span", { "class": "esn-lb-cnt" });
     var thumbs = h("div", { "class": "esn-lb-thumbs" });
     function btn(txt, label, fn, cls) { return h("button", { type: "button", "class": "esn-lb-btn " + (cls || ""), "aria-label": label, title: label, text: txt, onclick: fn }); }
-    var zoomOut = btn("−", "Pomniejsz (−)", function () { zoom(1 / 1.4); });
-    var zoomIn = btn("+", "Powiększ (+)", function () { zoom(1.4); });
-    var fit = btn("⤢", "Dopasuj do ekranu (0)", function () { reset(); });
-    var close = btn("✕", "Zamknij (Esc)", closeLightbox);
-    var prev = btn("‹", "Poprzednie zdjęcie (←)", function () { go(-1); }, "esn-lb-nav esn-lb-prev");
-    var next = btn("›", "Następne zdjęcie (→)", function () { go(1); }, "esn-lb-nav esn-lb-next");
-    var root = h("div", { "class": "esn-lb", role: "dialog", "aria-modal": "true", "aria-label": "Podgląd zdjęcia" }, [
+    var zoomOut = btn("−", _t('md.pomniejsz'), function () { zoom(1 / 1.4); });
+    var zoomIn = btn("+", _t('md.powieksz'), function () { zoom(1.4); });
+    var fit = btn("⤢", _t('md.dopasujDoEkranu0'), function () { reset(); });
+    var close = btn("✕", _t('md.zamknijEsc'), closeLightbox);
+    var prev = btn("‹", _t('md.poprzednieZdjecie'), function () { go(-1); }, "esn-lb-nav esn-lb-prev");
+    var next = btn("›", _t('md.nastepneZdjecie'), function () { go(1); }, "esn-lb-nav esn-lb-next");
+    var root = h("div", { "class": "esn-lb", role: "dialog", "aria-modal": "true", "aria-label": _t('md.podgladZdjecia') }, [
       h("div", { "class": "esn-lb-top" }, [cnt, h("div", { "class": "esn-lb-tools" }, [zoomOut, zoomIn, fit, close])]),
       prev, next, stage, cap, thumbs
     ]);
     items.forEach(function (it, n) {
-      var t = h("button", { type: "button", "class": "esn-lb-th", "aria-label": "Zdjęcie " + (n + 1), onclick: function () { show(n); } }, [h("img", { src: srcOf(it.url), alt: "", loading: "lazy" })]);
+      var t = h("button", { type: "button", "class": "esn-lb-th", "aria-label": _t('md.zdjecie') + " " + (n + 1), onclick: function () { show(n); } }, [h("img", { src: srcOf(it.url), alt: "", loading: "lazy" })]);
       thumbs.appendChild(t);
     });
     if (items.length < 2) { prev.hidden = next.hidden = true; thumbs.hidden = true; }
@@ -206,7 +206,7 @@
     var max = 4, vis = items.slice(0, max), rest = items.length - max;
     var box = h("div", { "class": "project-collage", "data-count": String(vis.length), style: "margin-bottom: 30px;" });
     vis.forEach(function (it, n) {
-      var tile = h("div", { "class": "collage-item", role: "button", tabindex: "0", style: "position: relative;", "aria-label": "Powiększ: " + labelOf(it) }, [
+      var tile = h("div", { "class": "collage-item", role: "button", tabindex: "0", style: "position: relative;", "aria-label": _t('md.powieksz2') + " " + labelOf(it) }, [
         h("img", { src: srcOf(it.url), alt: labelOf(it), loading: n ? "lazy" : "eager" }),
         n === max - 1 && rest > 0 ? h("div", { "class": "collage-overlay-more", text: "+" + rest }) : null,
         h("div", { "class": "collage-caption", text: labelOf(it) })
@@ -224,10 +224,8 @@
     opts = opts || {};
     var fb = (opts.fallback || []).filter(function (x) { return x && x.url; });
     slot.textContent = "";
-    var skip = opts.exclude || ["pinout"];     // obrazy pinoutu pokazuje sekcja Pinout, nie ogólna galeria
     return api.list(ownerType, ownerId).then(function (items) {
       if (!slot.isConnected) return;
-      items = items.filter(function (i) { return skip.indexOf(i.role) < 0; });
       if (!items.length && fb.length) items = fb;
       collage(slot, items);
     }).catch(function () { if (slot.isConnected) collage(slot, fb); });
@@ -238,8 +236,8 @@
     var type = opts.ownerType, ownerId = opts.ownerId || null, roles = opts.roles || ["main", "gallery"];
     var items = [], pending = [], limits = null, busy = 0, dead = false, uid = 0;
     var head = h("div", { "class": "esn-mm-head" }), grid = h("div", { "class": "esn-mm-grid" });
-    var input = h("input", { type: "file", multiple: "multiple", accept: ALLOWED.join(","), "class": "esn-mm-input", "aria-label": "Wybierz zdjęcia" });
-    var drop = h("label", { "class": "esn-mm-drop" }, [h("span", { text: "＋ Przeciągnij zdjęcia tutaj lub kliknij, aby wybrać" }), input]);
+    var input = h("input", { type: "file", multiple: "multiple", accept: ALLOWED.join(","), "class": "esn-mm-input", "aria-label": _t('md.wybierzZdjecia') });
+    var drop = h("label", { "class": "esn-mm-drop" }, [h("span", { text: _t('md.przeciagnijZdjeciaTutajLub') }), input]);
     root.textContent = "";
     root.classList.add("esn-mm");
     root.appendChild(head); root.appendChild(drop); root.appendChild(grid);
@@ -249,25 +247,24 @@
     function total() { return items.length + pending.length; }
     function hasMain() { return items.concat(pending).some(function (x) { return x.role === "main"; }); }
     function sel(cur, onChange) {
-      var s = h("select", { "class": "esn-mm-sel", "aria-label": "Rola zdjęcia" });
+      var s = h("select", { "class": "esn-mm-sel", "aria-label": _t('md.rolaZdjecia') });
       roles.forEach(function (r) { var o = h("option", { value: r, text: ROLE_LABELS[r] || r }); if (r === cur) o.selected = true; s.appendChild(o); });
       s.addEventListener("change", function () { onChange(s.value); });
       return s;
     }
     function ctlBtn(txt, label, fn, dis) { var b = h("button", { type: "button", "class": "esn-mm-ic", "aria-label": label, title: label, text: txt, onclick: fn }); if (dis) b.disabled = true; return b; }
     function confirmDel(msg) {
-      return typeof global.customConfirm === "function" ? global.customConfirm(msg, "Usuwanie zdjęcia") : Promise.resolve(global.confirm(msg));
+      return typeof global.customConfirm === "function" ? global.customConfirm(msg, _t('md.usuwanieZdjecia')) : Promise.resolve(global.confirm(msg));
     }
     function fail(e) { notify(e.message || String(e), "error"); }
 
     function renderHead() {
       head.textContent = "";
-      head.appendChild(h("strong", { text: "Zdjęcia " }));
+      head.appendChild(h("strong", { text: _t('md.zdjecia') + " " }));
       head.appendChild(h("span", { "class": "esn-mm-cnt", text: total() + " / " + maxFiles() }));
-      var info = "JPEG, PNG, WebP, GIF · do " + maxMB() + " MB" + (limits ? " · Twoje miejsce: " + limits.used_mb + " z " + limits.quota_mb + " MB" : "");
+      var info = _t('md.jpegPngWebpGif') + " " + maxMB() + " MB" + (limits ? " " + _t('md.twojeMiejsce') + " " + limits.used_mb + " z " + limits.quota_mb + " MB" : "");
       head.appendChild(h("div", { "class": "esn-mm-note", text: info }));
-      if (opts.hint) head.appendChild(h("div", { "class": "esn-mm-note", text: opts.hint }));
-      if (!ownerId) head.appendChild(h("div", { "class": "esn-mm-note", text: "Zdjęcia zostaną wgrane po zapisaniu." }));
+      if (!ownerId) head.appendChild(h("div", { "class": "esn-mm-note", text: _t('md.zdjeciaZostanaWgranePo') }));
       drop.classList.toggle("full", total() >= maxFiles());
       input.disabled = total() >= maxFiles();
     }
@@ -275,29 +272,29 @@
     function card(it, idx, list, persisted) {
       var c = h("div", { "class": "esn-mm-card" + (it.role === "main" ? " is-main" : "") + (it.err ? " is-err" : "") });
       var src = persisted ? srcOf(it.url) : it.preview;
-      var thumb = h("button", { type: "button", "class": "esn-mm-thumb", "aria-label": "Powiększ zdjęcie", onclick: function () {
+      var thumb = h("button", { type: "button", "class": "esn-mm-thumb", "aria-label": _t('md.powiekszZdjecie'), onclick: function () {
         openLightbox(list.map(function (x) { return { url: persisted ? x.url : x.preview, caption: x.caption, role: x.role }; }), idx);
       } }, [h("img", { src: src, alt: "", loading: "lazy" })]);
-      if (it.role === "main") thumb.appendChild(h("span", { "class": "esn-mm-badge", text: "Główne" }));
+      if (it.role === "main") thumb.appendChild(h("span", { "class": "esn-mm-badge", text: _t('md.glowne') }));
       c.appendChild(thumb);
       c.appendChild(sel(it.role, function (r) {
         if (persisted) api.patch(it.id, { role: r }).then(reload).catch(function (e) { fail(e); reload(); });
         else { if (r === "main") pending.forEach(function (p) { if (p !== it && p.role === "main") p.role = "gallery"; }); it.role = r; render(); }
       }));
-      var cap = h("input", { type: "text", "class": "esn-mm-cap", placeholder: "Podpis (opcjonalnie)", maxlength: "300", value: it.caption || "", "aria-label": "Podpis zdjęcia" });
+      var cap = h("input", { type: "text", "class": "esn-mm-cap", placeholder: _t('md.podpisOpcjonalnie'), maxlength: "300", value: it.caption || "", "aria-label": _t('md.podpisZdjecia') });
       cap.addEventListener("change", function () {
         it.caption = cap.value;
         if (persisted) api.patch(it.id, { caption: cap.value }).catch(fail);
       });
       c.appendChild(cap);
       var row = h("div", { "class": "esn-mm-row" });
-      row.appendChild(ctlBtn("◀", "Przesuń wcześniej", function () { move(list, idx, -1, persisted); }, idx === 0));
-      row.appendChild(ctlBtn("▶", "Przesuń później", function () { move(list, idx, 1, persisted); }, idx === list.length - 1));
+      row.appendChild(ctlBtn("◀", _t('md.przesunWczesniej'), function () { move(list, idx, -1, persisted); }, idx === 0));
+      row.appendChild(ctlBtn("▶", _t('md.przesunPozniej'), function () { move(list, idx, 1, persisted); }, idx === list.length - 1));
       row.appendChild(h("span", { "class": "esn-mm-sp" }));
-      row.appendChild(ctlBtn("🗑", "Usuń zdjęcie", function () { remove(it, persisted); }));
+      row.appendChild(ctlBtn("🗑", _t('md.usunZdjecie'), function () { remove(it, persisted); }));
       c.appendChild(row);
       if (!persisted) {
-        c.appendChild(h("div", { "class": "esn-mm-state" + (it.err ? " err" : ""), text: it.err ? it.err : it.prog != null ? "Wgrywanie… " + Math.round(it.prog * 100) + "%" : "Oczekuje na zapis" }));
+        c.appendChild(h("div", { "class": "esn-mm-state" + (it.err ? " err" : ""), text: it.err ? it.err : it.prog != null ? _t('md.wgrywanie') + " " + Math.round(it.prog * 100) + "%" : _t('md.oczekujeNaZapis') }));
         if (it.prog != null) { var bar = h("div", { "class": "esn-mm-bar" }, [h("i", { style: "width:" + Math.round(it.prog * 100) + "%" })]); c.appendChild(bar); }
       }
       return c;
@@ -316,9 +313,9 @@
       else render();
     }
     function remove(it, persisted) {
-      confirmDel("Usunąć to zdjęcie?").then(function (ok) {
+      confirmDel(_t('md.usunacToZdjecie')).then(function (ok) {
         if (!ok) return;
-        if (persisted) api.remove(it.id).then(function () { notify("Zdjęcie usunięte", "success"); return reload(); }).catch(fail);
+        if (persisted) api.remove(it.id).then(function () { notify(_t('md.zdjecieUsuniete'), "success"); return reload(); }).catch(fail);
         else { URL.revokeObjectURL(it.preview); pending.splice(pending.indexOf(it), 1); render(); }
       });
     }
@@ -331,15 +328,15 @@
     }
 
     function validate(f) {
-      if (ALLOWED.indexOf(f.type) < 0 && !ALLOWED_EXT.test(f.name)) return "„" + f.name + "”: dozwolone formaty to JPEG, PNG, WebP, GIF.";
-      if (f.size > maxMB() * 1048576) return "„" + f.name + "”: plik jest większy niż " + maxMB() + " MB (" + fmtMB(f.size) + ").";
+      if (ALLOWED.indexOf(f.type) < 0 && !ALLOWED_EXT.test(f.name)) return "„" + f.name + _t('md.dozwoloneFormatyToJpeg');
+      if (f.size > maxMB() * 1048576) return "„" + f.name + _t('md.plikJestWiekszyNiz') + " " + maxMB() + " MB (" + fmtMB(f.size) + ").";
       return null;
     }
     function addFiles(list) {
       var files = Array.prototype.slice.call(list || []), errs = [];
       files.forEach(function (f) {
         var e = validate(f);
-        if (!e && total() >= maxFiles()) e = "Osiągnięto limit " + maxFiles() + " zdjęć.";
+        if (!e && total() >= maxFiles()) e = _t('md.osiagnietoLimit') + " " + maxFiles() + " " + _t('md.zdjec');
         if (e) { errs.push(e); return; }
         var role = hasMain() ? "gallery" : "main", rec = { file: f, role: role, caption: "", preview: URL.createObjectURL(f), id: ++uid };
         pending.push(rec);

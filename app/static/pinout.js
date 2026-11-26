@@ -18,23 +18,23 @@
 
   var NS = "http://www.w3.org/2000/svg";
   var CATS = {
-    power:   ["Zasilanie", "#f0883e"],
-    ground:  ["Masa", "#9aa7b8"],
-    analog:  ["Analogowe", "#4cc3c9"],
-    digital: ["Cyfrowe I/O", "#5aa9ff"],
+    power:   [_t('pn.zasilanie'), "#f0883e"],
+    ground:  [_t('pn.masa'), "#9aa7b8"],
+    analog:  [_t('pn.analogowe'), "#4cc3c9"],
+    digital: [_t('pn.cyfroweIO'), "#5aa9ff"],
     spi:     ["SPI", "#8fd16a"],
     i2c:     ["I²C", "#e5879c"],
     i2s:     ["I²S", "#5fd4a8"],
     uart:    ["UART", "#d9a35f"],
     usb:     ["USB", "#a3a6ff"],
     can:     ["CAN", "#ffc4a3"],
-    pwm:     ["PWM / timery", "#d8e06a"],
-    debug:   ["Debug / JTAG", "#ff9d9d"],
-    rf:      ["RF / antena", "#7ee0ff"],
-    clock:   ["Zegar", "#c792ea"],
-    control: ["Sterujące / status", "#f2cc60"],
-    nc:      ["Brak połączenia / pad", "#7d8898"],
-    other:   ["Inne", "#b0b8c4"]
+    pwm:     [_t('pn.pwmTimery'), "#d8e06a"],
+    debug:   [_t('pn.debugJtag'), "#ff9d9d"],
+    rf:      [_t('pn.rfAntena'), "#7ee0ff"],
+    clock:   [_t('pn.zegar'), "#c792ea"],
+    control: [_t('pn.sterujaceStatus'), "#f2cc60"],
+    nc:      [_t('pn.brakPolaczeniaPad'), "#7d8898"],
+    other:   [_t('pn.inne'), "#b0b8c4"]
   };
   var LAYOUTS = ["quad", "dual", "sip", "to92", "to220", "sot23", "axial", "board", "none"];
   var SHAPE_KINDS = ["pcb", "chip", "conn", "btn", "led", "part"];
@@ -80,7 +80,7 @@
   }
 
   function normalize(src) {
-    var d = { pins: [], sources: [], shapes: [], groups: [], board: { aspect: 1.6, labels: null }, imageAsBackground: false, defaultTab: "interactive",
+    var d = { pins: [], sources: [], shapes: [], groups: [], board: { aspect: 1.6, labels: null }, imageAsBackground: false,
               package: "", view: "", notes: "", layout: "none", warning: "" };
     if (!src || typeof src !== "object" || !Array.isArray(src.pins)) return d;
     d.package = str(src.package); d.view = str(src.view); d.notes = str(src.notes);
@@ -93,8 +93,7 @@
       return { label: str(x && x.label), url: safeUrl(str(x && x.url)) };
     }).filter(function (x) { return x.label || x.url; });
 
-    d.imageAsBackground = src.image_as_background === true;
-    d.defaultTab = src.default_tab === "image" ? "image" : "interactive";   // zakładka startowa, gdy są i rysunek, i obraz   // zdjęcie komponentu jako tło trybu board (domyślnie: nie)
+    d.imageAsBackground = src.image_as_background === true;   // zdjęcie komponentu jako tło trybu board (domyślnie: nie)
     var b = src.board || {};
     d.board.aspect = Math.max(0.4, Math.min(4, num(b.aspect) || 1.6));
     d.board.labels = b.labels === true || b.labels === false ? b.labels : null;
@@ -114,7 +113,7 @@
 
     var pos = d.pins.filter(function (p) { return !p.pad; }).length;
     var layout = LAYOUTS.indexOf(src.layout) >= 0 ? src.layout : guessLayout(d.package, pos);
-    var bad = function (what) { d.warning = "Liczba pinów (" + pos + ") nie pasuje do układu „" + what + "” – pokazano tylko tabelę."; layout = "none"; };
+    var bad = function (what) { d.warning = _t('pn.liczbaPinow') + pos + _t('pn.niePasujeDoUkladu') + what + _t('pn.pokazanoTylkoTabele'); layout = "none"; };
     if (layout === "quad" && (pos < 4 || pos % 4)) bad("quad");
     else if (layout === "dual" && (pos < 2 || pos % 2)) bad("dual");
     else if ((layout === "to92" || layout === "to220") && (pos < 2 || pos > 5)) bad(layout);
@@ -189,7 +188,7 @@
   /* ── SVG: korpusy ────────────────────────────────────────────────────── */
   function pinGroup(svg, p, idx, onPin) {
     var g = s("g", { "class": "po-pin", tabindex: 0, role: "button",
-      "aria-label": "Pin " + p.n + " " + p.name + ", " + CATS[p.cat][0], "data-i": idx }, svg);
+      "aria-label": _t('pn.pin') + " " + p.n + " " + p.name + ", " + CATS[p.cat][0], "data-i": idx }, svg);
     g.style.setProperty("--c", CATS[p.cat][1]);
     svgPins[idx] = g;
     onPin(g, idx);
@@ -301,34 +300,6 @@
     });
   }
 
-  /* ── widok obrazu (wgrany rysunek pinoutu, np. z datasheetu) ───────── */
-  function imageViewer(imgs, title) {
-    var idx = 0, wrap = h("div", { "class": "po-imgs" });
-    var im = h("img", { "class": "po-img", alt: "", draggable: "false" });
-    var main = h("button", { type: "button", "class": "po-img-main", "aria-label": "Powiększ obraz" }, [im]);
-    var cap = h("div", { "class": "po-img-cap" }), thumbs = h("div", { "class": "po-img-thumbs" });
-    function show(i) {
-      idx = i; im.src = imgs[i].url; im.alt = imgs[i].caption || title || "Pinout";
-      cap.textContent = imgs[i].caption || "";
-      Array.prototype.forEach.call(thumbs.children, function (b, k) { b.classList.toggle("on", k === i); b.setAttribute("aria-current", String(k === i)); });
-    }
-    main.addEventListener("click", function () {
-      var items = imgs.map(function (x) { return { url: x.url, caption: x.caption || title }; });
-      if (global.ESNMedia && global.ESNMedia.openLightbox) global.ESNMedia.openLightbox(items, idx);
-      else global.open(imgs[idx].url, "_blank", "noopener");
-    });
-    imgs.forEach(function (x, i) {
-      if (imgs.length < 2) return;
-      var b = h("button", { type: "button", "class": "po-img-th", "aria-label": "Obraz " + (i + 1) + (x.caption ? ": " + x.caption : "") }, [h("img", { src: x.url, alt: "", loading: "lazy" })]);
-      b.addEventListener("click", function () { show(i); });
-      thumbs.appendChild(b);
-    });
-    wrap.appendChild(main); wrap.appendChild(cap);
-    if (imgs.length > 1) wrap.appendChild(thumbs);
-    show(0);
-    return wrap;
-  }
-
   /* ── render główny ───────────────────────────────────────────────────── */
   function render(root, data, opts) {
     opts = opts || {};
@@ -336,56 +307,29 @@
     var image = d.layout === "board" && d.imageAsBackground ? safeImg(str(opts.image)) : "";
     root.textContent = "";
     root.classList.add("pinout");
-    var imgs = (Array.isArray(opts.images) ? opts.images : []).map(function (x) {
-      return { url: safeImg(str(x && x.url)), caption: str(x && x.caption) };
-    }).filter(function (x) { return x.url; });
-    var hasPins = d.pins.length > 0;
-    if (!hasPins && !imgs.length) return null;
-    var canInter = hasPins && d.layout !== "none", canImg = imgs.length > 0;
-    var view = canInter && canImg ? d.defaultTab : canImg ? "image" : "interactive";
+    if (!d.pins.length) return null;
 
     var state = { sel: null, grp: null, active: {} }, rowsEl = {}, pinEls = {};
     svgPins = pinEls;
     var hasType = d.pins.some(function (p) { return p.type; });
 
-    var metaBits = [d.package, d.view].filter(Boolean);
-    if (hasPins) metaBits.push(d.pins.length + " wyprowadzeń");
-    else metaBits.push(imgs.length + (imgs.length === 1 ? " obraz" : " obrazy"));
-    root.appendChild(h("div", { "class": "po-head" }, [h("div", { "class": "po-meta", text: metaBits.join(" · ") })]));
+    root.appendChild(h("div", { "class": "po-head" }, [
+      h("div", { "class": "po-meta", text: [d.package, d.view].filter(Boolean).concat([d.pins.length + " " + _t('pn.wyprowadzen')]).join(" · ") })
+    ]));
     if (d.warning) root.appendChild(h("p", { "class": "po-warn", text: d.warning }));
-    var HELP_DRAW = "Najedź lub wybierz pin na rysunku albo w tabeli – drugi widok podświetli się. Strzałki przesuwają fokus, Enter/Spacja zaznacza, Esc czyści.";
-    var HELP_IMG = hasPins ? "Kliknij obraz, aby powiększyć. Wiersz w tabeli pokazuje szczegóły pinu (Strzałki przesuwają fokus, Esc czyści)." : "Kliknij obraz, aby powiększyć.";
-    var help = h("p", { "class": "po-help", text: view === "image" ? HELP_IMG : HELP_DRAW });
-    root.appendChild(help);
+    root.appendChild(h("p", { "class": "po-help",
+      text: _t('pn.najedzLubWybierzPin') }));
 
-    // przełącznik widoku: rysunek interaktywny / wgrany obraz
-    var tabs = null;
-    if (canInter && canImg) {
-      tabs = h("div", { "class": "po-tabs", role: "tablist", "aria-label": "Widok pinoutu" });
-      [["interactive", "Rysunek interaktywny"], ["image", "Obraz (" + imgs.length + ")"]].forEach(function (v) {
-        var b = h("button", { type: "button", role: "tab", "data-v": v[0], text: v[1] });
-        b.addEventListener("click", function () { setView(v[0]); });
-        b.addEventListener("keydown", function (e) {
-          if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
-          e.preventDefault();
-          var other = v[0] === "image" ? "interactive" : "image";
-          setView(other); tabs.querySelector('[data-v="' + other + '"]').focus();
-        });
-        tabs.appendChild(b);
-      });
-      root.appendChild(tabs);
-    }
-
-    var filters = h("div", { "class": "po-filters", role: "group", "aria-label": "Filtr kategorii" });
-    if (hasPins) root.appendChild(filters);
+    var filters = h("div", { "class": "po-filters", role: "group", "aria-label": _t('pn.filtrKategorii') });
+    root.appendChild(filters);
     var grid = h("div", { "class": "po-grid" + (d.layout === "none" ? " po-grid-table" : "") });
     root.appendChild(grid);
 
     var detail = h("div", { "class": "po-detail", "aria-live": "polite", id: "po-detail-" + id });
     function resetDetail() {
       detail.textContent = ""; detail.style.removeProperty("--c");
-      detail.appendChild(h("h4", { text: "Wybierz pin" }));
-      detail.appendChild(h("p", { "class": "po-src", text: "Kliknij pin na diagramie lub wiersz w tabeli, aby zobaczyć szczegóły i uwagi." }));
+      detail.appendChild(h("h4", { text: _t('pn.wybierzPin') }));
+      detail.appendChild(h("p", { "class": "po-src", text: _t('pn.kliknijPinNaDiagramie') }));
     }
     resetDetail();
 
@@ -396,8 +340,8 @@
     function showDetail(i) {
       var p = d.pins[i];
       detail.style.setProperty("--c", CATS[p.cat][1]); detail.textContent = "";
-      detail.appendChild(h("h4", { text: (p.pad ? p.name : "Pin " + p.n + " · " + p.name) + " – " + CATS[p.cat][0] }));
-      if (p.type) detail.appendChild(h("p", { text: "Typ: " + p.type }));
+      detail.appendChild(h("h4", { text: (p.pad ? p.name : _t('pn.pin') + " " + p.n + " · " + p.name) + " – " + CATS[p.cat][0] }));
+      if (p.type) detail.appendChild(h("p", { text: _t('pn.typ') + " " + p.type }));
       if (p.fn) detail.appendChild(h("p", { text: p.fn }));
       if (p.note) detail.appendChild(h("p", { "class": "po-src", text: p.note }));
     }
@@ -438,7 +382,7 @@
       detail.textContent = ""; detail.style.setProperty("--c", "var(--accent)");
       detail.appendChild(h("h4", { text: gr.name }));
       if (gr.note) detail.appendChild(h("p", { text: gr.note }));
-      detail.appendChild(h("p", { "class": "po-src", text: "Piny: " + groupIdx[gi].map(function (i) { return d.pins[i].name + " (" + d.pins[i].n + ")"; }).join(", ") }));
+      detail.appendChild(h("p", { "class": "po-src", text: _t('pn.piny') + " " + groupIdx[gi].map(function (i) { return d.pins[i].name + " (" + d.pins[i].n + ")"; }).join(", ") }));
     }
     function visible(i) { var any = Object.keys(state.active).length; return !any || !!state.active[d.pins[i].cat]; }
     function order() { return d.pins.map(function (_, i) { return i; }).filter(visible); }
@@ -463,18 +407,13 @@
       el.addEventListener("keydown", function (ev) { onKey(ev, i, inTable); });
     }
 
-    // widok (rysunek interaktywny lub obraz) – wymienny, panel szczegółów i tabela są wspólne
-    var left = h("div", { "class": "po-card po-left" }), viewHost = h("div", { "class": "po-viewhost" }), svg = null;
-    left.appendChild(viewHost);
-    if (hasPins) left.appendChild(detail);
-    grid.appendChild(left);
-
-    function drawInteractive() {
-      svgPins = pinEls;   // rejestr pinów TEJ instancji (zmienna jest współdzielona przez wszystkie pinouty na stronie)
+    // rysunek
+    var left = h("div", { "class": "po-card po-left" }), svg = null;
+    if (d.layout !== "none") {
       var posCount = d.pins.filter(function (p) { return !p.pad; }).length;
       var g = geometry(d.layout, posCount, d);
       svg = s("svg", { "class": "po-svg" + (d.layout === "board" ? " po-svg-board" : ""), viewBox: "0 0 " + g.w + " " + g.h, role: "group",
-        "aria-label": "Rysunek " + (opts.title || d.package) + ", " + d.pins.length + " wyprowadzeń" });
+        "aria-label": _t('pn.rysunek') + " " + (opts.title || d.package) + ", " + d.pins.length + " " + _t('pn.wyprowadzen') });
       var onPin = function (el, i) { wire(el, i, false); };
       if (d.layout === "board") {
         drawBoard(svg, d, g, { image: image }, onPin);
@@ -486,31 +425,15 @@
           });
         }
       } else drawChip(svg, d, g, opts, onPin);
-      viewHost.appendChild(svg);
+      left.appendChild(svg);
     }
-    function setView(v) {
-      view = v;
-      viewHost.textContent = "";
-      Object.keys(pinEls).forEach(function (k) { delete pinEls[k]; });
-      svg = null;
-      grid.className = "po-grid" + (v === "image" ? " po-grid-image" : !canInter ? " po-grid-table" : "");
-      if (v === "image") viewHost.appendChild(imageViewer(imgs, opts.title || d.package));
-      else if (canInter) drawInteractive();
-      help.textContent = v === "image" ? HELP_IMG : HELP_DRAW;
-      // stan zaznaczenia, grupy i filtrów przenosimy na nowo narysowany rysunek
-      if (state.sel !== null && pinEls[state.sel]) pinEls[state.sel].classList.add("sel");
-      if (state.grp !== null) groupIdx[state.grp].forEach(function (i) { if (pinEls[i]) pinEls[i].classList.add("grp"); });
-      if (hasPins) applyFilters();
-      if (tabs) Array.prototype.forEach.call(tabs.children, function (b) {
-        var on = b.getAttribute("data-v") === v;
-        b.setAttribute("aria-selected", String(on)); b.tabIndex = on ? 0 : -1;
-      });
-    }
+    left.appendChild(detail);
+    grid.appendChild(left);
 
     // tabela
-    var thead = h("tr", {}, [h("th", { text: "Nr" }), h("th", { text: "Nazwa" }), h("th", { text: "Kategoria" })]);
-    if (hasType) thead.appendChild(h("th", { text: "Typ" }));
-    thead.appendChild(h("th", { text: "Funkcja i uwagi" }));
+    var thead = h("tr", {}, [h("th", { text: "Nr" }), h("th", { text: _t('pn.nazwa') }), h("th", { text: _t('pn.kategoria') })]);
+    if (hasType) thead.appendChild(h("th", { text: _t('pn.typ2') }));
+    thead.appendChild(h("th", { text: _t('pn.funkcjaIUwagi') }));
     var tbody = h("tbody");
     d.pins.forEach(function (p, i) {
       var tr = h("tr", { tabindex: 0, "aria-selected": "false", "data-i": i });
@@ -525,11 +448,11 @@
       wire(tr, i, true);
       rowsEl[i] = tr; tbody.appendChild(tr);
     });
-    if (hasPins) grid.appendChild(h("div", { "class": "po-card po-tw" }, [h("table", {}, [h("thead", {}, [thead]), tbody])]));
+    grid.appendChild(h("div", { "class": "po-card po-tw" }, [h("table", {}, [h("thead", {}, [thead]), tbody])]));
 
     // grupy: złącza i magistrale
-    if (hasPins && d.groups.length) {
-      var gwrap = h("div", { "class": "po-groups" }, [h("h4", { text: "Złącza i magistrale" })]);
+    if (d.groups.length) {
+      var gwrap = h("div", { "class": "po-groups" }, [h("h4", { text: _t('pn.zlaczaIMagistrale') })]);
       var glist = h("div", { "class": "po-glist" });
       d.groups.forEach(function (gr, gi) {
         var btn = h("button", { type: "button", "class": "po-group", "aria-pressed": "false" });
@@ -570,21 +493,20 @@
       });
       filters.appendChild(b);
     }
-    if (hasPins) addBtn("all", "Wszystkie (" + d.pins.length + ")");
+    addBtn("all", _t('pn.wszystkie') + d.pins.length + ")");
     present.forEach(function (k) { addBtn(k, CATS[k][0] + " (" + d.pins.filter(function (p) { return p.cat === k; }).length + ")", CATS[k][1]); });
     applyFilters();
-    setView(view);
 
     // stopka – styl callout z platformy
     if (d.notes) {
       var lim = h("div", { "class": "callout callout-warn po-lim" });
-      lim.appendChild(h("strong", { text: "Ograniczenia weryfikacji" }));
+      lim.appendChild(h("strong", { text: _t('pn.ograniczeniaWeryfikacji') }));
       lim.appendChild(document.createTextNode(d.notes));
       root.appendChild(lim);
     }
     if (d.sources.length) {
       var src = h("p", { "class": "po-src po-sources" });
-      src.appendChild(h("strong", { text: "Źródła: " }));
+      src.appendChild(h("strong", { text: _t('pn.zrodla') + " " }));
       d.sources.forEach(function (x, i) {
         if (i) src.appendChild(document.createTextNode(" · "));
         if (x.url) src.appendChild(h("a", { href: x.url, target: "_blank", rel: "noopener noreferrer", text: x.label || x.url }));
@@ -592,7 +514,7 @@
       });
       root.appendChild(src);
     }
-    return { select: select, selectGroup: selectGroup, setView: setView, view: function () { return view; }, svg: svg, state: function () { return { sel: state.sel, grp: state.grp, active: state.active }; }, data: d };
+    return { select: select, selectGroup: selectGroup, svg: svg, state: function () { return { sel: state.sel, grp: state.grp, active: state.active }; }, data: d };
   }
 
   /* ── sekcja do karty podzespołu ──────────────────────────────────────── */
@@ -600,14 +522,14 @@
     opts = opts || {};
     slot.textContent = "";
     slot.classList.add("po-section");
-    slot.appendChild(h("h3", { "class": "section-title", text: "Pinout i opis wyprowadzeń" }));
+    slot.appendChild(h("h3", { "class": "section-title", text: _t('pn.pinoutIOpisWyprowadzen') }));
     var body = h("div", { "class": "po-body-wrap" });
     slot.appendChild(body);
-    var ctl = render(body, pinout, { title: opts.title, image: opts.image, images: opts.images });
+    var ctl = render(body, pinout, { title: opts.title, image: opts.image });
     if (ctl) return ctl;
-    body.appendChild(h("p", { "class": "po-empty", text: "Ten podzespół nie ma jeszcze opisu wyprowadzeń." }));
+    body.appendChild(h("p", { "class": "po-empty", text: _t('pn.tenPodzespolNieMa') }));
     if (opts.isAdmin && typeof opts.onEdit === "function") {
-      var btn = h("button", { type: "button", "class": "btn-action", text: "+ Dodaj pinout" });
+      var btn = h("button", { type: "button", "class": "btn-action", text: _t('pn.dodajPinout') });
       btn.addEventListener("click", opts.onEdit);
       body.appendChild(btn);
     }
@@ -635,23 +557,22 @@
     if (text.charAt(0) === "{") return JSON.parse(text);
     var out = { pins: [], sources: [], shapes: [], groups: [] };
     text.split(/\r?\n/).forEach(function (raw, i) {
-      var line = raw.trim(), ln = "Linia " + (i + 1) + ": ";
+      var line = raw.trim(), ln = _t('pn.linia') + " " + (i + 1) + ": ";
       if (!line || line.charAt(0) === "#") return;
-      var m = line.match(/^(package|view|layout|source|notes|aspect|labels|image_as_background|default_tab|shape|group)\s*:\s*(.*)$/i);
+      var m = line.match(/^(package|view|layout|source|notes|aspect|labels|image_as_background|shape|group)\s*:\s*(.*)$/i);
       if (m) {
         var k = m[1].toLowerCase(), v = m[2].trim(), f = v.split("|").map(function (x) { return x.trim(); });
         if (!v) return;
         if (k === "source") out.sources.push({ label: f[0], url: f[1] || "" });
-        else if (k === "aspect") { var a = num(v); if (a === null) throw new Error(ln + "aspect musi być liczbą, np. 1.6"); (out.board = out.board || {}).aspect = a; }
+        else if (k === "aspect") { var a = num(v); if (a === null) throw new Error(ln + _t('pn.aspectMusiBycLiczba')); (out.board = out.board || {}).aspect = a; }
         else if (k === "labels") (out.board = out.board || {}).labels = /^(tak|yes|true|1)$/i.test(v);
-        else if (k === "default_tab") out.default_tab = /^(image|obraz)/i.test(v) ? "image" : "interactive";
         else if (k === "image_as_background") out.image_as_background = /^(tak|yes|true|1)$/i.test(v);
         else if (k === "shape") {
           var t = f[0].toLowerCase(), c;
           if (t === "rect") { c = parseXY(f[1] || "", 4); if (!c) throw new Error(ln + "shape: rect | x,y,szer,wys | etykieta | rodzaj"); out.shapes.push({ t: t, x: c[0], y: c[1], w: c[2], h: c[3], label: f[2] || "", kind: f[3] || "part" }); }
           else if (t === "circle") { c = parseXY(f[1] || "", 3); if (!c) throw new Error(ln + "shape: circle | x,y,promień | etykieta | rodzaj"); out.shapes.push({ t: t, x: c[0], y: c[1], r: c[2], label: f[2] || "", kind: f[3] || "part" }); }
           else if (t === "text") { c = parseXY(f[1] || "", 2); if (!c) throw new Error(ln + "shape: text | x,y | etykieta"); out.shapes.push({ t: t, x: c[0], y: c[1], label: f[2] || "" }); }
-          else throw new Error(ln + "nieznany kształt „" + f[0] + "” (rect, circle, text)");
+          else throw new Error(ln + _t('pn.nieznanyKsztalt') + f[0] + "” (rect, circle, text)");
         }
         else if (k === "group") out.groups.push({ name: f[0], pins: (f[1] || "").split(",").map(function (x) { return x.trim(); }).filter(Boolean), note: f.slice(2).join(" / ") });
         else out[k] = v;
@@ -664,7 +585,7 @@
       if (at) { pin.n = at[1]; pin.x = +at[2]; pin.y = +at[3]; }
       out.pins.push(pin);
     });
-    if (!out.pins.length) throw new Error("Nie znaleziono żadnego pinu");
+    if (!out.pins.length) throw new Error(_t('pn.nieZnalezionoZadnegoPinu'));
     return out;
   }
 
@@ -675,7 +596,6 @@
     ["package", "view", "layout"].forEach(function (k) { if (p[k]) lines.push(k + ": " + clean(p[k])); });
     if (p.board && p.board.aspect) lines.push("aspect: " + p.board.aspect);
     if (p.board && typeof p.board.labels === "boolean") lines.push("labels: " + (p.board.labels ? "tak" : "nie"));
-    if (p.default_tab === "image") lines.push("default_tab: image");
     if (typeof p.image_as_background === "boolean") lines.push("image_as_background: " + (p.image_as_background ? "tak" : "nie"));
     (p.sources || []).forEach(function (x) { lines.push("source: " + clean(x.label) + " | " + str(x.url)); });
     if (p.notes) lines.push("notes: " + clean(p.notes));

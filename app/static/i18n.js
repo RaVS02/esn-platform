@@ -4,12 +4,14 @@
  * Brak klucza w języku → wersja polska (język bazowy) → sam klucz (ostrzeżenie w konsoli).
  *
  * API (window.ESNI18n, skrót window.t):
- *   t(klucz, {param})        – tekst z podstawieniem {param}
+ *   t(klucz, {param})        – tekst z podstawieniem {param}; w kodzie modułów używaj aliasu _t(...) (nie koliduje ze zmiennymi t)
  *   tn(klucz, n, {param})    – liczba mnoga wg reguł języka (Intl.PluralRules): klucz.one / .few / .many / .other
  *   apply(korzeń)            – tłumaczy elementy z atrybutami data-i18n="klucz" oraz data-i18n-attr="title:klucz;placeholder:klucz"
  *   lang(), set(kod), list() – bieżący język, zmiana (zapis w localStorage, klucz esn-lang), lista języków [{code,name}]
  *   mountSwitch(element)     – wstawia przełącznik języka (select)
  *   num(n), date(d, opcje)   – formatowanie liczb i dat wg ustawień regionalnych języka
+ *   label(grupa, wartość)     – etykieta wartości z bazy (np. label('cat','Czujniki')); brak klucza = wartość bez zmian, bez ostrzeżenia
+ *   err(komunikat)           – tłumaczy polski komunikat błędu z API według kluczy api.* (wzorce z {param}); nieznany zwraca bez zmian
  *   missing(kod)             – klucze bazowe, których brakuje w danym języku (do testów i kontroli)
  * Zdarzenie "esn-lang" na document (detail: {lang}) po zmianie języka.
  * Kolejność wyboru języka: zapisany wybór → język przeglądarki (navigator.languages) → polski.
@@ -49,6 +51,38 @@
     var p = Object.assign({ n: n }, params || {}), l = lang();
     var k = [key + "." + rule, key + ".other"].filter(function (x) { return (dicts[l] && dicts[l][x] != null) || (dicts[BASE] && dicts[BASE][x] != null); })[0];
     return t(k || key + ".other", p);
+  }
+
+  // etykieta wartości z bazy danych (kategoria, zastosowanie): tłumaczy tylko znane wartości, resztę zostawia bez zmian
+  function slug(v) { return String(v).toLowerCase().replace(/ł/g, "l").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, ""); }
+  function label(group, value) {
+    if (value == null || value === "") return value;
+    var k = group + "." + slug(value), l = lang();
+    return (dicts[l] && dicts[l][k] != null) ? dicts[l][k] : value;
+  }
+
+  // komunikaty błędów z API (serwer zwraca polski tekst): klucze "api.*" języka bazowego służą jako wzorce
+  // ({param} = fragment zmienny); dopasowany komunikat jest tłumaczony, nieznany zostaje bez zmian
+  var apiRe = null, apiN = -1;
+  function apiList() {
+    var base = dicts[BASE] || {}, keys = Object.keys(base).filter(function (k) { return k.indexOf("api.") === 0; });
+    if (apiRe && apiN === keys.length) return apiRe;
+    apiN = keys.length;
+    apiRe = keys.map(function (k) {
+      var names = [], parts = String(base[k]).split(/\{(\w+)\}/), src = "";
+      parts.forEach(function (p, i) { if (i % 2) { names.push(p); src += "(.+?)"; } else src += p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); });
+      return { key: k, re: new RegExp("^" + src + "$"), names: names };
+    });
+    return apiRe;
+  }
+  function err(msg) {
+    if (typeof msg !== "string" || !msg) return msg;
+    var list = apiList(), i, m, p;
+    for (i = 0; i < list.length; i++) {
+      m = list[i].re.exec(msg.trim());
+      if (m) { p = {}; list[i].names.forEach(function (n, j) { p[n] = m[j + 1]; }); return t(list[i].key, p); }
+    }
+    return msg;
   }
 
   function apply(root) {
@@ -119,11 +153,11 @@
   }
 
   window.ESNI18n = {
-    add: add, t: t, tn: tn, apply: apply, lang: lang, set: set, list: list, mountSwitch: mountSwitch, missing: missing,
+    add: add, t: t, tn: tn, apply: apply, lang: lang, set: set, list: list, mountSwitch: mountSwitch, missing: missing, label: label, err: err,
     num: function (n, o) { return new Intl.NumberFormat(locale(), o).format(n); },
     date: function (d, o) { return new Intl.DateTimeFormat(locale(), o || { dateStyle: "medium" }).format(d instanceof Date ? d : new Date(d)); }
   };
-  window.t = t;
+  window.t = t; window._t = t; window._tn = tn; window._L = label; window._E = err;   // _t / _tn: aliasy odporne na lokalne zmienne o nazwie t (np. callback(t) w kodzie modułów)
 
   document.addEventListener("DOMContentLoaded", function () {
     document.documentElement.setAttribute("lang", lang());

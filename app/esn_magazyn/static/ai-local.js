@@ -27,15 +27,15 @@
   function networkHint(url) {
     var isLocalHost = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:|\/|$)/i.test(url);
     if (location.protocol === "https:" && /^http:/i.test(url) && !isLocalHost) {
-      return "Przeglądarka blokuje połączenie z adresem http (poza localhost) ze strony https. Użyj adresu localhost albo https.";
+      return _t('al.przegladarkaBlokujePolaczenieZ');
     }
-    return "Nie można połączyć z " + url + ". Sprawdź, czy serwer modelu działa, czy adres i port się zgadzają, " +
-      "oraz czy dla Ollamy ustawiono OLLAMA_ORIGINS (zob. instrukcja w ustawieniach AI). Przeglądarka może też pytać o zgodę na dostęp do sieci lokalnej.";
+    return _t('al.nieMoznaPolaczycZ') + " " + url + _t('al.sprawdzCzySerwerModelu') + " " +
+      _t('al.orazCzyDlaOllamy');
   }
 
   function request(path, body, ms) {
     var cfg = get();
-    if (!validUrl(cfg.url)) return Promise.reject(new Error("Nieprawidłowy adres serwera lokalnego."));
+    if (!validUrl(cfg.url)) return Promise.reject(new Error(_t('al.nieprawidlowyAdresSerweraLokalnego')));
     var ctl = typeof AbortController !== "undefined" ? new AbortController() : null;
     var timer = ctl ? setTimeout(function () { ctl.abort(); }, ms || 120000) : null;
     return fetch(cfg.url + path, {
@@ -46,23 +46,23 @@
         var j = null; try { j = JSON.parse(t); } catch (e) { /* nie-JSON */ }
         if (!r.ok) {
           var m = j && j.error ? (j.error.message || j.error) : t.slice(0, 200);
-          throw new Error("Serwer lokalny (HTTP " + r.status + "): " + m);
+          throw new Error(_t('al.serwerLokalnyHttp') + " " + r.status + "): " + m);
         }
         return j;
       });
     }, function (e) {
-      if (e && e.name === "AbortError") throw new Error("Model lokalny nie odpowiedział na czas.");
+      if (e && e.name === "AbortError") throw new Error(_t('al.modelLokalnyNieOdpowiedzial'));
       throw new Error(networkHint(cfg.url));
     }).then(function (j) { if (timer) clearTimeout(timer); return j; }, function (e) { if (timer) clearTimeout(timer); throw e; });
   }
 
   function chat(system, messages, opts) {
     var cfg = get();
-    if (!cfg.model) return Promise.reject(new Error("Podaj nazwę modelu lokalnego w Profilu → Asystent AI."));
+    if (!cfg.model) return Promise.reject(new Error(_t('al.podajNazweModeluLokalnego')));
     var msgs = [{ role: "system", content: String(system || "") }].concat(messages.slice(-(opts && opts.keep || 6)));
     return request("/v1/chat/completions", { model: cfg.model, messages: msgs, temperature: 0.7, stream: false }).then(function (j) {
       var t = j && j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
-      if (!t) throw new Error("Model lokalny zwrócił pustą odpowiedź.");
+      if (!t) throw new Error(_t('al.modelLokalnyZwrocilPusta'));
       return t;
     });
   }

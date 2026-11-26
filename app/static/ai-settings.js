@@ -19,7 +19,7 @@
   function tok() { try { return localStorage.getItem("token"); } catch (e) { return null; } }
   function api(path, method, body) {
     return fetch(path, { method: method || "GET", headers: Object.assign({ Authorization: "Bearer " + tok() }, body ? { "Content-Type": "application/json" } : {}), body: body ? JSON.stringify(body) : undefined })
-      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) throw new Error(j.detail || ("HTTP " + r.status)); return j; }); });
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) throw new Error(_E(j.detail) || ("HTTP " + r.status)); return j; }); });
   }
   function note(el, text, kind) { el.textContent = text || ""; el.className = "ai-set-msg" + (kind ? " " + kind : ""); }
   function fmt(s, o) { return s.replace(/\{(\w+)\}/g, function (_, k) { return o[k]; }); }
