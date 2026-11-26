@@ -75,3 +75,6 @@
 
 - [x] v36: wiadomości e-mail w języku odbiorcy; instrukcja i szablony Wiedzy po angielsku; katalog magazynu z `lang`; etykiety języków na kartach katalogu.
 - [x] v37: magazyn – dodawanie z katalogu: dopasowanie kategorii niezależne od języka interfejsu, walidacja kategorii (formularz + 400 zamiast 500).
+- [x] v38: integracja edytora schematów połączeń (Narzędzia + karta projektu, /api/wiring, rev/409, tryb gościa) – `docs/SCHEMATY.md`.
+- [ ] Schematy: `Project.components` ze schematu, walidacja napięć (pola pinoutu 10.3), blokada usuwania komponentu użytego w schemacie (10.4), jasny motyw edytora (etap 11), link tylko do odczytu (etap 8).
+- [x] v39: schematy – jasny motyw edytora, nagłówek narzędzi, „schemat” zamiast „projekt”, no-store, podzespoły projektu ze schematu, ostrzeżenie przy usuwaniu komponentu.

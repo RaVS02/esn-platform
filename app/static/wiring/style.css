@@ -1,0 +1,343 @@
+/* ESN: blok :root z tokenami i reguła body{} z demo usunięte – zmienne i czcionki pochodzą ze style.css platformy (README edytora 10.1) */
+
+/* ===== wszystko poniżej jest zakresowane do .sch ===== */
+.sch{display:flex;flex-direction:column;height:100vh;color:var(--text);font:13px/1.5 var(--sans)}
+.sch *,.sch *::before,.sch *::after{box-sizing:border-box}
+.sch button,.sch input,.sch select,.sch textarea{font:inherit;color:inherit}
+.sch button{background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;transition:all .15s}
+.sch button:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.sch button:disabled{opacity:.35;cursor:default}
+.sch button.pri{background:var(--accent);border-color:var(--accent);color:#04161a;font-weight:700}
+.sch button.pri:hover{color:#04161a;filter:brightness(1.1)}
+.sch button.danger{color:var(--red);border-color:rgba(255,68,102,.35)}
+.sch button.danger:hover{background:rgba(255,68,102,.1);border-color:var(--red);color:var(--red)}
+.sch input,.sch select,.sch textarea{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;width:100%;outline:none;transition:border-color .2s,box-shadow .2s}
+.sch input:focus,.sch select:focus,.sch textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(86,225,253,.15)}
+.sch input::placeholder{color:var(--text3)}
+.sch .muted{color:var(--text3)}
+.sch .grow{flex:1}
+.sch code{font-family:var(--mono);color:var(--accent);font-size:12px}
+
+.sch [data-r="top"]{display:flex;align-items:center;gap:8px;padding:8px 14px;background:rgba(10,12,16,.92);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.sch [data-r="top"] input,.sch [data-r="top"] select{width:auto}
+.sch [data-r="projTitle"]{width:230px}
+.sch .brand{font-family:var(--display);font-weight:800;font-size:14px;color:var(--accent);text-transform:uppercase;margin-right:6px}
+.sch .sep{width:1px;height:20px;background:var(--border)}
+.sch .chk{display:flex;gap:5px;align-items:center;cursor:pointer;color:var(--text2)}
+.sch .chk input{width:auto}
+.sch .seg{display:flex}
+.sch .seg button{border-radius:0}
+.sch .seg button:first-child{border-radius:6px 0 0 6px}
+.sch .seg button:last-child{border-radius:0 6px 6px 0}
+.sch .seg button.on{background:rgba(86,225,253,.12);border-color:var(--accent);color:var(--accent)}
+.sch [data-r="dirty"]{color:var(--orange);font-family:var(--mono);font-size:11px}
+
+.sch main{flex:1;display:flex;min-height:0}
+.sch [data-r="lib"],.sch [data-r="insp"]{background:var(--bg2);padding:12px;overflow:auto;display:flex;flex-direction:column;gap:8px}
+.sch [data-r="lib"]{width:240px;border-right:1px solid var(--border)}
+.sch [data-r="insp"]{width:310px;border-left:1px solid var(--border)}
+.sch [data-r="libList"]{flex:1;overflow:auto}
+.sch .lcat{margin:12px 0 5px;color:var(--text3);font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.12em}
+.sch .litem{display:flex;align-items:center;gap:9px;padding:7px 9px;border:1px solid var(--border);border-radius:8px;margin-bottom:5px;cursor:pointer;background:var(--card)}
+.sch .litem:hover{border-color:var(--border2);background:var(--card2)}
+.sch .litem .nm{flex:1;min-width:0}
+.sch .litem small{display:block;color:var(--text3);font-family:var(--mono);font-size:10px}
+.sch .litem .ed{padding:0 7px}
+.sch .sw{width:4px;height:28px;border-radius:2px;background:var(--cv,var(--c))}
+
+/* płótno */
+.sch [data-r="vp"]{flex:1;position:relative;overflow:hidden;cursor:grab;background-color:var(--bg);
+  background-image:radial-gradient(var(--border) 1px,transparent 1px);background-size:24px 24px}
+.sch [data-r="vp"].panning{cursor:grabbing}
+.sch [data-r="world"]{position:absolute;left:0;top:0;transform-origin:0 0}
+.sch [data-r="wires"]{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;z-index:0}
+.sch [data-r="nodes"],.sch [data-r="labels"]{position:absolute;left:0;top:0}
+.sch [data-r="labels"]{z-index:2}
+.sch [data-r="hint"]{position:absolute;left:12px;bottom:10px;color:var(--text3);font-family:var(--mono);font-size:11px;background:rgba(10,12,16,.85);padding:4px 9px;border-radius:6px;pointer-events:none}
+
+.sch .node{position:absolute;width:250px;background:var(--card);border:1px solid var(--border);border-radius:8px;z-index:1;user-select:none}
+.sch .detail .node{width:330px}
+.sch .node.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 0 18px rgba(86,225,253,.12)}
+.sch .nh{padding:7px 11px;border-top:3px solid var(--cv,var(--c));border-radius:8px 8px 0 0;border-bottom:1px solid var(--border);cursor:grab}
+.sch .nh b{font-family:var(--display);font-size:13px}
+.sch .nh small{display:block;color:var(--text3);font-family:var(--mono);font-size:10px}
+.sch.ro .nh{cursor:default}
+
+.sch .pins{display:grid;grid-template-columns:1fr 1fr;padding:4px 0}
+.sch .pin{display:flex;align-items:center;gap:6px;padding:3px 11px;cursor:crosshair;min-width:0}
+.sch .pin:hover{background:var(--card2)}
+.sch .pin.R{flex-direction:row-reverse;text-align:right}
+.sch .pin .dot{flex:none;width:10px;height:10px;border-radius:50%;background:var(--cv,var(--c));border:2px solid var(--card);box-shadow:0 0 0 1px var(--cv,var(--c))}
+.sch .pin.L .dot{margin-left:-17px}
+.sch .pin.R .dot{margin-right:-17px}
+.sch .pin .pn{font-family:var(--mono);font-weight:600;font-size:12px}
+.sch .pin em{font-style:normal;color:var(--text3);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sch .pin:not(.used) .pn{color:var(--text3);font-weight:400}
+.sch.ro .pin{cursor:default}
+
+.sch .roles{padding:6px 11px 9px}
+.sch .role-h{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin-top:7px;color:var(--cv,var(--c))}
+.sch .role{display:flex;gap:7px;color:var(--text2);font-size:12px}
+.sch .role b{color:var(--text);font-family:var(--mono);font-weight:600;font-size:11px}
+.sch .role span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.sch .w{fill:none;stroke:var(--cv,var(--c));stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.sch .w.pw{stroke-dasharray:6 5}
+.sch .w.sel{stroke-width:4}
+.sch .w.warn{filter:drop-shadow(0 0 4px var(--red))}
+.sch .hit{fill:none;stroke:transparent;stroke-width:14;pointer-events:stroke;cursor:pointer}
+.sch .elabel{position:absolute;transform:translate(-50%,-50%);background:var(--bg);border:1px solid var(--cv,var(--c));
+  color:var(--cv,var(--c));padding:1px 8px;border-radius:10px;font-family:var(--mono);font-size:10px;white-space:nowrap;cursor:pointer}
+.sch .elabel.sel{background:var(--cv,var(--c));color:#04161a}
+.sch .elabel.warn{border-color:var(--red);color:var(--red)}
+.sch .wp{position:absolute;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:3px;background:var(--bg);border:2px solid var(--accent);cursor:move;transform:rotate(45deg)}
+.sch .wp:hover{background:var(--accent)}
+
+/* inspektor */
+.sch [data-r="insp"] h3{margin:0;font-family:var(--display);font-size:15px;color:var(--text)}
+.sch [data-r="insp"] h4{margin:12px 0 3px;color:var(--text3);font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.12em;font-weight:600}
+.sch [data-r="insp"] label{display:flex;flex-direction:column;gap:3px;color:var(--text3);margin-top:6px}
+.sch .prow{display:flex;gap:7px;align-items:baseline;padding:4px 0;border-bottom:1px solid var(--border)}
+.sch .prow .dot{width:8px;height:8px;border-radius:50%;background:var(--cv,var(--c));flex:none}
+.sch .prow small{color:var(--text3)}
+.sch .warnbox{border:1px solid rgba(255,68,102,.35);background:rgba(255,68,102,.08);color:#ff9bb0;border-radius:6px;padding:6px 9px;margin:5px 0;cursor:pointer}
+.sch .legend{display:flex;gap:8px;align-items:center;color:var(--text2)}
+.sch .legend i{width:16px;height:3px;background:var(--cv,var(--c));border-radius:2px}
+.sch .btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+
+.sch dialog{background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:12px;width:min(580px,94vw);padding:22px;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.sch dialog::backdrop{background:rgba(0,0,0,.8);backdrop-filter:blur(6px)}
+.sch dialog h3{margin:0 0 8px;font-family:var(--display);color:var(--accent)}
+.sch dialog label{display:flex;flex-direction:column;gap:3px;margin:9px 0;color:var(--text3)}
+.sch dialog textarea{font-family:var(--mono);font-size:12px}
+.sch dialog .row{display:flex;justify-content:flex-end;gap:8px}
+
+@media (max-width:900px){.sch [data-r="lib"]{width:170px}.sch [data-r="insp"]{width:230px}}
+
+/* ===== v3 ===== */
+/* scrollbar – jak w platformie (cienki, kolory z tokenów) */
+.sch *{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
+@supports not (scrollbar-color:auto){
+  .sch ::-webkit-scrollbar{width:6px;height:6px}
+  .sch ::-webkit-scrollbar-track{background:transparent}
+  .sch ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+  .sch ::-webkit-scrollbar-thumb:hover{background:var(--accent2)}
+}
+.sch [data-r="libList"]{padding-right:4px;margin-right:-4px}
+
+/* punkty zaczepienia: „duch" na środku odcinka (przeciągnij, aby dodać punkt) */
+.sch .wp.ghost{width:10px;height:10px;margin:-5px 0 0 -5px;opacity:.5;border-style:dashed;cursor:copy}
+.sch .wp.ghost:hover{opacity:1;background:var(--accent)}
+
+/* katalog / numery pinów / przełączniki */
+.sch .badge{font-weight:600;color:var(--accent);font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.06em}
+.sch .pin .pnum{flex:none;min-width:14px;text-align:center;color:var(--text3);font-family:var(--mono);font-size:10px}
+.sch .pin.R .pnum{text-align:center}
+.sch .seg.mini button{flex:1;padding:3px 6px;font-size:11px}
+.sch [data-r="top"] select.lang{width:auto;padding:5px 6px;font-family:var(--mono);font-size:12px}
+.sch [data-r="insp"] details{margin-top:2px;color:var(--text3)}
+.sch [data-r="insp"] summary{cursor:pointer;font-size:11px;color:var(--accent2)}
+.sch [data-r="insp"] details small{display:block;margin-top:2px;line-height:1.4}
+
+/* ===== v4 ===== */
+/* przełącznik trybu: pełna ramka aktywnego przycisku (sąsiednie ramki nakładają się, aktywny jest na wierzchu) */
+.sch .seg button+button{margin-left:-1px}
+.sch .seg button:hover,.sch .seg button.on{position:relative;z-index:1}
+
+/* chowanie paneli bocznych */
+.sch.lib-off [data-r="lib"]{display:none}
+.sch.insp-off [data-r="insp"]{display:none}
+.sch .ptog{position:absolute;top:8px;z-index:5;width:30px;height:28px;padding:0;font-size:15px;line-height:1;background:rgba(10,12,16,.85)}
+.sch [data-r="togLib"]{left:8px}
+.sch [data-r="togInsp"]{right:8px}
+.sch.lib-off [data-r="togLib"],.sch.insp-off [data-r="togInsp"]{color:var(--accent);border-color:var(--accent)}
+
+/* menu eksportu */
+.sch .menuwrap{position:relative}
+.sch [data-r="btnExport"]::after{content:" ▾";font-size:10px}
+.sch .menu{position:absolute;top:calc(100% + 4px);right:0;min-width:200px;background:var(--card);border:1px solid var(--border2);border-radius:8px;padding:4px;display:flex;flex-direction:column;gap:2px;z-index:30;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.sch .menu[hidden]{display:none}
+.sch .menu button{text-align:left;border:0;background:transparent}
+.sch .menu button:hover{background:var(--card2);color:var(--text)}
+
+/* lista części: „załaduj więcej" */
+.sch button.more{width:100%;margin-top:8px}
+.sch .cnt{text-align:center;margin-top:8px;font-size:11px;font-family:var(--mono)}
+
+/* ===== v5: etykiety przewodów ===== */
+.sch .elabel{user-select:none}
+.sch:not(.ro) .elabel{cursor:grab}
+.sch:not(.ro) .elabel:active{cursor:grabbing}
+
+/* ===== v6: ikony i zdjęcia części, menu „Widok”, wypełnione etykiety ===== */
+.sch .nh{display:flex;gap:10px;align-items:center}
+.sch .nht{min-width:0}
+.sch .pico{flex:none;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:7px;
+  color:var(--cv,var(--c));background:rgba(255,255,255,.04);background:color-mix(in srgb,var(--cv,var(--c)) 14%,transparent);overflow:hidden}
+.sch .pico svg{width:18px;height:18px}
+.sch .pico img{width:100%;height:100%;object-fit:contain;background:var(--bg2);border-radius:6px}
+.sch .pico.photo svg{display:none}
+.sch .pico.lico{width:30px;height:30px}
+.sch .pico.lico svg{width:17px;height:17px}
+
+.sch .menu.left{left:0;right:auto}
+.sch .menu .mi{display:flex;flex-direction:row;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;cursor:pointer;color:var(--text2);margin:0}
+.sch .menu .mi:hover{background:var(--card2);color:var(--text)}
+.sch .menu .mi input{width:auto}
+.sch [data-r="btnView"]::after{content:" ▾";font-size:10px}
+
+/* ustawienie widoku: wypełnione tło etykiet przewodów (jak przy zaznaczonym przewodzie) */
+.sch.fill-labels .elabel{background:var(--cv,var(--c));color:#04161a}
+.sch.fill-labels .elabel.warn{background:var(--red);border-color:var(--red);color:#fff}
+
+/* ===== v7: orientacja pinów ===== */
+.sch .menu .mi.sel{flex-direction:column;align-items:stretch;gap:5px;cursor:default;min-width:250px}
+.sch .menu .mi.sel:hover{background:transparent;color:var(--text2)}
+.sch [data-r="insp"] label.chk{flex-direction:row;align-items:center;gap:6px;color:var(--text2)}
+
+/* ===== v8: rozmiar kafelków (tryb kompaktowy, zmiana szerokości) ===== */
+.sch [data-r="world"].compact .node{width:190px}
+.sch [data-r="world"].compact.detail .node{width:240px}
+.sch [data-r="world"].compact .nh{padding:5px 9px;gap:7px}
+.sch [data-r="world"].compact .nh small{display:none}
+.sch [data-r="world"].compact .pico{width:22px;height:22px}
+.sch [data-r="world"].compact .pico svg{width:14px;height:14px}
+.sch [data-r="world"].compact .pins{padding:2px 0}
+.sch [data-r="world"].compact .pin{padding:1px 9px}
+.sch [data-r="world"].compact .pin em{display:none}
+.sch [data-r="world"].compact .pin .pn{font-size:11px}
+.sch [data-r="world"].compact .pin.L .dot{margin-left:-15px}
+.sch [data-r="world"].compact .pin.R .dot{margin-right:-15px}
+.sch [data-r="world"].compact .roles{padding:4px 9px 6px}
+.sch [data-r="world"].compact .role{display:inline-flex;margin-right:7px}
+.sch [data-r="world"].compact .role span{display:none}
+/* ręcznie ustawiona szerokość: opisy się zawijają zamiast być ucinane */
+.sch .node.sized .role span{white-space:normal;overflow:visible}
+.sch .node.sized .role{align-items:baseline}
+.sch .rsz{position:absolute;right:3px;bottom:3px;width:11px;height:11px;border-right:2px solid var(--accent);border-bottom:2px solid var(--accent);
+  border-radius:0 0 3px 0;cursor:nwse-resize;opacity:0;transition:opacity .15s}
+.sch:not(.ro) .node:hover .rsz,.sch:not(.ro) .node.sel .rsz{opacity:.8}
+.sch .rsz:hover{opacity:1 !important}
+.sch.ro .rsz{display:none}
+.sch [data-r="insp"] .wrow{display:flex;gap:6px;align-items:center}
+.sch [data-r="insp"] .wrow input{flex:1;min-width:0}
+
+/* ===== v9: zmiana wysokości i rozmiaru (róg = obie osie, krawędzie = jedna oś) ===== */
+.sch .rsz-r,.sch .rsz-b{position:absolute;background:var(--accent);border-radius:3px;opacity:0;transition:opacity .15s;z-index:1}
+.sch .rsz-r{right:-4px;top:50%;width:7px;height:28px;margin-top:-14px;cursor:ew-resize}
+.sch .rsz-b{bottom:-4px;left:50%;width:28px;height:7px;margin-left:-14px;cursor:ns-resize}
+.sch:not(.ro) .node:hover .rsz-r,.sch:not(.ro) .node:hover .rsz-b,.sch:not(.ro) .node.sel .rsz-r,.sch:not(.ro) .node.sel .rsz-b{opacity:.55}
+.sch .rsz-r:hover,.sch .rsz-b:hover{opacity:1 !important}
+.sch.ro .rsz-r,.sch.ro .rsz-b{display:none}
+.sch .pin .dot{position:relative;z-index:3}          /* kropki pinów zawsze nad uchwytami zmiany rozmiaru */
+
+/* ===== v10: eksport PDF ===== */
+.sch dialog label.chk{flex-direction:row;align-items:center;gap:8px;color:var(--text2)}
+.sch dialog label.chk input{width:auto}
+
+/* ===== v11: walidacja – plakietka ostrzeżeń na kafelku, podpowiedzi w panelu „Sprawdzenie” ===== */
+.sch .nbadge{flex:none;margin-left:auto;align-self:flex-start;padding:1px 7px;border-radius:10px;font-family:var(--mono);font-size:10px;font-weight:600;
+  line-height:16px;white-space:nowrap;color:#fff;background:var(--red);box-shadow:0 0 8px rgba(255,68,102,.35);cursor:help}
+.sch [data-r="world"].compact .nbadge{padding:0 5px;font-size:9px;line-height:14px}
+.sch .hintbox{border:1px solid rgba(86,225,253,.25);background:rgba(86,225,253,.06);color:var(--text2);border-radius:6px;padding:6px 9px;margin:5px 0;font-size:12px}
+.sch .hintbox[data-node],.sch .hintbox[data-goto]{cursor:pointer}
+.sch .hintbox[data-node]:hover,.sch .hintbox[data-goto]:hover{border-color:var(--accent)}
+.sch .warnbox:hover{border-color:var(--red)}
+
+/* ===== v12: wartość elementu, link do karty komponentu, pola wyboru ===== */
+.sch .nval{display:inline-block;margin-left:7px;padding:0 6px;border:1px solid var(--border2);border-radius:5px;font-family:var(--mono);font-size:11px;
+  font-weight:600;line-height:16px;color:var(--accent);background:var(--bg2);vertical-align:1px;white-space:nowrap}
+.sch [data-r="world"].compact .nval{font-size:10px;line-height:14px;margin-left:5px}
+.sch .nlink{flex:none;margin-left:auto;align-self:flex-start;width:20px;height:20px;display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--border);border-radius:5px;color:var(--text3);text-decoration:none;font-size:12px;line-height:1;cursor:pointer;transition:all .15s}
+.sch .nbadge+.nlink{margin-left:5px}
+.sch .nlink:hover{color:var(--accent);border-color:var(--accent)}
+.sch .btnlink{display:inline-block;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--text);
+  text-decoration:none;transition:all .15s}
+.sch .btnlink:hover{border-color:var(--accent);color:var(--accent)}
+.sch [data-r="insp"] .wrow select{width:auto;flex:none}
+
+/* pola wyboru w stylistyce platformy (ramka i akcent z tokenów); :not([hidden]) podnosi specyficzność ponad „.menu .mi input” */
+.sch input[type="checkbox"]:not([hidden]){-webkit-appearance:none;appearance:none;flex:none;width:16px;height:16px;margin:0;padding:0;
+  border:1px solid var(--border2);border-radius:4px;background:var(--bg2);display:inline-grid;place-content:center;cursor:pointer;
+  vertical-align:middle;transition:background .15s,border-color .15s,box-shadow .15s}
+.sch input[type="checkbox"]:not([hidden])::before{content:"";width:9px;height:9px;background:#04161a;transform:scale(0);transition:transform .12s ease-out;
+  clip-path:polygon(14% 44%,0 59%,40% 100%,100% 22%,86% 8%,40% 72%)}
+.sch input[type="checkbox"]:not([hidden]):checked{background:var(--accent);border-color:var(--accent)}
+.sch input[type="checkbox"]:not([hidden]):checked::before{transform:scale(1)}
+.sch input[type="checkbox"]:not([hidden]):hover:not(:disabled){border-color:var(--accent)}
+.sch input[type="checkbox"]:not([hidden]):focus{box-shadow:none}
+.sch input[type="checkbox"]:not([hidden]):focus-visible{box-shadow:0 0 0 2px rgba(86,225,253,.25)}
+.sch input[type="checkbox"]:not([hidden]):disabled{opacity:.4;cursor:default}
+
+/* ===== v13: zaznaczanie wielu elementów, notatki na płótnie, wyrównywanie ===== */
+.sch .selbox{position:absolute;z-index:4;border:1px dashed var(--accent);background:rgba(86,225,253,.07);border-radius:3px;pointer-events:none}
+.sch .tnote{position:absolute;z-index:1;min-height:36px;padding:8px 11px 8px 13px;border-radius:8px;user-select:none;cursor:grab;
+  background:var(--card);background:color-mix(in srgb,var(--cv,var(--c)) 10%,var(--card));border:1px solid var(--border2);
+  border-color:color-mix(in srgb,var(--cv,var(--c)) 45%,transparent);box-shadow:inset 3px 0 0 var(--cv,var(--c))}
+.sch.ro .tnote{cursor:default}
+.sch .tnote.sel{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--cv,var(--c)),0 0 0 1px var(--accent),0 0 18px rgba(86,225,253,.12)}
+.sch .tn-text{font-size:12px;line-height:1.45;color:var(--text);white-space:pre-wrap;overflow-wrap:anywhere}
+.sch .tn-text.empty{color:var(--text3);font-style:italic}
+.sch .algrid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:4px}
+.sch .algrid.two{grid-template-columns:repeat(2,1fr)}
+.sch .algrid button{padding:5px 4px;font-size:12px;white-space:nowrap}
+.sch [data-r="insp"] textarea{resize:vertical;font-family:var(--sans)}
+
+/* ===== v14: zwijanie kafelka ===== */
+.sch .nhr{margin-left:auto;display:flex;gap:5px;align-items:center;align-self:flex-start;flex:none}
+.sch .nhr .nbadge,.sch .nhr .nlink{margin-left:0}
+.sch .ncol{width:20px;height:20px;padding:0;display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1;
+  border-radius:5px;color:var(--text3);background:transparent;border:1px solid var(--border)}
+.sch .ncol:hover{color:var(--accent);border-color:var(--accent)}
+.sch.ro .ncol{display:none}
+.sch .node.collapsed .nh{border-bottom:0;border-radius:8px}
+.sch .node.collapsed .rsz-b{display:none}
+
+/* ===== v15: dotyk i rysik (Pointer Events) ===== */
+/* płótno obsługuje gesty samo (przesuwanie, powiększanie dwoma palcami) – przeglądarka nie przewija ani nie powiększa strony */
+.sch [data-r="vp"]{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.sch [data-r="vp"] img{-webkit-user-drag:none;pointer-events:none}
+/* ekran dotykowy: większe cele pod palec (mysz – bez zmian) */
+@media (pointer:coarse){
+  .sch .wp{width:20px;height:20px;margin:-10px 0 0 -10px}
+  .sch .wp.ghost{width:18px;height:18px;margin:-9px 0 0 -9px}
+  .sch .hit{stroke-width:26}
+  .sch .ncol,.sch .nlink{width:28px;height:28px;font-size:13px}
+  .sch .pin{padding-top:5px;padding-bottom:5px}
+  .sch .rsz{width:18px;height:18px}
+  .sch .node.sel .rsz-r{width:12px;right:-7px;height:36px;margin-top:-18px}
+  .sch .node.sel .rsz-b{height:12px;bottom:-7px;width:36px;margin-left:-18px}
+  .sch .elabel{padding:3px 10px}
+}
+/* wąski edytor (klasa .narrow nadawana wg szerokości edytora): pasek w jednym rzędzie przewijanym w bok, mniejsza podpowiedź */
+.sch.narrow [data-r="top"]{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;padding:6px 10px;gap:6px;scrollbar-width:none}
+.sch.narrow [data-r="top"]::-webkit-scrollbar{display:none}
+.sch.narrow [data-r="top"] > *{flex:none}
+.sch.narrow .brand,.sch.narrow [data-r="top"] .grow{display:none}
+.sch.narrow [data-r="projSel"]{max-width:170px}
+.sch.narrow [data-r="projTitle"]{width:150px}
+.sch.narrow .menu{position:fixed;z-index:60;max-height:70vh;overflow:auto}
+.sch.narrow [data-r="hint"]{font-size:10px;line-height:1.35;right:12px;padding:3px 8px}
+
+/* ===== ESN: jasny motyw (etap 11) – klasa .light na korzeniu (opts.theme: 'light' | 'dark' | 'auto' = wg platformy) =====
+   Kolory magistral i kategorii (--c, ustawiane w kodzie) zostają bez zmian (z nich korzysta eksport); na ekranie w jasnym
+   motywie są przyciemniane przez --cv (ten sam współczynnik co shadeForLight w eksporcie). Tokeny = jasna paleta platformy. */
+.sch.light{color-scheme:light;
+  --bg:#f3f6fb; --bg2:#e9eef6; --bg3:#dfe6f0; --card:#ffffff; --card2:#f0f4fa; --border:#d2dbe7; --border2:#bcc9da;
+  --accent:#0a7ea4; --accent2:#075f80; --green:#0a8a4a; --orange:#c25f00; --red:#d3254a; --purple:#6a47d6;
+  --text:#14202e; --text2:#44566e; --text3:#5d6e85}
+.sch.light *{--cv:color-mix(in srgb,var(--c) 72%,#000)}
+.sch.light [data-r="top"]{background:rgba(255,255,255,.94)}
+.sch.light [data-r="hint"],.sch.light .ptog{background:rgba(255,255,255,.9)}
+.sch.light button.pri,.sch.light button.pri:hover{color:#fff}
+.sch.light .elabel.sel,.sch.light.fill-labels .elabel{color:#fff}
+.sch.light input[type="checkbox"]:not([hidden])::before{background:#fff}
+.sch.light .warnbox{color:var(--red);background:rgba(211,37,74,.07);border-color:rgba(211,37,74,.35)}
+.sch.light .seg button.on{background:rgba(10,126,164,.10)}
+.sch.light .hintbox{border-color:rgba(10,126,164,.3);background:rgba(10,126,164,.06)}
+.sch.light .selbox{background:rgba(10,126,164,.08)}
+.sch.light .node.sel{box-shadow:0 0 0 1px var(--accent),0 0 14px rgba(10,126,164,.18)}
+.sch.light .tnote.sel{box-shadow:inset 3px 0 0 var(--cv,var(--c)),0 0 0 1px var(--accent),0 0 14px rgba(10,126,164,.18)}
+.sch.light dialog{box-shadow:0 20px 50px rgba(20,32,46,.25)}
+.sch.light dialog::backdrop{background:rgba(20,32,46,.45)}

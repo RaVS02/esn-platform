@@ -281,3 +281,31 @@ class KnowledgeImport(Base):
 
     batch_id = Column(String(60), primary_key=True)
     applied_at = Column(DateTime, default=datetime.utcnow)
+
+
+# ── Edytor schematów połączeń (v38, wiring_service.py) ──────────────────────────────────────────────
+class WiringSchema(Base):
+    """Schemat połączeń (dokument edytora). Może być powiązany z projektem platformy (project_id) albo samodzielny (Narzędzia)."""
+    __tablename__ = "wiring_schemas"
+
+    id = Column(String(16), primary_key=True)                  # krótki identyfikator (hex), jak w edytorze
+    owner_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    project_id = Column(Integer, ForeignKey("projects.id", ondelete="SET NULL"), nullable=True, unique=True, index=True)
+    title = Column(String(200), nullable=False, default="")
+    title_en = Column(String(200), nullable=True)
+    data = Column(JSON, nullable=False, default=dict)          # {wire, orient, density, nodes, links, glabels, gpts, notes} – po clean_wiring
+    rev = Column(Integer, nullable=False, default=1, server_default="1")   # blokada optymistyczna (409 przy niezgodności)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class WiringPart(Base):
+    """Własna część użytkownika w edytorze schematów (części z katalogu to OfficialComponent z pinoutem, id 'cat-<id>')."""
+    __tablename__ = "wiring_parts"
+    __table_args__ = (UniqueConstraint("owner_id", "part_id", name="uq_wiring_part_owner"),)
+
+    id = Column(Integer, primary_key=True)
+    owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    part_id = Column(String(64), nullable=False, index=True)
+    data = Column(JSON, nullable=False, default=dict)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

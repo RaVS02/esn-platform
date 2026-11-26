@@ -20,6 +20,7 @@ import media_service
 import ai_service
 import content_service
 import knowledge_service
+import wiring_service
 from fastapi.responses import JSONResponse
 
 # Inicjalizacja bazy
@@ -97,6 +98,20 @@ def create_user_inventory(user_id: int):
         open(full_path, 'w').close()
 
     return full_path
+
+optional_security = HTTPBearer(auto_error=False)
+
+def get_optional_user(credentials: Optional[HTTPAuthorizationCredentials] = Depends(optional_security), db: Session = Depends(get_db)):
+    """Użytkownik z tokenu albo None (gość) – dla endpointów publicznych, które zalogowanym pokazują więcej."""
+    if not credentials:
+        return None
+    try:
+        payload = jwt.decode(credentials.credentials, auth.SECRET_KEY, algorithms=[auth.ALGORITHM])
+    except Exception:
+        return None
+    login = payload.get("sub")
+    user = db.query(models.User).filter(models.User.login == login).first() if login else None
+    return None if (not user or user.is_banned) else user
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
     token = credentials.credentials
@@ -1214,4 +1229,5 @@ def set_user_role(
 # --- SYSTEM MEDIÓW (zdjęcia projektów, komponentów i platformy) ---
 app.include_router(media_service.build_router(get_db, get_current_user))
 app.include_router(content_service.build_router(get_db, get_current_user))   # relacje, kod, zasoby
-app.include_router(knowledge_service.build_router(get_db, get_current_user))   # wiedza: niezbędniki, poradniki, artykuły, kursy
+app.include_router(knowledge_service.build_router(get_db, get_current_user))
+app.include_router(wiring_service.build_router(get_db, get_current_user, get_optional_user))   # edytor schematów połączeń (/api/wiring)   # wiedza: niezbędniki, poradniki, artykuły, kursy

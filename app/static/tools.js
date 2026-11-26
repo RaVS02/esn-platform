@@ -56,6 +56,9 @@
     if (!t || (t.status && t.status !== "ready")) return home(el);
     el.textContent = "";
     el.appendChild(h("button", { type: "button", "class": "kn-back", text: _t("tools.narzedzia2"), onclick: function () { go(""); } }));
+    /* wspólny nagłówek narzędzia: ikona + nazwa (opis i treść rysuje samo narzędzie) */
+    el.appendChild(h("div", { "class": "tl-head" }, [h("span", { "class": "tl-head-ic", "aria-hidden": "true" }, [h("i", { "class": t.icon || "fa-solid fa-wrench" })]),
+      h("h2", { "class": "tl-title", text: _t(t.title) })]));
     var body = h("div", { "class": "tools-body" });
     el.appendChild(body);
     document.title = _t(t.title) + " – ESN";

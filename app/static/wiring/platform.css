@@ -1,0 +1,16 @@
+/* Edytor schematów w platformie ESN – dopasowanie do strony (sam edytor: wiring/style.css, bez zmian poza usunięciem tokenów demo).
+ * Motyw: edytor dostaje opts.theme = 'auto' i przełącza się razem z platformą (reguły .sch.light w wiring/style.css). */
+.wiring-host{height:min(78vh,820px);min-height:480px;border:1px solid var(--border2);border-radius:12px;overflow:hidden;background:var(--bg)}
+.wiring-host.sch{height:min(78vh,820px)}
+.wiring-host .sch,.sch.wiring-host{line-height:1.5}
+.sch [hidden]{display:none !important}
+/* reset platformy (* {margin:0;padding:0}) – przywrócenie odstępów, których edytor oczekuje od przeglądarki */
+.sch p{margin:0 0 6px}
+.sch ul,.sch ol{padding-left:18px}
+.sch dialog{margin:auto}
+.wiring-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 12px}
+.wiring-bar .wiring-note{color:var(--text3);font-size:12px;font-family:var(--mono)}
+.wiring-guest{margin:0 0 12px;padding:10px 14px;border:1px dashed var(--border2);border-radius:10px;color:var(--text2);font-size:13px}
+.wiring-section{margin:0 0 30px}
+.wiring-empty{padding:16px;border:1px dashed var(--border2);border-radius:10px;color:var(--text3);font-size:13px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+@media (max-width: 820px){ .wiring-host,.wiring-host.sch{height:72vh;min-height:420px} }
