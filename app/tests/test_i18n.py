@@ -93,9 +93,9 @@ def test_keys_used_in_modules_exist():
     files = list((APP / "static").glob("*.js")) + [APP / "templates" / "index.html"]
     for f in files:
         src = f.read_text(encoding="utf-8")
-        for k in re.findall(r"""\b_t\(\s*['"]([\w.]+)['"]""", src):
+        for k in re.findall(r"""\b_t\(\s*['"]([\w.]+)['"]\s*[,)]""", src):
             assert k in keys, f"{f.name}: brak klucza {k}"
-        for k in re.findall(r"""\b_tn\(\s*['"]([\w.]+)['"]""", src):
+        for k in re.findall(r"""\b_tn\(\s*['"]([\w.]+)['"]\s*[,)]""", src):
             assert (k + ".other") in keys, f"{f.name}: brak form liczby mnogiej {k}"
 
 

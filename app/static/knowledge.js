@@ -48,7 +48,7 @@
   }
   function isStaff() { var r = currentRole(); return r === "admin" || r === "moderator"; }
   function isAdmin() { return currentRole() === "admin"; }
-  function fmtDate(iso) { try { return new Date(iso).toLocaleDateString("pl-PL", { day: "numeric", month: "long", year: "numeric" }); } catch (e) { return ""; } }
+  function fmtDate(iso) { try { return new Date(iso).toLocaleDateString(global.ESNI18n ? global.ESNI18n.locale() : "pl", { day: "numeric", month: "long", year: "numeric" }); } catch (e) { return ""; } }
 
   var KIND_LABEL = { essential: _t('kn.niezbednik'), guide: _t('kn.poradnik'), article: _t('kn.artykul'), lesson: _t('kn.lekcjaKursu') };
   var KIND_BADGE = { essential: "badge-orange", guide: "badge-green", article: "badge-accent", lesson: "badge-purple" };
@@ -360,7 +360,7 @@
   function itemCard(it, opts) {
     var meta = [it.reading_min + " min"].concat((it.tags || []).slice(0, 3).map(function (t) { return "#" + t })).join(" · ");
     var c = h("button", { type: "button", "class": "kn-card", onclick: function () { go(it.slug); } }, [
-      h("span", { "class": "kn-card-top" }, [badge(it.kind_label, KIND_BADGE[it.kind] || "badge-gray"), (opts && opts.noLevel) ? null : badge(it.level_label, "badge-gray")]),
+      h("span", { "class": "kn-card-top" }, [badge(KIND_LABEL[it.kind] || it.kind_label, KIND_BADGE[it.kind] || "badge-gray"), (opts && opts.noLevel) ? null : badge(LEVEL_LABEL[it.level] || it.level_label, "badge-gray")]),
       h("strong", { "class": "kn-card-title", text: (opts && opts.no ? opts.no + ". " : "") + it.title }),
       it.summary ? h("span", { "class": "kn-card-sum", text: it.summary }) : null,
       h("span", { "class": "kn-card-meta", text: meta })
@@ -369,7 +369,7 @@
   }
   function courseCard(c) {
     return h("button", { type: "button", "class": "kn-card kn-course", onclick: function () { go("kurs/" + c.slug); } }, [
-      h("span", { "class": "kn-card-top" }, [badge(_t('kn.kurs'), "badge-purple"), badge(c.level_label, "badge-gray")]),
+      h("span", { "class": "kn-card-top" }, [badge(_t('kn.kurs'), "badge-purple"), badge(LEVEL_LABEL[c.level] || c.level_label, "badge-gray")]),
       h("strong", { "class": "kn-card-title", text: c.title }),
       c.summary ? h("span", { "class": "kn-card-sum", text: c.summary }) : null,
       h("span", { "class": "kn-card-meta", text: _tn('kn.lessons', c.lessons) + " · ~" + c.reading_min + " " + _t('kn.min') })
@@ -451,12 +451,12 @@
         list.appendChild(h("li", {}, [h("button", { type: "button", "class": "kn-lesson", onclick: function () { go(it.slug); } }, [
           h("span", { "class": "kn-lesson-no", text: String(i + 1) }),
           h("span", { "class": "kn-lesson-txt" }, [h("strong", { text: it.title }), it.summary ? h("span", { text: it.summary }) : null]),
-          h("span", { "class": "kn-lesson-meta" }, [badge(it.level_label, "badge-gray"), h("span", { text: it.reading_min + " min" })])
+          h("span", { "class": "kn-lesson-meta" }, [badge(LEVEL_LABEL[it.level] || it.level_label, "badge-gray"), h("span", { text: it.reading_min + " min" })])
         ])]));
       });
       el.appendChild(h("div", { "class": "full-wrap kn-wrap kn-narrow kn-top" }, [
         h("button", { type: "button", "class": "kn-back", text: _t('kn.wiedza2'), onclick: function () { go(""); } }),
-        h("div", { "class": "kn-head" }, [h("div", { "class": "kn-card-top" }, [badge(_t('kn.kurs'), "badge-purple"), badge(c.level_label, "badge-gray")]),
+        h("div", { "class": "kn-head" }, [h("div", { "class": "kn-card-top" }, [badge(_t('kn.kurs'), "badge-purple"), badge(LEVEL_LABEL[c.level] || c.level_label, "badge-gray")]),
           h("h1", { text: c.title }), h("p", { "class": "hero-sub", text: c.summary }),
           h("div", { "class": "kn-meta", text: _tn('kn.lessons', c.lessons) + " · " + _t('kn.readMin', { n: c.reading_min }) })]),
         c.items.length ? h("div", { "class": "kn-actions" }, [h("button", { type: "button", "class": "btn-action primary", onclick: function () { go(c.items[0].slug); }, text: _t('kn.zacznijKurs') }),
@@ -472,7 +472,7 @@
       if (!el.isConnected) return;
       el.textContent = "";
       var body = h("div", { "class": "kn-body" });
-      var meta = [fmtDate(a.updated_at || a.published_at), a.reading_min + " min czytania", a.author ? "autor: " + a.author : ""].filter(Boolean).join(" · ");
+      var meta = [fmtDate(a.updated_at || a.published_at), _t("kn.readMin", { n: a.reading_min }), a.author ? _t("kn.autorN", { name: a.author }) : ""].filter(Boolean).join(" · ");
       var crumbs = h("div", { "class": "kn-crumbs" }, [h("button", { type: "button", "class": "kn-back", text: _t('kn.wiedza2'), onclick: function () { go(""); } })]);
       if (a.course) crumbs.appendChild(h("button", { type: "button", "class": "kn-back", text: _t('kn.kurs2') + " " + a.course.title, onclick: function () { go("kurs/" + a.course.slug); } }));
       var nav = null;
@@ -485,8 +485,8 @@
       el.appendChild(h("div", { "class": "full-wrap kn-wrap kn-narrow kn-top" }, [
         crumbs,
         h("div", { "class": "kn-head" }, [
-          h("div", { "class": "kn-card-top" }, [badge(a.kind_label, KIND_BADGE[a.kind] || "badge-gray"), badge(a.level_label, "badge-gray"),
-            a.lesson_no ? badge(_t('kn.lekcja') + " " + a.lesson_no + " z " + a.lesson_total, "badge-purple") : null].concat((a.tags || []).map(function (t) { return h("span", { "class": "kn-tag", text: "#" + t }); }))),
+          h("div", { "class": "kn-card-top" }, [badge(KIND_LABEL[a.kind] || a.kind_label, KIND_BADGE[a.kind] || "badge-gray"), badge(LEVEL_LABEL[a.level] || a.level_label, "badge-gray"),
+            a.lesson_no ? badge(_t('kn.lekcjaZ', { n: a.lesson_no, m: a.lesson_total }), "badge-purple") : null].concat((a.tags || []).map(function (t) { return h("span", { "class": "kn-tag", text: "#" + t }); }))),
           h("h1", { text: a.title }), a.summary ? h("p", { "class": "hero-sub", text: a.summary }) : null, h("div", { "class": "kn-meta", text: meta })
         ]),
         body, nav
@@ -521,9 +521,15 @@
     [_t('kn.kod'), "```cpp Tytuł przykładu\nvoid setup() {}\n```\n"]
   ];
 
+  function statusKey(it) {
+    var st = it.state || "none";
+    if (!it.published) return ({ review: "review", rejected: "rejected" })[st] || "draft";
+    return st === "none" ? "pub" : "pub_" + st;
+  }
+  function statusText(it) { return _t("kn.st_" + statusKey(it)); }
   function statusBadge(it) {
     var cls = it.state === "rejected" ? "badge-red" : it.state === "review" ? "badge-orange" : it.published ? "badge-green" : "badge-gray";
-    return badge(it.status, cls);
+    return badge(statusText(it), cls);
   }
 
   /* ── instrukcja redakcji: ten sam renderer co artykuły, więc przykłady są „na żywo” ── */
@@ -559,7 +565,7 @@
     el.textContent = "";
     var tab = sub[1] === "kolejka" ? "queue" : sub[1] === "kursy" ? "courses" : sub[1] === "instrukcja" ? "guide" : "items";
     var wrap = h("div", { "class": "full-wrap kn-wrap" });
-    el.appendChild(h("section", { "class": "hero kn-hero" }, [h("div", { "class": "hero-tag", text: _t('kn.redakcja') }), h("h1", {}, [_t('kn.panel') + " ", h("em", { text: "redakcji" })]),
+    el.appendChild(h("section", { "class": "hero kn-hero" }, [h("div", { "class": "hero-tag", text: _t('kn.redakcja') }), h("h1", {}, [_t('kn.panel') + " ", h("em", { text: _t("kn.redakcjiEm") })]),
       h("p", { "class": "hero-sub", text: isAdmin() ? _t('kn.zatwierdzajTresciRedaktorowPublikuj') : _t('kn.tworzTresciIWysylaj') })]));
     var tabs = h("div", { "class": "esn-tabs", role: "tablist" });
     var T = [["items", _t('kn.tresci'), "redakcja"]];
@@ -579,28 +585,28 @@
       var F = { q: "", kind: "", level: "", status: "", sort: "updated", dir: -1 };
       function uniq(f) { var m = {}; rows.forEach(function (r) { m[r[f]] = 1; }); return Object.keys(m).sort(); }
       function sel(label, field, opts) {
-        var s = h("select", { "class": "sort-select", "aria-label": label }, [h("option", { value: "", text: label + ": wszystkie" })].concat(opts.map(function (o) { return h("option", { value: o[0], text: o[1] }); })));
+        var s = h("select", { "class": "sort-select", "aria-label": label }, [h("option", { value: "", text: _t("kn.filtrWszystkie", { label: label }) })].concat(opts.map(function (o) { return h("option", { value: o[0], text: o[1] }); })));
         s.addEventListener("change", function () { F[field] = s.value; draw(); }); return s;
       }
       var q = h("input", { "class": "text-input kn-q", type: "search", placeholder: _t('kn.szukajWTytuleOpisie'), "aria-label": _t('kn.szukajTresci') });
       var qt = null; q.addEventListener("input", function () { clearTimeout(qt); qt = setTimeout(function () { F.q = q.value.trim().toLowerCase(); draw(); }, 200); });
       var sortSel = h("select", { "class": "sort-select", "aria-label": _t('kn.sortowanie') }, [["updated:-1", _t('kn.najnowszeZmiany')], ["updated:1", _t('kn.najstarszeZmiany')], ["title:1", _t('kn.tytulAz')], ["title:-1", _t('kn.tytulZa')], ["level:1", _t('kn.poziomRosnaco')], ["status:1", _t('kn.status')]].map(function (o) { return h("option", { value: o[0], text: o[1] }); }));
       sortSel.addEventListener("change", function () { var p = sortSel.value.split(":"); F.sort = p[0]; F.dir = +p[1]; draw(); });
-      var bar = h("div", { "class": "kn-filterbar" }, [q, sel(_t('kn.typ'), "kind", uniq("kind_label").map(function (x) { return [x, x]; })), sel(_t('kn.poziom'), "level", LEVEL_ORDER.map(function (l) { return [l, LEVEL_LABEL[l]]; })),
-        sel(_t('kn.status'), "status", uniq("status").map(function (x) { return [x, x]; })), sortSel]);
+      var bar = h("div", { "class": "kn-filterbar" }, [q, sel(_t('kn.typ'), "kind", uniq("kind").map(function (x) { return [x, KIND_LABEL[x] || x]; })), sel(_t('kn.poziom'), "level", LEVEL_ORDER.map(function (l) { return [l, LEVEL_LABEL[l]]; })),
+        sel(_t('kn.status'), "status", ["draft", "review", "rejected", "pub", "pub_draft", "pub_review", "pub_rejected"].filter(function (k) { return rows.some(function (r) { return statusKey(r) === k; }); }).map(function (k) { return [k, _t("kn.st_" + k)]; })), sortSel]);
       var count = h("div", { "class": "kn-meta kn-count" }), holder = h("div", {});
       body.appendChild(bar); body.appendChild(count); body.appendChild(holder);
       function draw() {
         var ql = F.q, list = rows.filter(function (r) {
-          if (F.kind && r.kind_label !== F.kind) return false; if (F.level && r.level !== F.level) return false; if (F.status && r.status !== F.status) return false;
+          if (F.kind && r.kind !== F.kind) return false; if (F.level && r.level !== F.level) return false; if (F.status && statusKey(r) !== F.status) return false;
           if (ql && ((r.title || "") + " " + (r.summary || "") + " " + (r.tags || []).join(" ") + " " + (r.author || "") + " " + (r.slug || "")).toLowerCase().indexOf(ql) < 0) return false; return true;
         });
         var rank = function (l) { var i = LEVEL_ORDER.indexOf(l); return i < 0 ? 99 : i; };
         list.sort(function (a, b) {
-          var x, y; if (F.sort === "title") { x = (a.title || "").toLowerCase(); y = (b.title || "").toLowerCase(); } else if (F.sort === "level") { x = rank(a.level); y = rank(b.level); } else if (F.sort === "status") { x = a.status || ""; y = b.status || ""; } else { x = a.updated_at || ""; y = b.updated_at || ""; }
+          var x, y; if (F.sort === "title") { x = (a.title || "").toLowerCase(); y = (b.title || "").toLowerCase(); } else if (F.sort === "level") { x = rank(a.level); y = rank(b.level); } else if (F.sort === "status") { x = statusText(a); y = statusText(b); } else { x = a.updated_at || ""; y = b.updated_at || ""; }
           return (x < y ? -1 : x > y ? 1 : 0) * F.dir;
         });
-        count.textContent = list.length + " z " + rows.length;
+        count.textContent = _t("kn.countZ", { n: list.length, m: rows.length });
         holder.textContent = "";
         if (!list.length) { holder.appendChild(h("div", { "class": "kn-empty", text: _t('kn.brakTresciSpelniajacychKryteria') })); return; }
         holder.appendChild(tableOf(list));
@@ -610,7 +616,7 @@
       var tb = h("tbody"); t.appendChild(tb);
       list.forEach(function (it) {
         var tr = h("tr", { "class": "kn-row", tabindex: "0" }, [h("td", {}, [h("strong", { text: it.title }), it.review_note && it.state === "rejected" ? h("div", { "class": "kn-note-bad", text: _t('kn.odrzucone') + " " + it.review_note }) : null]),
-          h("td", { text: it.kind_label }), h("td", { text: LEVEL_LABEL[it.level] || it.level }), h("td", {}, [statusBadge(it)]), h("td", { text: it.author || "—" }), h("td", { text: fmtDate(it.updated_at) })]);
+          h("td", { text: KIND_LABEL[it.kind] || it.kind_label }), h("td", { text: LEVEL_LABEL[it.level] || it.level }), h("td", {}, [statusBadge(it)]), h("td", { text: it.author || "—" }), h("td", { text: fmtDate(it.updated_at) })]);
         var open = function () { go("redakcja/edytuj/" + it.id); };
         tr.addEventListener("click", open); tr.addEventListener("keydown", function (e) { if (e.key === "Enter") open(); });
         tb.appendChild(tr);
@@ -828,7 +834,7 @@
       wrap.appendChild(acts);
       if (rec && rec.history && rec.history.length) {
         var hist = h("details", { "class": "kn-hist" }, [h("summary", { text: _t('kn.historiaZmianStatusu') })]);
-        var LBL = { create: "utworzono", submit: _t('kn.wyslanoDoPrzegladu2'), approve: "zatwierdzono", reject: "odrzucono", publish: "opublikowano", unpublish: "wycofano", discard: "porzucono zmiany" };
+        var LBL = { create: _t('kn.hCreate'), submit: _t('kn.wyslanoDoPrzegladu2'), approve: _t('kn.hApprove'), reject: _t('kn.hReject'), publish: _t('kn.hPublish'), unpublish: _t('kn.hUnpublish'), discard: _t('kn.hDiscard') };
         rec.history.forEach(function (x) { hist.appendChild(h("div", { "class": "kn-hrow", text: fmtDate(x.at) + " · " + (x.user || "?") + " · " + (LBL[x.action] || x.action) + (x.note ? " – " + x.note : "") })); });
         wrap.appendChild(hist);
       }

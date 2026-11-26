@@ -123,7 +123,7 @@
       var tabs = h("div", { "class": "esn-tabs", role: "tablist", "aria-label": _t('ct.srodowisko') }), panel = h("div", { "class": "esn-code-panel", role: "tabpanel" });
       var count = {}; items.forEach(function (i) { count[i.lang_label] = (count[i.lang_label] || 0) + 1; });
       var btns = items.map(function (it, n) {
-        var label = it.lang_label + (count[it.lang_label] > 1 ? " · " + (it.title || n + 1) : "");
+        var label = _L("rt", it.lang_label) + (count[it.lang_label] > 1 ? " · " + (it.title || n + 1) : "");
         var b = h("button", { type: "button", role: "tab", text: label, onclick: function () { show(n); } });
         b.addEventListener("keydown", function (e) {
           if (e.key === "ArrowRight" || e.key === "ArrowLeft") { e.preventDefault(); var m = (n + (e.key === "ArrowRight" ? 1 : -1) + items.length) % items.length; show(m); btns[m].focus(); }
@@ -134,7 +134,7 @@
         btns.forEach(function (b, i) { b.setAttribute("aria-selected", String(i === n)); b.tabIndex = i === n ? 0 : -1; });
         var it = items[n]; panel.textContent = "";
         var copy = h("button", { type: "button", "class": "esn-copy", text: _t('ct.kopiuj'), onclick: function () { copyText(it.code, copy); } });
-        panel.appendChild(h("div", { "class": "esn-code-head" }, [h("span", { "class": "esn-code-title", text: it.title || it.lang_label }), copy]));
+        panel.appendChild(h("div", { "class": "esn-code-head" }, [h("span", { "class": "esn-code-title", text: it.title || _L("rt", it.lang_label) }), copy]));
         var codeEl = h("code", {});
         highlightInto(codeEl, it.code, it.lang);
         panel.appendChild(h("div", { "class": "code-block esn-hl" }, [h("pre", {}, [codeEl])]));
@@ -156,7 +156,7 @@
       var box = section(slot, _t('ct.zasobyIPlikiDo')), list = h("ul", { "class": "esn-res" });
       var hasFile = false;
       items.forEach(function (r) {
-        var meta = [r.type_label];
+        var meta = [_L("rt", r.type_label)];
         var a;
         if (r.kind === "file") {
           hasFile = true; meta.push(sizeText(r.size));
@@ -167,7 +167,7 @@
         }
         var main = h("div", { "class": "esn-res-main" }, [h("div", { "class": "esn-res-label", text: r.label }), h("div", { "class": "esn-res-meta", text: meta.join(" · ") })]);
         if (r.kind === "file" && r.license_label) {
-          var lic = h("div", { "class": "esn-res-lic" }, [h("span", { "class": "esn-badge", text: r.license_label })]);
+          var lic = h("div", { "class": "esn-res-lic" }, [h("span", { "class": "esn-badge", text: _L("lic", r.license_label) })]);
           if (r.license_note) lic.appendChild(h("span", { text: " " + (r.license === "own" ? _t('ct.uwagi') + " " : _t('ct.autorZrodlo') + " ") + r.license_note }));
           main.appendChild(lic);
         }
@@ -327,7 +327,7 @@
     var FALLBACK_TYPES = { datasheet: _t('ct.datasheet'), docs: _t('ct.dokumentacja'), schematic: _t('ct.schemat'), pcb: "PCB / Gerbery", firmware: "Kod / firmware", model3d: "Model 3D", guide: _t('ct.poradnik'), repo: _t('ct.repozytorium'), other: _t('ct.inne') };
     function typeSel(cur) {
       var T = (pol && pol.types) || FALLBACK_TYPES;   // formularz powstaje zanim wczyta się polityka z serwera
-      var s = h("select", { "class": "esn-ed-sel", "aria-label": "Rodzaj zasobu" });
+      var s = h("select", { "class": "esn-ed-sel", "aria-label": _t('ct.rodzajZasobu') });
       Object.keys(T).forEach(function (k) { var o = h("option", { value: k, text: T[k] }); if (k === cur) o.selected = true; s.appendChild(o); });
       return s;
     }
@@ -340,9 +340,9 @@
       var label = h("input", { type: "text", "class": "esn-ed-in", maxlength: "200", value: it.label || "", "aria-label": _t('ct.opis') });
       label.addEventListener("change", function () { it.label = label.value; if (persisted && label.value.trim()) api.patchRes(it.id, { label: label.value }).catch(fail); });
       var ts = typeSel(it.rtype); ts.addEventListener("change", function () { it.rtype = ts.value; if (persisted) api.patchRes(it.id, { rtype: ts.value }).catch(fail); });
-      var info = it.kind === "file" ? (it.name || (it.file && it.file.name) || "plik") + " · " + sizeText(it.size || (it.file && it.file.size) || 0) + " · " + (it.license_label || (pol && pol.licenses[it.license]) || it.license || "")
+      var info = it.kind === "file" ? (it.name || (it.file && it.file.name) || _t("ct.plik").toLowerCase()) + " · " + sizeText(it.size || (it.file && it.file.size) || 0) + " · " + _L("lic", it.license_label || (pol && pol.licenses[it.license]) || it.license || "")
         : (it.url || ""); 
-      var line1 = h("div", { "class": "esn-ed-row" }, [h("span", { "class": "esn-badge", text: it.kind === "file" ? "PLIK" : "LINK" }), ts, label,
+      var line1 = h("div", { "class": "esn-ed-row" }, [h("span", { "class": "esn-badge", text: it.kind === "file" ? _t("ct.plik").toUpperCase() : _t("ct.link").toUpperCase() }), ts, label,
         ctlBtn("◀", _t('ct.przesunWczesniej'), function () { move(listRef, i, -1, persisted); }, i === 0), ctlBtn("▶", _t('ct.przesunPozniej'), function () { move(listRef, i, 1, persisted); }, i === listRef.length - 1),
         ctlBtn("🗑", _t('ct.usun'), function () { confirmDel(_t('ct.usunacTenZasob'), _t('ct.usuwanie')).then(function (ok) { if (!ok) return; if (persisted) api.delRes(it.id).then(reload).catch(fail); else { listRef.splice(i, 1); render(); } }); })]);
       var c = h("div", { "class": "esn-ed-card" + (it.err ? " is-err" : "") }, [line1, h("div", { "class": "esn-ed-note", text: info })]);
@@ -365,11 +365,11 @@
       forms.textContent = "";
       // — link —
       var lt = typeSel("datasheet"), ll = h("input", { type: "text", "class": "esn-ed-in", placeholder: _t('ct.opisNpDatasheetProducenta'), maxlength: "200", "aria-label": _t('ct.opisLinku') });
-      var lu = h("input", { type: "url", "class": "esn-ed-in", placeholder: "https://…", maxlength: "490", "aria-label": "Adres linku" });
+      var lu = h("input", { type: "url", "class": "esn-ed-in", placeholder: "https://…", maxlength: "490", "aria-label": _t('ct.adresLinku') });
       var lb = h("button", { type: "button", "class": "esn-ed-add", text: _t('ct.dodajLink'), onclick: function () {
         if (overLimit()) return;
         var rec = { kind: "link", rtype: lt.value, label: ll.value.trim(), url: lu.value.trim() };
-        if (!rec.label || !rec.url) return notify("Podaj opis i adres linku.", "warn");
+        if (!rec.label || !rec.url) return notify(_t('ct.podajOpisIAdres'), "warn");
         if (!/^https?:\/\//i.test(rec.url)) return notify(_t('ct.adresMusiZaczynacSie'), "warn");
         if (ownerId) api.addLink(Object.assign({ owner_type: type, owner_id: ownerId }, rec)).then(function () { ll.value = lu.value = ""; return reload(); }).catch(fail);
         else { pending.push(rec); ll.value = lu.value = ""; render(); }
@@ -380,8 +380,8 @@
       var d = h("details", { "class": "esn-form" }); d.appendChild(h("summary", { "class": "esn-form-t", text: _t('ct.wgrajPlikTylkoWlasny') }));
       var ft = typeSel("schematic"), fl = h("input", { type: "text", "class": "esn-ed-in", placeholder: _t('ct.opisOpcjonalnieDomyslnieNazwa'), maxlength: "200", "aria-label": _t('ct.opisPliku') });
       var fi = h("input", { type: "file", "class": "esn-ed-file", accept: ((pol && pol.allowed_ext) || []).map(function (e) { return "." + e; }).join(","), "aria-label": _t('ct.plik') });
-      var lic = h("select", { "class": "esn-ed-sel", "aria-label": "Licencja pliku" }, [h("option", { value: "", text: "— licencja —" })]);
-      Object.keys((pol && pol.licenses) || {}).forEach(function (k) { lic.appendChild(h("option", { value: k, text: pol.licenses[k] })); });
+      var lic = h("select", { "class": "esn-ed-sel", "aria-label": _t('ct.licencjaPliku') }, [h("option", { value: "", text: _t('ct.licencja') })]);
+      Object.keys((pol && pol.licenses) || {}).forEach(function (k) { lic.appendChild(h("option", { value: k, text: _L("lic", pol.licenses[k]) })); });
       var note = h("input", { type: "text", "class": "esn-ed-in", placeholder: _t('ct.autorZrodloWymaganeDla'), maxlength: "300", "aria-label": _t('ct.autorLubZrodlo') });
       var rights = h("input", { type: "checkbox", id: "esn-rights-" + Math.random().toString(36).slice(2) });
       var rl = h("label", { "class": "esn-rights", "for": rights.id }, [rights, h("span", { text: " " + _t('ct.potwierdzamZeJestemAutorem') })]);

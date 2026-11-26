@@ -155,6 +155,7 @@
   window.ESNI18n = {
     add: add, t: t, tn: tn, apply: apply, lang: lang, set: set, list: list, mountSwitch: mountSwitch, missing: missing, label: label, err: err,
     num: function (n, o) { return new Intl.NumberFormat(locale(), o).format(n); },
+    locale: function () { return locale(); },
     date: function (d, o) { return new Intl.DateTimeFormat(locale(), o || { dateStyle: "medium" }).format(d instanceof Date ? d : new Date(d)); }
   };
   window.t = t; window._t = t; window._tn = tn; window._L = label; window._E = err;   // _t / _tn: aliasy odporne na lokalne zmienne o nazwie t (np. callback(t) w kodzie modułów)

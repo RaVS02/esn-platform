@@ -131,7 +131,7 @@
         var drawC = function () {
           cg.textContent = "";
           b.rows.forEach(function (r, ri) {
-            var cb = h("input", { type: "checkbox", "aria-label": "Zrobione" }); cb.checked = !!r[0]; cb.addEventListener("change", function () { r[0] = cb.checked; push(); });
+            var cb = h("input", { type: "checkbox", "aria-label": _t('wz.zrobione') }); cb.checked = !!r[0]; cb.addEventListener("change", function () { r[0] = cb.checked; push(); });
             cg.appendChild(h("div", { "class": "kn-wiz-row kn-wiz-check" }, [cb, inp(r[1], function (v) { r[1] = v; push(); }, _t('wz.punktListy'), 200), h("button", { type: "button", "class": "kn-mini", "aria-label": _t('wz.usunPunkt'), text: "×", onclick: function () { b.rows.splice(ri, 1); drawC(); push(); } })]));
           });
         };
@@ -141,7 +141,7 @@
       }
       if (d.kind === "widget") {
         var names = Object.keys(o.getWidgets());
-        var ws = h("select", { "class": "sort-select", "aria-label": _t('wz.widget') }, [h("option", { value: "", text: "— wybierz widget —" })].concat(names.map(function (n) { return h("option", { value: n, text: n }); })));
+        var ws = h("select", { "class": "sort-select", "aria-label": _t('wz.widget') }, [h("option", { value: "", text: _t('wz.wybierzWidget') })].concat(names.map(function (n) { return h("option", { value: n, text: n }); })));
         if (b.wname && names.indexOf(b.wname) < 0) ws.appendChild(h("option", { value: b.wname, text: b.wname + " (brak)" }));
         ws.value = b.wname || ""; ws.addEventListener("change", function () { b.wname = ws.value; push(); });
         var hh = h("input", { type: "number", "class": "text-input kn-num", min: 80, max: 1200, value: b.wh || 320, "aria-label": _t('wz.wysokosc') }); hh.addEventListener("input", function () { b.wh = hh.value; push(); });
@@ -161,7 +161,7 @@
         var head = h("div", { "class": "kn-wiz-head-bar" }, [h("strong", { text: (i + 1) + ". " + label }), h("span", { "class": "kn-wiz-acts" }, [
           h("button", { type: "button", "class": "kn-mini", title: _t('wz.wGore'), "aria-label": _t('wz.przesunWGore'), text: "↑", disabled: i === 0, onclick: function () { mv(-1); } }),
           h("button", { type: "button", "class": "kn-mini", title: _t('wz.wDol'), "aria-label": _t('wz.przesunWDol'), text: "↓", disabled: i === blocks.length - 1, onclick: function () { mv(1); } }),
-          h("button", { type: "button", "class": "kn-mini", title: "Duplikuj", "aria-label": "Duplikuj blok", text: "⧉", onclick: function () { blocks.splice(i + 1, 0, JSON.parse(JSON.stringify(b))); draw(); push(); } }),
+          h("button", { type: "button", "class": "kn-mini", title: _t('wz.duplikuj'), "aria-label": _t('wz.duplikujBlok'), text: "⧉", onclick: function () { blocks.splice(i + 1, 0, JSON.parse(JSON.stringify(b))); draw(); push(); } }),
           h("button", { type: "button", "class": "kn-mini kn-mini-del", title: _t('wz.usunBlok'), "aria-label": _t('wz.usunBlok'), text: "×", onclick: function () { blocks.splice(i, 1); draw(); push(); } })])]);
         list.appendChild(h("div", { "class": "kn-wiz-card" }, [head, body(b)]));
       });
@@ -176,7 +176,7 @@
       if (d.kind === "widget") { var n = Object.keys(o.getWidgets()); b.wname = n[0] || ""; b.wh = "320"; }
       return b;
     }
-    var pick = h("select", { "class": "sort-select", "aria-label": "Typ nowego bloku" }, GROUPS.filter(function (g) { return Object.keys(DEFS).some(function (k) { return DEFS[k].group === g && allowed(k); }); }).map(function (g) {
+    var pick = h("select", { "class": "sort-select", "aria-label": _t('wz.typNowegoBloku') }, GROUPS.filter(function (g) { return Object.keys(DEFS).some(function (k) { return DEFS[k].group === g && allowed(k); }); }).map(function (g) {
       return h("optgroup", { label: g }, Object.keys(DEFS).filter(function (k) { return DEFS[k].group === g && allowed(k); }).map(function (k) { return h("option", { value: k, text: DEFS[k].label }); }));
     }));
     add.appendChild(h("span", { "class": "kn-meta", text: _t('wz.dodajBlok') })); add.appendChild(pick);

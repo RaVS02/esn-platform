@@ -8,9 +8,9 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <meta name="color-scheme" content="dark light">
-<script src="/magazyn/static/i18n.js?v=4"></script>
-<script src="/magazyn/static/i18n/pl.js?v=4"></script>
-<script src="/magazyn/static/i18n/en.js?v=4"></script>
+<script src="/magazyn/static/i18n.js?v=5"></script>
+<script src="/magazyn/static/i18n/pl.js?v=5"></script>
+<script src="/magazyn/static/i18n/en.js?v=5"></script>
 <script src="/magazyn/static/theme.js?v=4"></script>
 <script src="/magazyn/static/ai-local.js?v=2"></script>
 <link rel="stylesheet" href="/magazyn/static/magazyn.css?v=1.7">
@@ -1054,7 +1054,7 @@ function openAssignForProj(projId) {
 
   const p = S.projects.find(x => x.id === projId);
   const infoEl = document.getElementById('assign-comp-info');
-  infoEl.textContent = p ? `<i class="fa-regular fa-screwdriver-wrench"></i> Projekt: ${p.name}` : '';
+  infoEl.textContent = p ? _t('mag.projektN', { name: p.name }) : '';
   infoEl.style.display = 'block';
 
   document.getElementById('assign-modal-title').textContent = _t('mag.dodajKomponentDoProjektu2');
@@ -1500,7 +1500,7 @@ init();
           <p>Kompleksowa platforma do nauki architektury, programowania C/C++ oraz projektowania układów elektronicznych dla systemów wbudowanych.</p>
           <div class="social-links">
         <a href="https://github.com/RaVS02" target="_blank" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
-        <a href="https://buymeacoffee.com/sobalarafaa" target="_blank" aria-label="Kup mi kawę na buycoffee.to"><i class="fa-solid fa-mug-hot"></i></a>
+        <a href="https://buymeacoffee.com/sobalarafaa" target="_blank" aria-label="Kup mi kawę na buycoffee.to" data-i18n-attr="aria-label:footer.kupMiKaweNa"><i class="fa-solid fa-mug-hot"></i></a>
 
       </div>
         </div>
@@ -1524,6 +1524,6 @@ init();
         <p>Wersja 2.2.0 | <span class="status-dot"></span> System Online</p>
       </div>
     </footer>
-<script>document.addEventListener('esn-lang', () => location.reload());</script>
+<script>document.title = _t('mag.title'); document.addEventListener('esn-lang', () => location.reload());</script>
 </body>
 </html>

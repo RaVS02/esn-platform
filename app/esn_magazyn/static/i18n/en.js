@@ -220,5 +220,8 @@ ESNI18n.add("en", {
   "api.nieMoznaOdczytacZapisanegoKlucza": "The saved key cannot be read (the encryption secret has changed). Enter the key again.",
   "api.brakPolaczeniaZDostawcaAi": "No connection to the AI provider: {reason}",
   "api.wykorzystanoDziennyLimitZapytanWroci": "Daily limit used ({n} requests). It resets tomorrow; you can also provide your own API key in Profile.",
-  "api.bladHttp": "HTTP error {n}"
+  "api.bladHttp": "HTTP error {n}",
+  "mag.title": "ElectroLab – My Warehouse",
+  "mag.projektN": "Project: {name}",
+  "footer.kupMiKaweNa": "Buy me a coffee on buycoffee.to"
 }, { name: "English", locale: "en-GB" });

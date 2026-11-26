@@ -220,5 +220,8 @@ ESNI18n.add("pl", {
   "api.nieMoznaOdczytacZapisanegoKlucza": "Nie można odczytać zapisanego klucza (zmienił się sekret szyfrujący). Wpisz klucz ponownie.",
   "api.brakPolaczeniaZDostawcaAi": "Brak połączenia z dostawcą AI: {reason}",
   "api.wykorzystanoDziennyLimitZapytanWroci": "Wykorzystano dzienny limit ({n} zapytań). Wróci jutro; możesz też podać własny klucz API w Profilu.",
-  "api.bladHttp": "Błąd HTTP {n}"
+  "api.bladHttp": "Błąd HTTP {n}",
+  "mag.title": "ElectroLab – Mój Magazyn",
+  "mag.projektN": "Projekt: {name}",
+  "footer.kupMiKaweNa": "Kup mi kawę na buycoffee.to"
 }, { name: "Polski", locale: "pl-PL" });

@@ -1293,8 +1293,8 @@ function editProject(slug) {
     mountProjectExtras(p.id);
     mountProjectArticle(p.full_content_md || '', p.id);
 
-    document.querySelector('#projectModal h2').innerText = "Edytuj Projekt";
-    document.querySelector('#projectModal button[onclick="submitProject()"]').innerText = "Zapisz zmiany";
+    document.querySelector('#projectModal h2').innerText = _t('projects.edytujProjekt');
+    document.querySelector('#projectModal button[onclick="submitProject()"]').innerText = _t('projects.zapiszZmiany');
     document.getElementById('projectModal').style.display = 'flex';
 }
 
@@ -1305,7 +1305,7 @@ function openProjectModal() {
     if (projMedia) { projMedia.destroy(); projMedia = null; }
     
     // Przywracamy domyślne napisy w modalu
-    document.querySelector('#projectModal h2').innerText = "Nowy Projekt";
+    document.querySelector('#projectModal h2').innerText = _t('projects.nowyProjekt');
     document.querySelector('#projectModal button[onclick="submitProject()"]').innerText = _t('contact.submitProject');
     
     // Czyścimy wszystkie pola tekstowe
@@ -1340,7 +1340,7 @@ function closeProjectModal() {
     editingProjectId = null;
     editingProjectData = null;
     document.getElementById('projectModal').style.display = 'none';
-    document.querySelector('#projectModal h2').innerText = "Nowy Projekt";
+    document.querySelector('#projectModal h2').innerText = _t('projects.nowyProjekt');
     document.querySelector('#projectModal button[onclick="submitProject()"]').innerText = _t('contact.submitProject');
     document.querySelectorAll('#projectModal input, #projectModal textarea').forEach(i => i.value = "");
     
@@ -1443,19 +1443,19 @@ async function submitProject() {
 
         // ETAP 2b: powiązania z katalogiem, przykłady kodu, zasoby, a na końcu zdjęcia (wszystko po zapisie projektu)
         const partialErrors = [];
-        try { if (projParts) await projParts.save(savedProjectId); } catch (e) { partialErrors.push('podzespoły: ' + e.message); }
+        try { if (projParts) await projParts.save(savedProjectId); } catch (e) { partialErrors.push(_t('projects.podzespolyN') + e.message); }
         try { if (projCode) await projCode.save(savedProjectId); } catch (e) { partialErrors.push('kod: ' + e.message); }
         if (projRes) { const rr = await projRes.flush(savedProjectId); rr.failed.forEach(f => partialErrors.push(`${f.name} (${f.error})`)); }
         if (projMedia) { const r = await projMedia.flush(savedProjectId); r.failed.forEach(f => partialErrors.push(`${f.name} (${f.error})`)); }
         if (partialErrors.length) {
             editingProjectId = savedProjectId;   // projekt już istnieje – kolejne zapisy to edycja
-            document.querySelector('#projectModal h2').innerText = "Edytuj Projekt";
+            document.querySelector('#projectModal h2').innerText = _t('projects.edytujProjekt');
             toast(_t('toast.partial') + partialErrors.join('; '), 'error');
             updateProjectsView();
             return;
         }
 
-        toast(editingProjectId ? "Zaktualizowano projekt!" : "Projekt i pliki dodane!");
+        toast(editingProjectId ? _t('projects.projektZaktualizowany') : _t('projects.projektIPlikiDodane'));
         closeProjectModal();
         closeFullProjectView();
         updateProjectsView();
@@ -1683,7 +1683,7 @@ async function loadCatalog() {
   } catch(e) {
     document.getElementById('components-list').innerHTML =
       `<div style="text-align:center;padding:60px;color:var(--text3);font-family:var(--mono);">
-        ⚠ Nie udało się załadować katalogu.<br><small>${esc(e.message)}</small>
+        ⚠ ${_t('components.katalogBlad')}<br><small>${esc(e.message)}</small>
        </div>`;
   }
 }
@@ -1919,7 +1919,7 @@ function handleNewOption(selectElement) {
 async function openCatalogModal(id = null) {
     catalogEditingId = id;
     document.getElementById('catalogModal').style.display = 'flex';
-    document.getElementById('catalogModalTitle').innerText = id ? 'Edytuj Komponent' : 'Dodaj Komponent';
+    document.getElementById('catalogModalTitle').innerText = id ? _t('components.edytujKomponentTitle') : _t('components.dodajKomponentTitle');
 
     const [catRes, appRes] = await Promise.all([
         fetch('/api/catalog/categories'),
@@ -1962,7 +1962,7 @@ async function openCatalogModal(id = null) {
     // Zdjęcia: komponent zapisany → wgrywanie od razu; nowy → po pierwszym zapisie
     if (catMedia) catMedia.destroy();
     catMedia = ESNMedia.manager(document.getElementById('cm-media-manager'), { ownerType: 'component', ownerId: id || null, roles: ['main', 'gallery', 'pinout'],
-        hint: 'Rola „Pinout” = obraz pokazywany w sekcji Pinout karty (nie w galerii). Podpis zdjęcia staje się podpisem rysunku.' });
+        hint: _t('components.pinoutHint') });
     if (catCodeEd) catCodeEd.destroy();
     if (catResMgr) catResMgr.destroy();
     catCodeEd = ESNContent.codeEditor(document.getElementById('cm-code-editor'), { ownerType: 'component', ownerId: id || null });
