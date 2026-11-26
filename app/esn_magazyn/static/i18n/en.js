@@ -227,5 +227,20 @@ ESNI18n.add("en", {
   "cat.wersjeJezykowe": "Available language versions: {list}",
   "cat.wersjaPodstawowa": "Not translated into your language – showing the {lang} version",
   "mag.wybierzKategorie": "Choose a component category",
-  "api.wybierzKategorieKomponentu": "Choose a component category"
+  "api.wybierzKategorieKomponentu": "Choose a component category",
+  "mag.ikonyZestawu": "Icons from the shared set",
+  "mag.ikonaLubWlasna": "Click an icon from the shared set (the same as in the schematic editor) or type an emoji / Font Awesome class.",
+  "mag.ikona.mcu": "Microcontroller",
+  "mag.ikona.ic": "Integrated circuit",
+  "mag.ikona.module": "Module",
+  "mag.ikona.sensor": "Sensor",
+  "mag.ikona.display": "Display",
+  "mag.ikona.power": "Power",
+  "mag.ikona.conn": "Connector",
+  "mag.ikona.res": "Resistor",
+  "mag.ikona.cap": "Capacitor",
+  "mag.ikona.diode": "Diode",
+  "mag.ikona.trans": "Transistor",
+  "mag.ikona.act": "Actuator",
+  "mag.ikona.box": "Other"
 }, { name: "English", locale: "en-GB" });

@@ -9,11 +9,12 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <meta name="color-scheme" content="dark light">
 <script src="/magazyn/static/i18n.js?v=6"></script>
-<script src="/magazyn/static/i18n/pl.js?v=7"></script>
-<script src="/magazyn/static/i18n/en.js?v=7"></script>
+<script src="/magazyn/static/i18n/pl.js?v=8"></script>
+<script src="/magazyn/static/i18n/en.js?v=8"></script>
 <script src="/magazyn/static/theme.js?v=4"></script>
+<script src="/magazyn/static/esn-icons.js?v=1"></script>
 <script src="/magazyn/static/ai-local.js?v=2"></script>
-<link rel="stylesheet" href="/magazyn/static/magazyn.css?v=1.7">
+<link rel="stylesheet" href="/magazyn/static/magazyn.css?v=1.8">
 <link rel="stylesheet" href="/magazyn/static/mobile.css?v=3">
 </head>
 <body>
@@ -371,9 +372,10 @@
     <div class="form-row">
       <div class="form-group" style="flex:2">
         <label class="form-label" data-i18n="mag.emojiIkona">Emoji / ikona</label>
+        <div id="cf-icon-pick" class="icon-pick" role="listbox" data-i18n-attr="aria-label:mag.ikonyZestawu"></div>
         <input class="form-control" id="cf-icon" placeholder="🔌 lub fa-solid fa-bolt" data-i18n-attr="placeholder:mag.lubFaSolidFa">
         <div style="font-family:var(--mono); font-size:9px; color:var(--text3); margin-top:5px; line-height:1.4;">
-          <span data-i18n="mag.wklejEmotkeNpLub">Wklej emotkę (np. 📦) lub wpisz klasę</span> <b>FontAwesome</b> <span data-i18n="mag.npFaSolidFa">(np. fa-solid fa-robot).</span>
+          <span data-i18n="mag.ikonaLubWlasna">Kliknij ikonę ze wspólnego zestawu (te same co w edytorze schematów) albo wpisz emotkę / klasę Font Awesome.</span>
         </div>
       </div>
       <div class="form-group" style="flex:1">
@@ -528,12 +530,26 @@ function renderCatSelect() {
   document.getElementById('f-category').innerHTML = S.categories.map(c=>`<option value="${c.id}" data-name="${String(c.name).replace(/"/g,'&quot;')}">${_L('cat', c.name)}</option>`).join('');
 }
 
+// wybór ikony ze wspólnego zestawu (klik = wpis „sch:<klucz>” w polu ikony; emoji i Font Awesome dalej działają)
+function drawIconPick() {
+  const box = document.getElementById('cf-icon-pick'); if (!box || !window.ESNIcons) return;
+  const cur = document.getElementById('cf-icon').value;
+  const name = k => { const key = 'mag.ikona.' + k; return _t(key); };     // klucze mag.ikona.<klucz> (mcu, ic, module…)
+  box.innerHTML = ESNIcons.keys().map(k => `<button type="button" class="ipk${cur === 'sch:' + k ? ' on' : ''}" data-k="${k}" title="${name(k)}" aria-label="${name(k)}">${ESNIcons.svg(k, 20)}</button>`).join('');
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('#cf-icon-pick .ipk'); if (!b) return;
+  document.getElementById('cf-icon').value = 'sch:' + b.dataset.k; drawIconPick();
+});
+document.addEventListener('input', e => { if (e.target && e.target.id === 'cf-icon') drawIconPick(); });
+
 function openAddCat() {
   editingCatId = null;
   document.querySelector('#cat-modal .modal-title span').textContent = _t('mag.nowaKategoria');
   document.getElementById('cf-name').value = '';
-  document.getElementById('cf-icon').value = '';
+  document.getElementById('cf-icon').value = 'sch:box';
   document.getElementById('cf-color').value = '#56e1fd';
+  drawIconPick();
   document.getElementById('btn-del-cat').style.display = 'none'; // Ukrywamy usuwanie przy tworzeniu
   document.getElementById('btn-save-cat').textContent = _t('mag.utworz');
   openModal('cat-modal');
@@ -547,6 +563,7 @@ function openEditCat(id) {
   document.getElementById('cf-name').value = c.name;
   document.getElementById('cf-icon').value = c.icon;
   document.getElementById('cf-color').value = c.color;
+  drawIconPick();
   document.getElementById('btn-del-cat').style.display = 'block'; // Pokazujemy usuwanie przy edycji
   document.getElementById('btn-save-cat').textContent = _t('mag.zapisz');
   openModal('cat-modal');
@@ -1243,6 +1260,11 @@ function formatSpecsToTable(specsStr) {
 
 function renderIcon(iconStr) {
   if (!iconStr) return '🔧';
+  // wspólny zestaw ikon (te same co w edytorze schematów): „sch:<klucz>”
+  if (iconStr.startsWith('sch:')) {
+    const k = iconStr.slice(4);
+    return window.ESNIcons && ESNIcons.has(k) ? ESNIcons.svg(k) : '🔧';
+  }
   // Jeśli to klasa FontAwesome (zaczyna się od fa- lub ma w sobie fa )
   if (iconStr.startsWith('fa-') || iconStr.includes('fa ')) {
     return `<i class="${iconStr}"></i>`;

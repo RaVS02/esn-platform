@@ -51,6 +51,14 @@ Identyfikatory pinów mogą zawierać `+`, `/`, `−` itp. (`PIN_RE`; v41 – wc
   Ważne dla użytkowników: nazwa pinu = identyfikator, więc zmiana nazwy pinu w istniejącej części rozłącza jego przewody.
 - Haki edytora: `inst.openPart(id|null)`, `inst.reloadLib()`, `opts.onPartSaved(part)`; błąd zapisu części pokazuje komunikat zamiast cichej porażki.
 
+## 2c. Wspólne ikony kategorii (v44)
+
+`app/static/esn-icons.js` (identyczna kopia w `app/esn_magazyn/static/`) – te same rysunki co `ICONS` w edytorze schematów (13 ikon: mcu, ic, module, sensor, display,
+power, conn, res, cap, diode, trans, act, box). Test `test_shared_icons_match_schematic_editor` pilnuje, że kopie i edytor się zgadzają.
+Magazyn: ikona kategorii `sch:<klucz>` (rysowana w kolorze kategorii); domyślne kategorie dostają je przy pierwszym wejściu (`migrate_default_icons` – tylko ikony
+niezmienione przez użytkownika; emoji i Font Awesome nadal działają). Okno kategorii ma wybór ikony ze wspólnego zestawu.
+Zmiana ikon: popraw `ICONS` w edytorze i skopiuj ścieżki do obu `esn-icons.js` (test wskaże różnice).
+
 ## 3. Haki dodane w `app.js` (komentarz `ESN:`)
 
 | Hak | Po co |

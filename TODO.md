@@ -85,7 +85,7 @@
    – wspólna biblioteka dla wszystkich (bez pinoutu w katalogu), z wartościami i jednostkami jak w demo (4k7, 100n, V, A, Hz…).
    Złożone podzespoły (MCU, moduły, układy) – z katalogu (pinout + dokumentacja); dalej można dodać własną część lub własny pinout.
 2. [x] (v43) **Usuwanie i zarządzanie częściami własnymi** + poradnik edytora (dziś: tworzenie i edycja ✎, bez usuwania); ostrzeżenie, gdy część jest użyta w schematach.
-3. [ ] **Ikony kategorii ze schematów → magazyn** (ikony edytora lepiej oddają kategorie; jeden wspólny zestaw dla schematów, magazynu i katalogu).
+3. [x] (v44) **Ikony kategorii ze schematów → magazyn** (ikony edytora lepiej oddają kategorie; jeden wspólny zestaw dla schematów, magazynu i katalogu).
 4. [ ] **Tryb gościa:** wyraźne przypomnienie, że schematy żyją tylko w przeglądarce (wyczyszczenie danych = utrata) – zachęta do eksportu JSON / zalogowania.
 5. [ ] Checklista edytora (docs/SCHEMATY.md 6): link tylko do odczytu (etap 8), `generated_with_ai`, pola napięć w pinoutach (10.3), wersjonowanie pinoutu (10.4), magazyn/lista zakupowa, PDF z serwera.
 6. [ ] **Widok fizyczny (etap 13 edytora, w stylu Tinkercad/Fritzing):** kafelek = rysunek pinoutu z fizycznym rozmieszczeniem pinów (renderer `pinout.js`), przewody od fizycznych pozycji pinów,

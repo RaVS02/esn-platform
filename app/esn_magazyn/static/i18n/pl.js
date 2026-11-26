@@ -227,5 +227,20 @@ ESNI18n.add("pl", {
   "cat.wersjeJezykowe": "Dostępne wersje językowe: {list}",
   "cat.wersjaPodstawowa": "Brak tłumaczenia na Twój język – wyświetlana wersja: {lang}",
   "mag.wybierzKategorie": "Wybierz kategorię komponentu",
-  "api.wybierzKategorieKomponentu": "Wybierz kategorię komponentu"
+  "api.wybierzKategorieKomponentu": "Wybierz kategorię komponentu",
+  "mag.ikonyZestawu": "Ikony ze wspólnego zestawu",
+  "mag.ikonaLubWlasna": "Kliknij ikonę ze wspólnego zestawu (te same co w edytorze schematów) albo wpisz emotkę / klasę Font Awesome.",
+  "mag.ikona.mcu": "Mikrokontroler",
+  "mag.ikona.ic": "Układ scalony",
+  "mag.ikona.module": "Moduł",
+  "mag.ikona.sensor": "Czujnik",
+  "mag.ikona.display": "Wyświetlacz",
+  "mag.ikona.power": "Zasilanie",
+  "mag.ikona.conn": "Złącze",
+  "mag.ikona.res": "Rezystor",
+  "mag.ikona.cap": "Kondensator",
+  "mag.ikona.diode": "Dioda",
+  "mag.ikona.trans": "Tranzystor",
+  "mag.ikona.act": "Element wykonawczy",
+  "mag.ikona.box": "Inne"
 }, { name: "Polski", locale: "pl-PL" });

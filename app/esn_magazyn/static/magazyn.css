@@ -482,3 +482,11 @@ input[type="number"] {
 .lang-opt:hover, .lang-opt:focus { background: rgba(var(--accent-rgb, 0,229,255), .1); }
 .lang-opt.on { color: var(--accent); }
 .lang-opt.on .lang-code { color: var(--accent); }
+
+/* v44: wspólny zestaw ikon (esn-icons.js) – SVG w kolorze tekstu, rozmiar jak tekst obok */
+.esn-ic { display: inline-block; vertical-align: -0.15em; flex-shrink: 0; }
+.icon-pick { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.icon-pick .ipk { width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px;
+  border: 1px solid var(--border2); background: var(--bg2); color: var(--text2); cursor: pointer; }
+.icon-pick .ipk:hover { border-color: var(--accent); color: var(--accent); }
+.icon-pick .ipk.on { border-color: var(--accent); color: var(--accent); background: rgba(var(--accent-rgb, 86,225,253), .10); }

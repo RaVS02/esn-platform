@@ -184,26 +184,48 @@ class ProjectComponent(Base):
         }
 
 
+# Ikony „sch:<klucz>” = wspólny zestaw ikon (static/esn-icons.js, te same rysunki co w edytorze schematów) – v44.
 DEFAULT_CATEGORIES = [
-    ('Czujniki', 'fa-solid fa-satellite-dish', '#f97316'),
-    ('Diody', 'fa-solid fa-caret-right', '#ef4444'),
-    ('Kondensatory', 'fa-solid fa-battery-half', '#3b82f6'),
-    ('Mikrokontrolery', 'fa-solid fa-server', '#10b981'),
-    ('Moduły', 'fa-solid fa-layer-group', '#6366f1'),
-    ('Rezystory', 'fa-solid fa-wave-square', '#f59e0b'),
-    ('Tranzystory', 'fa-solid fa-code-branch', '#8b5cf6'),
-    ('Układy scalone', 'fa-solid fa-microchip', '#06b6d4'),
-    ('Wyświetlacze', 'fa-solid fa-desktop', '#ec4899'),
-    ('Zasilacze', 'fa-solid fa-bolt', '#fbbf24'),
-    ('Złącza', 'fa-solid fa-plug', '#84cc16'),
-    ('Inne', 'fa-solid fa-wrench', '#64748b'),
+    ('Czujniki', 'sch:sensor', '#f97316'),
+    ('Diody', 'sch:diode', '#ef4444'),
+    ('Kondensatory', 'sch:cap', '#3b82f6'),
+    ('Mikrokontrolery', 'sch:mcu', '#10b981'),
+    ('Moduły', 'sch:module', '#6366f1'),
+    ('Rezystory', 'sch:res', '#f59e0b'),
+    ('Tranzystory', 'sch:trans', '#8b5cf6'),
+    ('Układy scalone', 'sch:ic', '#06b6d4'),
+    ('Wyświetlacze', 'sch:display', '#ec4899'),
+    ('Zasilacze', 'sch:power', '#fbbf24'),
+    ('Złącza', 'sch:conn', '#84cc16'),
+    ('Inne', 'sch:box', '#64748b'),
 ]
+# dawne ikony domyślne (Font Awesome) – podmieniane na nowe tylko wtedy, gdy użytkownik ich nie zmieniał
+OLD_DEFAULT_ICONS = {
+    'Czujniki': 'fa-solid fa-satellite-dish', 'Diody': 'fa-solid fa-caret-right', 'Kondensatory': 'fa-solid fa-battery-half',
+    'Mikrokontrolery': 'fa-solid fa-server', 'Moduły': 'fa-solid fa-layer-group', 'Rezystory': 'fa-solid fa-wave-square',
+    'Tranzystory': 'fa-solid fa-code-branch', 'Układy scalone': 'fa-solid fa-microchip', 'Wyświetlacze': 'fa-solid fa-desktop',
+    'Zasilacze': 'fa-solid fa-bolt', 'Złącza': 'fa-solid fa-plug', 'Inne': 'fa-solid fa-wrench',
+}
+
+
+def migrate_default_icons(session):
+    """v44: domyślne kategorie z niezmienioną ikoną Font Awesome → ikona ze wspólnego zestawu (sch:…). Własne ikony zostają."""
+    new = {name: icon for name, icon, _ in DEFAULT_CATEGORIES}
+    changed = False
+    for cat in session.query(Category).filter(Category.name.in_(list(OLD_DEFAULT_ICONS))).all():
+        if cat.icon == OLD_DEFAULT_ICONS.get(cat.name):
+            cat.icon = new[cat.name]
+            changed = True
+    if changed:
+        session.commit()
 
 def seed_if_empty(session):
     if session.query(Category).count() == 0:
         for name, icon, color in DEFAULT_CATEGORIES:
             session.add(Category(name=name, icon=icon, color=color, is_custom=False))
         session.commit()
+    else:
+        migrate_default_icons(session)
 
 
 # ─── SESSION (multi-tenant – jedna DB na usera) ───────────────────────────────

@@ -128,3 +128,19 @@ def test_api_error_patterns_cover_backend_messages():
             if not any(p.match(msg) for p in pats):
                 uncovered.append(msg)
     assert not uncovered, f"komunikaty bez wzorca api.*: {sorted(set(uncovered))[:5]}"
+
+
+def test_shared_icons_match_schematic_editor():
+    """esn-icons.js (portal i magazyn) = te same rysunki co ICONS w edytorze schematów (v44)."""
+    import json as _json
+    a = (APP / "static" / "esn-icons.js").read_text(encoding="utf-8")
+    assert a == (APP / "esn_magazyn" / "static" / "esn-icons.js").read_text(encoding="utf-8")
+    shared = _json.loads(re.search(r"var ICONS = (\{.*?\});", a, re.S).group(1))
+    ed = (APP / "static" / "wiring" / "app.js").read_text(encoding="utf-8")
+    body = ed[ed.index("const ICONS = {"):]
+    body = body[:body.index("};")]
+    editor = dict(re.findall(r"\n\s*(\w+): '([^']*)',", body))
+    assert shared == editor
+    mag = (APP / "esn_magazyn" / "app.py").read_text(encoding="utf-8")
+    for key in re.findall(r"'sch:(\w+)'", mag):
+        assert key in shared, key
