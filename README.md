@@ -185,6 +185,8 @@ Po poprawnym uruchomieniu, platforma jest dostępna pod następującymi adresami
 ## Pinout komponentów
 Interaktywny opis wyprowadzeń i wyglądu podzespołów w katalogu: [docs/PINOUT.md](docs/PINOUT.md) · narzędzie (galeria i edytor): Narzędzia → Pinout (`/#tools/pinout`)
 
+Linki do sklepów przy komponentach: [docs/SKLEPY.md](docs/SKLEPY.md).
+
 Schematy połączeń (edytor z osobnego repozytorium, osadzony w platformie): [docs/SCHEMATY.md](docs/SCHEMATY.md) · Narzędzia → Edytor schematów (`/#tools/schematic`) i sekcja „Schemat połączeń” w karcie projektu.
 
 ## Zdjęcia (system mediów)

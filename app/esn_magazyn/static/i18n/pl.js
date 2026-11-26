@@ -242,5 +242,21 @@ ESNI18n.add("pl", {
   "mag.ikona.diode": "Dioda",
   "mag.ikona.trans": "Tranzystor",
   "mag.ikona.act": "Element wykonawczy",
-  "mag.ikona.box": "Inne"
+  "mag.ikona.box": "Inne",
+  "shop.tytul": "Gdzie kupić",
+  "shop.podpowiedz": "Linki do sklepów (bez cen – szybko się zmieniają). Tylko adresy http:// lub https://, maks. 12.",
+  "shop.dodaj": "＋ Dodaj sklep",
+  "shop.nazwa": "Nazwa sklepu",
+  "shop.nazwaPh": "np. Botland",
+  "shop.adres": "Adres strony produktu",
+  "shop.region": "Region",
+  "shop.uwaga": "Uwaga",
+  "shop.uwagaPh": "np. moduł z wlutowanymi goldpinami",
+  "shop.usun": "Usuń sklep",
+  "shop.region.any": "dowolny region",
+  "shop.region.pl": "Polska",
+  "shop.region.eu": "UE",
+  "shop.region.world": "świat",
+  "shop.zastrzezenie": "Linki prowadzą do zewnętrznych sklepów – platforma nie odpowiada za ich ofertę, ceny ani dostępność.",
+  "shop.zlyAdres": "Popraw adres sklepu – dozwolone tylko linki zaczynające się od http:// lub https://."
 }, { name: "Polski", locale: "pl-PL" });

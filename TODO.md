@@ -97,3 +97,4 @@
       zaproszenie po loginie, uprawnienia: edycja treści / edycja schematu, bez usuwania i bez zmiany właściciela; widoczne w karcie projektu).
       Uwaga techniczna: schematy mają już blokadę wersji (rev → 409), więc równoległa edycja przez kilka osób jest bezpieczna; wspólna edycja na żywo – osobny, późniejszy pomysł.
 - [x] v47: usuwanie projektu z miniaturki i karty (brakowało funkcji deleteProject – przyciski nic nie robiły od początku).
+- [x] v48: „Gdzie kupić” – linki do sklepów przy komponentach katalogu (karta, miniaturka, magazyn) – `docs/SKLEPY.md`.

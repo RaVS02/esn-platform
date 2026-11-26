@@ -40,6 +40,7 @@ with engine.begin() as _conn:
     _conn.execute(_sql_text("ALTER TABLE users ADD COLUMN IF NOT EXISTS lang VARCHAR(5)"))
     _conn.execute(_sql_text("ALTER TABLE official_components ADD COLUMN IF NOT EXISTS base_lang VARCHAR(5) NOT NULL DEFAULT 'pl'"))
     _conn.execute(_sql_text("ALTER TABLE official_components ADD COLUMN IF NOT EXISTS translations JSON"))
+    _conn.execute(_sql_text("ALTER TABLE official_components ADD COLUMN IF NOT EXISTS shops JSON"))
     # Projekty: język treści
     _conn.execute(_sql_text("ALTER TABLE projects ADD COLUMN IF NOT EXISTS lang VARCHAR(5) NOT NULL DEFAULT 'pl'"))
     _conn.execute(_sql_text("CREATE INDEX IF NOT EXISTS ix_projects_lang ON projects (lang)"))
@@ -827,6 +828,37 @@ def _clean_pinout_translations(raw, base, pins, groups, shapes, s):
             out[lang] = o
     return out
 
+SHOP_REGIONS = ("", "pl", "eu", "world")
+SHOP_MAX = 12
+
+def clean_shops(raw) -> list:
+    """Linki „Gdzie kupić” (v48): tylko adresy http(s) bez spacji i znaków HTML, max 12, przycięte teksty, region z listy.
+    Bez cen (szybko się dezaktualizują). Duplikaty adresów odrzucane."""
+    if raw is None:
+        return []
+    if not isinstance(raw, list):
+        raise HTTPException(status_code=400, detail="Nieprawidłowa lista sklepów")
+    out, seen = [], set()
+    for s in raw[:SHOP_MAX]:
+        if not isinstance(s, dict):
+            continue
+        url = str(s.get("url") or "").strip()
+        if not url:
+            continue
+        if not re.match(r"^https?://[^\s\"'<>`]+$", url) or len(url) > 500:
+            raise HTTPException(status_code=400, detail="Nieprawidłowy adres sklepu (dozwolone tylko linki http:// lub https://)")
+        if url.lower() in seen:
+            continue
+        seen.add(url.lower())
+        name = str(s.get("name") or "").strip()[:60] or re.sub(r"^https?://(www\.)?", "", url).split("/")[0][:60]
+        region = s.get("region") if s.get("region") in SHOP_REGIONS else ""
+        o = {"name": name, "url": url, "region": region}
+        note = str(s.get("note") or "").strip()[:120]
+        if note:
+            o["note"] = note
+        out.append(o)
+    return out
+
 def clean_comp_translations(raw, base):
     """Tłumaczenia pól komponentu: {lang: {name, description, specs:{klucz bazowy: etykieta}}}."""
     if raw in (None, "", {}):
@@ -1020,6 +1052,7 @@ def list_catalog(
             "image_gallery_2": getattr(item, 'image_gallery_2', None),
             "image_gallery_3": getattr(item, 'image_gallery_3', None),
             "pinout_summary": pinout_summary(item),  # pełny pinout tylko w GET /api/catalog/{id}
+            "shops_count": len(getattr(item, "shops", None) or []),
             "created_at": item.created_at.isoformat() if item.created_at else None,
         }
         resolve_comp(d, getattr(item, "base_lang", None) or "pl", getattr(item, "translations", None), lang)
@@ -1096,6 +1129,7 @@ def get_catalog_item(item_id: int, lang: Optional[str] = Query(None), db: Sessio
         "image_gallery_2": getattr(item, 'image_gallery_2', None),
         "image_gallery_3": getattr(item, 'image_gallery_3', None),
         "pinout": getattr(item, 'pinout', None),
+        "shops": getattr(item, 'shops', None) or [],
         "created_at": item.created_at.isoformat() if item.created_at else None,
     }
     resolve_comp(d, base, tr, lang)
@@ -1120,6 +1154,7 @@ def create_catalog_item(
         datasheet_url=data.get("datasheet_url"),
         pinout=clean_pinout(data.get("pinout"), _comp_base(data.get("base_lang"))),
         base_lang=_comp_base(data.get("base_lang")),
+        shops=clean_shops(data.get("shops")),
     )
     item.translations = clean_comp_translations(data.get("translations"), item.base_lang)
     db.add(item)
@@ -1146,6 +1181,8 @@ def update_catalog_item(
         item.base_lang = _comp_base(data["base_lang"])
     if "pinout" in data:
         item.pinout = clean_pinout(data["pinout"], item.base_lang or "pl")
+    if "shops" in data:
+        item.shops = clean_shops(data["shops"])
     if "translations" in data or "base_lang" in data:
         item.translations = clean_comp_translations(data.get("translations", item.translations), item.base_lang)
 

@@ -144,3 +144,8 @@ def test_shared_icons_match_schematic_editor():
     mag = (APP / "esn_magazyn" / "app.py").read_text(encoding="utf-8")
     for key in re.findall(r"'sch:(\w+)'", mag):
         assert key in shared, key
+
+
+def test_shops_module_copies_identical():
+    for f in ("shops.js", "shops.css"):
+        assert (APP / "static" / f).read_text(encoding="utf-8") == (APP / "esn_magazyn" / "static" / f).read_text(encoding="utf-8"), f

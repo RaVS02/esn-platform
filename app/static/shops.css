@@ -1,0 +1,23 @@
+/* „Gdzie kupić” (v48) – wspólne dla portalu i magazynu (identyczna kopia w esn_magazyn/static/shops.css) */
+.shop-box{margin:0 0 30px}
+.shop-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
+.shop-item{display:flex;flex-direction:column;gap:4px}
+.shop-link{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border2);border-radius:10px;background:var(--card);color:var(--text);text-decoration:none;transition:border-color .15s}
+.shop-link:hover{border-color:var(--accent)}
+.shop-ic{font-size:16px}
+.shop-main{display:flex;flex-direction:column;min-width:0;flex:1}
+.shop-main strong{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.shop-main small{font-family:var(--mono);font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.shop-reg{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);border:1px solid var(--border2);border-radius:10px;padding:2px 8px;white-space:nowrap}
+.shop-note{font-size:12px;color:var(--text2);margin:0 4px;line-height:1.45}
+.shop-disc{font-size:11px;color:var(--text3);margin-top:8px}
+.shop-ed-head{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;margin-bottom:6px}
+.shop-ed-hint{color:var(--text3);font-size:11px}
+.shop-ed-rows{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.shop-ed-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr) minmax(0,1fr) minmax(0,1.5fr) auto;gap:6px;align-items:center}
+.shop-ed-row > *{min-width:0;width:100%}
+.shop-ed-row > .shop-del{width:auto}
+.shop-ed-row .text-input{margin:0}
+.shop-ed-row .bad{border-color:var(--red)}
+.shop-ed .shop-del{padding:6px 10px;border-color:var(--red);color:var(--red)}
+@media (max-width: 1100px){ .shop-ed-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;} .shop-ed-row input:nth-child(2),.shop-ed-row input:nth-child(4){grid-column:1/-1} .shop-ed-row{padding-bottom:6px;border-bottom:1px dashed var(--border)} }

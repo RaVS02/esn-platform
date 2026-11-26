@@ -242,5 +242,21 @@ ESNI18n.add("en", {
   "mag.ikona.diode": "Diode",
   "mag.ikona.trans": "Transistor",
   "mag.ikona.act": "Actuator",
-  "mag.ikona.box": "Other"
+  "mag.ikona.box": "Other",
+  "shop.tytul": "Where to buy",
+  "shop.podpowiedz": "Shop links (no prices – they change quickly). Only http:// or https:// addresses, max 12.",
+  "shop.dodaj": "＋ Add shop",
+  "shop.nazwa": "Shop name",
+  "shop.nazwaPh": "e.g. Mouser",
+  "shop.adres": "Product page address",
+  "shop.region": "Region",
+  "shop.uwaga": "Note",
+  "shop.uwagaPh": "e.g. module with soldered pin headers",
+  "shop.usun": "Remove shop",
+  "shop.region.any": "any region",
+  "shop.region.pl": "Poland",
+  "shop.region.eu": "EU",
+  "shop.region.world": "worldwide",
+  "shop.zastrzezenie": "Links lead to external shops – the platform is not responsible for their offer, prices or availability.",
+  "shop.zlyAdres": "Fix the shop address – only links starting with http:// or https:// are allowed."
 }, { name: "English", locale: "en-GB" });

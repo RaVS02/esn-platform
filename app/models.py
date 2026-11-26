@@ -128,6 +128,7 @@ class OfficialComponent(Base):
     # base_lang = język pól bazowych (name/description/specs), translations = {lang: {name, description, specs}}
     base_lang = Column(String(5), nullable=False, default="pl", server_default="pl")
     translations = Column(JSON, nullable=True)
+    shops = Column(JSON, nullable=True)      # „Gdzie kupić”: [{name, url, region, note}] (v48, clean_shops w main.py)
     
     created_at = Column(DateTime, default=datetime.utcnow)
 class ContactMessage(Base):

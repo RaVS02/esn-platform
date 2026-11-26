@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="dark light">
 <script src="{{ url_for('static', path='/i18n.js') }}?v=13"></script>
-<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=21"></script>
-<script src="{{ url_for('static', path='/i18n/en.js') }}?v=21"></script>
+<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=22"></script>
+<script src="{{ url_for('static', path='/i18n/en.js') }}?v=22"></script>
 <script src="{{ url_for('static', path='/theme.js') }}?v=4"></script>
 <title data-i18n="meta.title">Platforma Systemów Wbudowanych</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="{{ url_for('static', path='/pinout.css') }}?v=10">
 <link rel="stylesheet" href="{{ url_for('static', path='/wiring/style.css') }}?v=4">
 <link rel="stylesheet" href="{{ url_for('static', path='/wiring/platform.css') }}?v=7">
+<link rel="stylesheet" href="{{ url_for('static', path='/shops.css') }}?v=2">
 <script src="{{ url_for('static', path='/vendor/marked.umd.js') }}?v=18.2.1"></script>
 <script src="{{ url_for('static', path='/vendor/purify.min.js') }}?v=3.4.18"></script>
 <script src="{{ url_for('static', path='/pinout.js') }}?v=7"></script>
@@ -26,6 +27,7 @@
 <script>window.SCH_AUTOMOUNT = false;</script>
 <script src="{{ url_for('static', path='/wiring/app.js') }}?v=7"></script>
 <script src="{{ url_for('static', path='/wiring-guide.js') }}?v=2"></script>
+<script src="{{ url_for('static', path='/shops.js') }}?v=1"></script>
 <script src="{{ url_for('static', path='/wiring-embed.js') }}?v=10"></script>
 <link rel="stylesheet" href="{{ url_for('static', path='/media.css') }}?v=1">
 <script src="{{ url_for('static', path='/media.js') }}?v=3"></script>
@@ -360,6 +362,7 @@
           <label class="form-label" data-i18n="components.linkDoDatasheetu">Link do datasheetu</label>
           <input class="text-input" id="cm-datasheet" placeholder="https://...">
         </div>
+        <div style="grid-column:1/-1;" id="cm-shops"></div>
         <div style="grid-column:1/-1;">
           <label class="form-label"><span data-i18n="components.pinoutLabel">Pinout (opis wyprowadzeń)</span>
             <a href="javascript:void(0)" style="margin-left:10px;color:var(--accent);font-size:11px;"
@@ -1608,6 +1611,7 @@ function renderCatalogCard(item, isAdmin) {
     const langBadge = (cLangs.length > 1 || (cLangs.length === 1 && cLangs[0] !== cUi))
         ? `<span style="display:inline-flex; gap:3px;" title="${esc(_t('cat.wersjeJezykowe', {list: cLangs.map(l => l.toUpperCase()).join(', ')}) + (item.lang_used && item.lang_used !== cUi ? ' · ' + _t('cat.wersjaPodstawowa', {lang: item.lang_used.toUpperCase()}) : ''))}">${cLangs.map(l => `<span class="badge ${l === item.lang_used ? 'badge-blue' : 'badge-gray'}" style="font-size:10px;">${esc(l.toUpperCase())}</span>`).join('')}</span>`
         : '';
+    const shopBadge = item.shops_count ? `<span class="badge badge-gray" style="font-size:10px;" title="${esc(_t('shop.tytul'))}">🛒 ${item.shops_count}</span>` : '';
     const pinBadge = item.pinout_summary ? `<span class="badge badge-accent" style="font-size:10px;">⌖ ${item.pinout_summary.count} pin</span>` : '';
     const appsHtml = apps.slice(0, 2).map(a => `<span class="badge badge-gray" style="font-size:10px;">${esc(_L('app', a))}</span>`).join(' ');
     const tagsHtml = tags.slice(0, 5).map(t => `<span class="tag" style="font-size:10px; padding:2px 6px;">${esc(t)}</span>`).join(' ');
@@ -1626,7 +1630,7 @@ function renderCatalogCard(item, isAdmin) {
     <div class="project-card-mini" onclick="openFullCatalogView(${item.id})">
         <div class="thumb" style="height: 140px;">${thumbHtml}</div>
         <div style="padding: 16px; display:flex; flex-direction:column; flex:1;">
-            <div style="display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap;">${catBadge} ${appsHtml} ${pinBadge} ${langBadge}</div>
+            <div style="display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap;">${catBadge} ${appsHtml} ${pinBadge} ${shopBadge} ${langBadge}</div>
             <h3 style="font-size:16px; margin-bottom:8px; color:var(--text);">${esc(item.name)} ${item.symbol ? `<span style="font-size:12px; color:var(--text3); font-weight:400;">(${esc(item.symbol)})</span>` : ''}</h3>
             
             <p style="font-size:13px; color:var(--text2); font-family: var(--sans); margin-bottom:15px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
@@ -1700,6 +1704,7 @@ function openFullCatalogView(id) {
             </div>
         </div>
         
+        <div id="catalog-shops-slot"></div>
         <div id="catalog-pinout-slot"></div>
         <div id="catalog-code-slot"></div>
         <div id="catalog-res-slot"></div>
@@ -1725,7 +1730,13 @@ async function loadCatalogPinout(item, isAdmin) {
             fetch(`/api/catalog/${item.id}`),
             ESNMedia.api.list('component', item.id).catch(() => [])
         ]);
-        if (res.ok) pinout = (await res.json()).pinout;
+        if (res.ok) {
+            const full = await res.json();
+            pinout = full.pinout;
+            const sv = window.ESNShops && ESNShops.view(full.shops);         // „Gdzie kupić” (v48)
+            const ss = document.getElementById('catalog-shops-slot');
+            if (ss && sv) { ss.textContent = ''; ss.appendChild(sv); }
+        }
         images = media.filter(m => m.role === 'pinout').map(m => ({ url: m.url, caption: m.caption }));
     } catch (e) { /* brak sieci – pokaż placeholder */ }
     if (!slot.isConnected) return; // użytkownik przeszedł do innego komponentu
@@ -2030,6 +2041,7 @@ async function openCatalogModal(id = null) {
         document.getElementById('cm-description').value = '';
         document.getElementById('cm-datasheet').value = '';
         document.getElementById('cm-pinout').value = '';
+        window._cmShops = ESNShops.editor(document.getElementById('cm-shops'), []);
 
     } else {
         const res = await fetch(`/api/catalog/${id}`);
@@ -2046,6 +2058,7 @@ async function openCatalogModal(id = null) {
         document.getElementById('cm-pinout').value = ESNPinout.toText(data.pinout);
         bl.value = data.base_lang || 'pl';
         _cmI18n.setBaseLang(bl.value); _cmI18n.set(data.translations || {});
+        window._cmShops = ESNShops.editor(document.getElementById('cm-shops'), data.shops || []);
     }
 
     // Zdjęcia: komponent zapisany → wgrywanie od razu; nowy → po pierwszym zapisie
@@ -2107,6 +2120,7 @@ async function saveCatalogItem() {
 
     const baseLang = document.getElementById('cm-baselang').value || 'pl';
     if (pinoutObj && !pinoutObj.lang) pinoutObj.lang = baseLang;
+    if (window._cmShops && _cmShops.invalid()) return toast(_t('shop.zlyAdres'), 'error');
     const payload = {
         base_lang: baseLang,
         translations: window._cmI18n ? _cmI18n.get() : {},
@@ -2118,7 +2132,8 @@ async function saveCatalogItem() {
         tags: tagsArray,
         technical_specs: specsObj,
         description: document.getElementById('cm-description').value,
-        datasheet_url: document.getElementById('cm-datasheet').value
+        datasheet_url: document.getElementById('cm-datasheet').value,
+        shops: window._cmShops ? _cmShops.get() : undefined
     };
 
     const url = catalogEditingId ? `/api/catalog/${catalogEditingId}` : '/api/catalog';
