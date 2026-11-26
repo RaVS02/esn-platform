@@ -1,0 +1,25 @@
+lang: pl
+package: Moduł 4-pin (2,54 mm)
+view: widok od strony złącza
+layout: sip
+source: Karta katalogowa modułu HC-SR04 (wklej adres producenta) |
+notes: Przykład poglądowy. Wyjście ECHO ma poziom 5 V – przy mikrokontrolerze 3,3 V (np. ESP32) użyj dzielnika napięcia lub konwertera poziomów.
+group: Zasilanie | 1, 4 | Moduł wymaga 5 V
+group: Pomiar | 2, 3 | Impuls TRIG → echo o długości proporcjonalnej do odległości
+
+# nr | nazwa | kategoria | typ | funkcja | uwagi
+1 | VCC | power | Zasilanie | Zasilanie dodatnie | 5 V DC, ok. 15 mA podczas pracy
+2 | TRIG | digital | Wejście | Wyzwalanie pomiaru | Impuls wysoki min. 10 µs
+3 | ECHO | digital | Wyjście | Impuls zwrotny | Długość impulsu = czas lotu fali; poziom 5 V
+4 | GND | ground | Masa | Masa | Wspólna z masą mikrokontrolera
+
+[en]
+view: view from the connector side
+notes: Illustrative example. The ECHO output is 5 V – with a 3.3 V microcontroller (e.g. ESP32) use a voltage divider or a level shifter.
+group: Zasilanie | Power | The module needs 5 V
+group: Pomiar | Measurement | TRIG pulse → echo pulse whose length is proportional to distance
+# nr | typ | funkcja | uwagi
+1 | Power | Positive supply | 5 V DC, about 15 mA when running
+2 | Input | Measurement trigger | High pulse of at least 10 µs
+3 | Output | Return pulse | Pulse length = time of flight; 5 V level
+4 | Ground | Ground | Common with the microcontroller ground

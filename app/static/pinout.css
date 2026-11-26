@@ -157,3 +157,14 @@
 .ci-fld { display: grid; gap: 4px; font-size: 11px; color: var(--text3); font-family: var(--mono); }
 .ci-fld small { color: var(--text3); }
 .ci-specs { font-family: var(--mono); font-size: 12px; }
+
+/* kafelki narzędzi: pełna szerokość, bez pustego miejsca po prawej */
+.tools-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.tools-grid .module-card { height: 100%; box-sizing: border-box; }
+
+/* powiększony podgląd pinoutu */
+.tp-full { position: fixed; inset: 0; z-index: 1000; background: var(--bg); overflow: auto; padding: 18px 24px 40px; }
+.tp-full-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; position: sticky; top: 0; background: var(--bg); padding: 6px 0 10px; z-index: 2; font-family: var(--mono); }
+.tp-full-body { max-width: 1700px; margin: 0 auto; }
+.tp-full-body .po-grid:not(.po-grid-table) { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+@media (max-width: 900px) { .tp-full-body .po-grid:not(.po-grid-table) { grid-template-columns: minmax(0, 1fr); } }

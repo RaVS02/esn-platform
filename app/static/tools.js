@@ -27,7 +27,7 @@
   function home(el) {
     el.textContent = "";
     el.appendChild(h("div", { "class": "tl-banner" }, [h("div", {}, [h("strong", { text: _t("tools.wRozwoju") }), h("span", { text: _t("tools.banner") })])]));
-    var grid = h("div", { "class": "grid-cards", style: "max-width: 1100px;" });
+    var grid = h("div", { "class": "tools-grid" });
     TOOLS.slice().sort(function (a, b) { var ra = !a.status || a.status === "ready" ? 0 : 1, rb = !b.status || b.status === "ready" ? 0 : 1; return ra - rb; }).forEach(function (t) {
       var ready = !t.status || t.status === "ready";
       var tag = STATUS[t.status || "ready"];

@@ -1078,5 +1078,8 @@ ESNI18n.add("en", {
   "ci.nazwa": "Name",
   "ci.opisKomponentu": "Description",
   "ci.parametry": "Parameter labels",
-  "ci.parametryHint": "One per line: base key = translation (values stay unchanged)."
+  "ci.parametryHint": "One per line: base key = translation (values stay unchanged).",
+  "tp.powieksz": "⤢ Enlarge preview",
+  "tp.powieszPodglad": "Full-screen preview",
+  "tp.zamknij": "Close"
 }, { name: "English", locale: "en-GB" });

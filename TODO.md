@@ -65,6 +65,7 @@
 - [x] (v31) Projekty: pole `lang`, filtr języka, plakietki. Dalej: komponenty (`translations`), pinouty, schematy.
 - [x] (v32) Filtr języków: checkboxy + łączenie tłumaczeń + plakietki (Wiedza, projekty).
 - [x] (v33) Komponenty: jeden rekord z tłumaczeniami (`base_lang`, `translations`), pinout z wersjami językowymi, narzędzie Pinout w Narzędziach (rejestr `ESNTools`). Dalej: pinout w magazynie/schematach z językiem, kalkulatory, edytor schematów.
+- [x] (v34) Pinout: powiększony podgląd (pełny ekran), układ kafelków Narzędzi, przykład komponentu z tłumaczeniem (`docs/PRZYKLAD-KOMPONENTU.md`).
 - [ ] Szablony i przewodnik treści (`knowledge-templates.js`, `knowledge-guide.js`) – wersje EN (razem z treściami wielojęzycznymi).
 - [ ] Przejście na zmianę języka bez przeładowania strony.
 - [ ] Treści z polem `lang` (artykuły, kursy, projekty, podzespoły).

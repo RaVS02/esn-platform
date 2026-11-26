@@ -38,6 +38,7 @@
     var docLang = h("select", { "class": "sort-select", "aria-label": _t("tp.jezykOpisu") });
     var addLang = h("select", { "class": "sort-select", "aria-label": _t("tp.dodajTlumaczenie") });
     var viewLang = h("select", { "class": "sort-select", "aria-label": _t("tp.jezykPodgladu") });
+    var zoomBtn = h("button", { type: "button", "class": "btn-action", text: _t("tp.powieksz"), title: _t("tp.powieszPodglad") });
     var exportLang = h("select", { "class": "sort-select", "aria-label": _t("tp.jezykEksportu") });
     var fileIn = h("input", { type: "file", accept: ".txt,.json,text/plain,application/json" });
     var imgIn = h("input", { type: "file", accept: "image/*" });
@@ -149,6 +150,19 @@
       btn(_t("tp.pobierzJson"), function () { var t = json(); if (t) download(fname("json", exportLang.value), t, "application/json"); }),
       fileBtn(_t("tp.zdjeciePlytki"), imgIn), noImg, pickWrap]);
     var bar3 = h("div", { "class": "tp-bar" }, [h("span", { "class": "tp-lbl", text: _t("tp.jezykOpisu") }), docLang, addLang, h("span", { "class": "tp-lbl", text: _t("tp.podglad") }), viewLang]);
+    bar3.appendChild(zoomBtn);
+    /* powiększony podgląd: pełny ekran, ten sam opis i język; Esc lub „Zamknij” wraca do edytora */
+    zoomBtn.addEventListener("click", function () {
+      var d = doc(); if (!d) return;
+      var ov = h("div", { "class": "tp-full", role: "dialog", "aria-modal": "true", "aria-label": _t("tp.podglad") });
+      var body = h("div", { "class": "tp-full-body" });
+      function close() { document.removeEventListener("keydown", onKey); ov.remove(); document.body.style.overflow = ""; zoomBtn.focus(); }
+      function onKey(e) { if (e.key === "Escape" && !e.defaultPrevented) { e.preventDefault(); close(); } }
+      ov.appendChild(h("div", { "class": "tp-full-bar" }, [h("strong", { text: (d.package || "Pinout") + " · " + previewLang.toUpperCase() }), btn(_t("tp.zamknij"), close, "primary")]));
+      ov.appendChild(body);
+      document.body.appendChild(ov); document.body.style.overflow = "hidden"; document.addEventListener("keydown", onKey);
+      P.render(body, d, { image: image, lang: previewLang });
+    });
     edit.appendChild(bar1); edit.appendChild(bar3); edit.appendChild(bar2);
     edit.appendChild(h("div", { "class": "tp-ed" }, [
       h("div", {}, [src, err, h("p", { "class": "tp-hint", text: _t("tp.format") })]), prev]));

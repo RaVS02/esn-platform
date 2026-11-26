@@ -1078,5 +1078,8 @@ ESNI18n.add("pl", {
   "ci.nazwa": "Nazwa",
   "ci.opisKomponentu": "Opis",
   "ci.parametry": "Etykiety parametrów",
-  "ci.parametryHint": "Po jednej linii: klucz bazowy = tłumaczenie (wartości zostają bez zmian)."
+  "ci.parametryHint": "Po jednej linii: klucz bazowy = tłumaczenie (wartości zostają bez zmian).",
+  "tp.powieksz": "⤢ Powiększ podgląd",
+  "tp.powieszPodglad": "Podgląd na pełnym ekranie",
+  "tp.zamknij": "Zamknij"
 }, { name: "Polski", locale: "pl-PL" });
