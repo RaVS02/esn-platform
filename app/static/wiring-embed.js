@@ -266,11 +266,68 @@
     return { refresh: refresh };
   }
 
+  /* ── tryb gościa: baner z kopią zapasową (wszystkie schematy i części w jednym pliku), przywracaniem i logowaniem ── */
+  var BACKUP_FMT = "esn-wiring-guest";
+  function guestStats() {
+    var d = guestLoad();
+    return { schemas: Object.keys(d.projects).length, parts: Object.keys(d.parts).length, backup: d.backup_at || null };
+  }
+  function downloadBackup() {
+    var d = guestLoad(), now = new Date();
+    var data = { format: BACKUP_FMT, version: 1, exported_at: now.toISOString(), projects: d.projects, parts: d.parts };
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 1)], { type: "application/json" }));
+    a.download = "esn-schematy-" + now.toISOString().slice(0, 10) + ".json";
+    document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 0);
+    d.backup_at = now.toISOString(); guestSave(d);
+  }
+  function restoreBackup(file, done) {
+    var rd = new FileReader();
+    rd.onload = function () {
+      var b;
+      try { b = JSON.parse(rd.result); } catch (e) { b = null; }
+      if (!b || b.format !== BACKUP_FMT || typeof b.projects !== "object" || typeof b.parts !== "object") { toast(_t("wr.zlyPlikKopii"), "error"); return; }
+      var d = guestLoad(), ps = Object.keys(b.projects), same = ps.filter(function (k) { return d.projects[k]; }).length;
+      if (!confirm(_t("wr.przywrocicKopie", { n: ps.length, p: Object.keys(b.parts).length }) + (same ? "\n\n" + _t("wr.przywrocNadpisze", { n: same }) : ""))) return;
+      ps.forEach(function (k) { var p = b.projects[k]; if (p && typeof p === "object") { d.projects[k] = Object.assign({}, p, { id: k }); (d.ts = d.ts || {})[k] = new Date().toISOString(); } });
+      Object.keys(b.parts).forEach(function (k) { if (!/^(cat|std)-/.test(k) && b.parts[k] && typeof b.parts[k] === "object") d.parts[k] = Object.assign({}, b.parts[k], { id: k }); });
+      d.backup_at = b.exported_at || d.backup_at;
+      guestSave(d); toast(_t("wr.przywrocono", { n: ps.length }), "success"); done();
+    };
+    rd.readAsText(file);
+  }
+  // przycisk logowania portalu (obiekt auth w szablonie nie jest globalny – używamy tego samego przycisku co w górnym pasku)
+  function loginTrigger() { return document.querySelector("[onclick*=\"auth.showModal('login')\"]"); }
+  function guestBanner(rerender) {
+    var st = guestStats(), old = !st.backup || (Date.now() - new Date(st.backup).getTime() > 7 * 864e5);
+    var file = h("input", { type: "file", accept: ".json,application/json", hidden: "hidden", onchange: function (e) {
+      var f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) restoreBackup(f, rerender); } });
+    var info = _t("wr.wPrzegladarce", { s: st.schemas, p: st.parts }) + " · " +
+      (st.backup ? _t("wr.ostatniaKopia", { d: fmtDate(st.backup) }) : _t("wr.brakKopii"));
+    return h("div", { "class": "wiring-guest warn" + (st.schemas && old ? " stale" : ""), role: "note" }, [
+      h("div", { "class": "wg-head" }, [h("span", { "class": "wg-ic", "aria-hidden": "true", text: "⚠" }), h("strong", { text: _t("wr.goscTytul") })]),
+      h("p", { text: _t("wr.trybGoscia") }),
+      h("p", { "class": "wg-info" + (st.schemas && old ? " bad" : ""), text: info + (st.schemas && old ? " – " + _t("wr.zrobKopie") : "") }),
+      h("div", { "class": "wg-btns" }, [
+        h("button", { type: "button", "class": "btn-action primary", text: _t("wr.pobierzKopie"), disabled: st.schemas || st.parts ? null : "disabled",
+          onclick: function () { downloadBackup(); toast(_t("wr.kopiaPobrana"), "success"); rerender(); } }),
+        h("button", { type: "button", "class": "btn-action", text: _t("wr.przywrocZKopii"), onclick: function () { file.click(); } }),
+        loginTrigger() ? h("button", { type: "button", "class": "btn-action", text: _t("wr.zalogujSie"), onclick: function () { var t = loginTrigger(); if (t) t.click(); } }) : null,
+        file])]);
+  }
+  // pierwszy zapis gościa w tej sesji → jednorazowe przypomnienie
+  function guestSavedOnce() {
+    try { if (sessionStorage.getItem("esn-wiring-guest-told")) return; sessionStorage.setItem("esn-wiring-guest-told", "1"); } catch (e) { /* tryb prywatny */ }
+    toast(_t("wr.zapisanoLokalnie"), "warn");
+  }
+
   function mountTool(el, ctx) {
     var logged = !!token(), wrap = h("div", { "class": "wiring-section" }), host = h("div");
     el.appendChild(h("p", { "class": "hero-sub tp-lead", text: _t("wr.lead") }));
     var guestCount = Object.keys(guestLoad().projects).length;
-    if (!logged) el.appendChild(h("div", { "class": "wiring-guest", text: _t("wr.trybGoscia") }));
+    var bannerBox = h("div");
+    function drawBanner() { bannerBox.textContent = ""; bannerBox.appendChild(guestBanner(function () { el.textContent = ""; mountTool(el, ctx); })); }
+    if (!logged) { drawBanner(); el.appendChild(bannerBox); }
     else {
       var bar = h("div", { "class": "wiring-bar" }, [h("span", { "class": "wiring-note", text: _t("wr.zapisNaKoncie") })]);
       if (guestCount) bar.appendChild(h("button", { type: "button", "class": "btn-action", text: _t("wr.przeniesNaKonto", { n: guestCount }),
@@ -279,7 +336,9 @@
     }
     var base = logged ? { call: req } : guestApi(), listBox = h("div"), list = null, ed = null;
     // edytor korzysta z tej samej warstwy danych; każdy zapis / nowy / usunięty schemat odświeża listę
-    var edApi = { call: function (m, u, b) { return base.call(m, u, b).then(function (r) { if (m !== "GET" && /^\/projects/.test(u) && list) { list.refresh(); if (parts) parts.refresh(); } else if (m === "GET" && /^\/projects\//.test(u) && list) setTimeout(list.draw, 0); return r; }); } };
+    var edApi = { call: function (m, u, b) { return base.call(m, u, b).then(function (r) {
+      if (!logged && m !== "GET") { drawBanner(); if (m === "PUT" || m === "POST") guestSavedOnce(); }
+      if (m !== "GET" && /^\/projects/.test(u) && list) { list.refresh(); if (parts) parts.refresh(); } else if (m === "GET" && /^\/projects\//.test(u) && list) setTimeout(list.draw, 0); return r; }); } };
     var partsBox = h("div"), parts = null, partsOpen = false;
     function remount(id) { ed = mountEditor(host, { api: edApi, project: id || undefined, onPartSaved: function () { if (parts) parts.refresh(); } }); }
     if (global.ESNWiringGuide) el.appendChild(global.ESNWiringGuide.render(h, lang()));

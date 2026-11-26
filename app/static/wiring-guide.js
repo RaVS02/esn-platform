@@ -44,7 +44,7 @@
         ["strzałki (Shift = 50 px)", "przesuwanie zaznaczenia"],
         ["◇ na zaznaczonym przewodzie", "przeciągnij, żeby dodać punkt zaczepienia; dwuklik na punkcie go usuwa"],
         ["Esc", "odznacz"]] },
-      { t: "7. Tryb gościa", p: ["Bez logowania schematy i części własne są zapisywane **tylko w tej przeglądarce** – wyczyszczenie danych przeglądarki, tryb prywatny albo inny komputer oznacza ich brak. Zrób eksport JSON albo zaloguj się i użyj „Przenieś schematy z tej przeglądarki na konto”."] }
+      { t: "7. Tryb gościa", p: ["Bez logowania schematy i części własne są zapisywane **tylko w tej przeglądarce** – wyczyszczenie danych przeglądarki, tryb prywatny albo inny komputer oznacza ich brak. Baner nad edytorem pokazuje, ile schematów jest w przeglądarce i kiedy zrobiono ostatnią kopię: **Pobierz kopię (JSON)** zapisuje wszystkie schematy i części własne w jednym pliku, **Przywróć z kopii…** wczytuje je z powrotem (także w innej przeglądarce). Najpewniej: zaloguj się i użyj „Przenieś schematy z tej przeglądarki na konto”."] }
     ] },
     en: { title: "Guide: using the editor and adding your own part", sections: [
       { t: "1. Your first diagram", ul: [
@@ -86,7 +86,7 @@
         ["arrows (Shift = 50 px)", "move the selection"],
         ["◇ on a selected wire", "drag to add a waypoint; double-click a waypoint to remove it"],
         ["Esc", "deselect"]] },
-      { t: "7. Guest mode", p: ["Without logging in, diagrams and own parts are saved **only in this browser** – clearing browser data, a private window or another computer means they are gone. Export JSON, or log in and use “Move diagrams from this browser to your account”."] }
+      { t: "7. Guest mode", p: ["Without logging in, diagrams and own parts are saved **only in this browser** – clearing browser data, a private window or another computer means they are gone. The banner above the editor shows how many diagrams are in this browser and when the last backup was made: **Download backup (JSON)** saves all diagrams and own parts in one file, **Restore from backup…** loads them back (also in another browser). Safest: log in and use “Move diagrams from this browser to your account”."] }
     ] }
   };
 

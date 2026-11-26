@@ -59,6 +59,13 @@ Magazyn: ikona kategorii `sch:<klucz>` (rysowana w kolorze kategorii); domyślne
 niezmienione przez użytkownika; emoji i Font Awesome nadal działają). Okno kategorii ma wybór ikony ze wspólnego zestawu.
 Zmiana ikon: popraw `ICONS` w edytorze i skopiuj ścieżki do obu `esn-icons.js` (test wskaże różnice).
 
+## 2d. Tryb gościa – przypomnienie i kopia zapasowa (v45)
+
+Baner nad edytorem (tylko bez logowania): ostrzeżenie, że dane są tylko w tej przeglądarce, licznik schematów i części, data ostatniej kopii
+(czerwony, gdy kopii nie ma albo ma ponad 7 dni). Przyciski: **Pobierz kopię (JSON)** – plik `esn-schematy-RRRR-MM-DD.json` (`{format: "esn-wiring-guest", version: 1,
+projects, parts}`), **Przywróć z kopii…** (scalenie; schematy o tym samym id są zastępowane po potwierdzeniu), **Zaloguj się** (okno logowania portalu).
+Po pierwszym zapisie w sesji – jednorazowy komunikat (sessionStorage `esn-wiring-guest-told`). Kopia ≠ eksport JSON jednego schematu z menu Eksport edytora.
+
 ## 3. Haki dodane w `app.js` (komentarz `ESN:`)
 
 | Hak | Po co |
