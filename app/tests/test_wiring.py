@@ -267,3 +267,45 @@ def test_my_parts_list_usage_and_delete(env):
     assert client.delete("/api/wiring/parts/moj-x", headers=a).json() == {"ok": True}
     assert "moj-x" not in [p["id"] for p in client.get("/api/wiring/my-parts", headers=a).json()]
     assert client.get("/api/wiring/projects/" + s["id"], headers=a).json()["nodes"][0]["part"] == "moj-x"   # schemat bez zmian („Brak części”)
+
+
+def test_view_only_share_links(env):
+    from datetime import datetime, timedelta, timezone
+    a, b = env["a"]["h"], env["b"]["h"]
+    s = client.post("/api/wiring/projects", headers=a, json={"title": "Do udostępnienia", "nodes": [{"id": "n1", "part": "std-resistor", "x": 0, "y": 0}]}).json()
+    assert client.get(f"/api/wiring/projects/{s['id']}").status_code == 404                 # prywatny bez linku
+    assert client.post(f"/api/wiring/projects/{s['id']}/shares", headers=b, json={"days": 7}).status_code == 403
+    assert client.post(f"/api/wiring/projects/{s['id']}/shares", headers=a, json={"days": 3}).status_code == 400
+    r = client.post(f"/api/wiring/projects/{s['id']}/shares", headers=a, json={"days": 7}).json()
+    tok = r["token"]
+    assert r["state"] == "active" and r["expires_at"] and len(tok) >= 30
+    lst = client.get(f"/api/wiring/projects/{s['id']}/shares", headers=a).json()
+    assert len(lst) == 1 and "token" not in lst[0]                                          # token nie wraca w liście
+    db = SessionLocal()
+    row = db.query(models.WiringShare).filter(models.WiringShare.schema_id == s["id"]).first()
+    assert tok not in (row.token_hash or "") and len(row.token_hash) == 64                  # w bazie tylko skrót
+    db.close()
+    v = client.get(f"/api/wiring/shared/{tok}")
+    assert v.status_code == 200 and v.json()["can_edit"] is False and v.json()["nodes"][0]["part"] == "std-resistor"
+    assert "no-store" in v.headers.get("cache-control", "")
+    assert client.get(f"/api/wiring/projects/{s['id']}/shares", headers=a).json()[0]["views"] == 1
+    assert client.get("/api/wiring/shared/zly-token").status_code == 404
+    # bez terminu + unieważnienie
+    r2 = client.post(f"/api/wiring/projects/{s['id']}/shares", headers=a, json={"days": None}).json()
+    assert r2["expires_at"] is None
+    assert client.delete(f"/api/wiring/projects/{s['id']}/shares/{r2['id']}", headers=b).status_code == 403
+    assert client.delete(f"/api/wiring/projects/{s['id']}/shares/{r2['id']}", headers=a).json()["state"] == "revoked"
+    assert client.get(f"/api/wiring/shared/{r2['token']}").status_code == 404
+    # wygasły
+    db = SessionLocal()
+    sh = db.query(models.WiringShare).filter(models.WiringShare.id == r["id"]).first()
+    sh.expires_at = datetime.now(timezone.utc) - timedelta(minutes=1)
+    db.commit()
+    db.close()
+    assert client.get(f"/api/wiring/shared/{tok}").status_code == 404
+    assert client.get(f"/api/wiring/projects/{s['id']}/shares", headers=a).json()[-1]["state"] == "expired"
+    # usunięcie schematu usuwa linki
+    client.delete(f"/api/wiring/projects/{s['id']}", headers=a)
+    db = SessionLocal()
+    assert db.query(models.WiringShare).filter(models.WiringShare.schema_id == s["id"]).count() == 0
+    db.close()

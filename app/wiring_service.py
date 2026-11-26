@@ -16,8 +16,11 @@ Części z katalogu = OfficialComponent z pinoutem (id 'cat-<id>'), w języku z 
 i pinoutu). Adapter (pin_type, component_to_part, INV_CAT) przeniesiony bez zmian z demo edytora (main.py repozytorium edytora).
 Walidacja zapisu: clean_wiring – dozwolone pola i limity wg README edytora 10.2 (frontendowi nie ufamy).
 """
+import hashlib
 import json
 import re
+import secrets
+from datetime import datetime, timedelta, timezone
 import time
 import uuid
 from collections import defaultdict, deque
@@ -37,7 +40,7 @@ LIM = {
     "nodes": 60, "links": 400, "pts": 20, "notes": 100, "note_text": 1000, "label": 80, "link_note": 200, "title": 200,
     "value": 40, "gkeys": 400, "gkey": 120, "coord": 100000, "body": 256 * 1024,
     "schemas_per_user": 100, "parts_per_user": 200, "part_pins": 200, "part_name": 100, "part_desc": 500, "pin_text": 200,
-    "saves_per_hour": 300,
+    "saves_per_hour": 300, "shares_per_schema": 10, "share_days": (1, 7, 30, 90, 365),
 }
 WIRE_STYLES = ("curve", "ortho", "straight")
 NOTE_C = ("info", "warn", "ok")
@@ -704,6 +707,87 @@ def build_router(get_db, get_current_user, get_optional_user) -> APIRouter:
             if any(str(n.get("part")) == f"cat-{int(component_id)}" for n in (r.data or {}).get("nodes") or []):
                 exact.append({"id": sid, "title": title, "project_id": pid})
         return {"count": len(exact), "schemas": exact[:20]}
+
+    # ── linki tylko do podglądu (etap 8 edytora) ─────────────────────────────────────────────────────
+    SH = models.WiringShare
+
+    def _hash(tok: str) -> str:
+        return hashlib.sha256(tok.encode("utf-8")).hexdigest()
+
+    def _aware(dt):
+        return dt if dt is None or dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+    def share_state(sh) -> str:
+        if sh.revoked_at:
+            return "revoked"
+        exp = _aware(sh.expires_at)
+        if exp and exp <= datetime.now(timezone.utc):
+            return "expired"
+        return "active"
+
+    def share_out(sh) -> dict:
+        iso = lambda d: _aware(d).isoformat() if d else None
+        return {"id": sh.id, "created_at": iso(sh.created_at), "expires_at": iso(sh.expires_at), "revoked_at": iso(sh.revoked_at),
+                "last_used_at": iso(sh.last_used_at), "views": sh.views or 0, "state": share_state(sh)}
+
+    def editable_row(db, user, sid):
+        row = get_row(db, sid)
+        if not can_edit(user, row, db):
+            raise HTTPException(403, detail="Brak uprawnień do edycji schematu")
+        return row
+
+    @router.get("/projects/{sid}/shares")
+    def list_shares(sid: str, db: Session = Depends(get_db), user=Depends(get_current_user)):
+        row = editable_row(db, user, sid)
+        rows = db.query(SH).filter(SH.schema_id == row.id).order_by(SH.created_at.desc()).all()
+        return [share_out(s) for s in rows]
+
+    @router.post("/projects/{sid}/shares")
+    async def create_share(sid: str, request: Request, db: Session = Depends(get_db), user=Depends(get_current_user)):
+        """Nowy link tylko do podglądu. Token zwracany JEDEN raz (w bazie tylko skrót). days: 1/7/30/90/365 albo null = bez terminu."""
+        row = editable_row(db, user, sid)
+        body = await read_body(request)
+        days = body.get("days")
+        if days is not None and days not in LIM["share_days"]:
+            raise HTTPException(400, detail="Nieprawidłowy czas ważności linku")
+        rate.check(user.id)
+        active = [s for s in db.query(SH).filter(SH.schema_id == row.id).all() if share_state(s) == "active"]
+        if len(active) >= LIM["shares_per_schema"]:
+            raise HTTPException(400, detail=f"Osiągnięto limit aktywnych linków ({LIM['shares_per_schema']}) – unieważnij nieużywane")
+        tok = secrets.token_urlsafe(24)
+        sh = SH(schema_id=row.id, token_hash=_hash(tok), created_by=user.id,
+                expires_at=(datetime.now(timezone.utc) + timedelta(days=days)) if days else None)
+        db.add(sh)
+        db.commit()
+        db.refresh(sh)
+        return dict(share_out(sh), token=tok)
+
+    @router.delete("/projects/{sid}/shares/{share_id}")
+    def revoke_share(sid: str, share_id: int, db: Session = Depends(get_db), user=Depends(get_current_user)):
+        row = editable_row(db, user, sid)
+        sh = db.query(SH).filter(SH.id == share_id, SH.schema_id == row.id).first()
+        if not sh:
+            raise HTTPException(404, detail="Nie ma takiego linku")
+        if not sh.revoked_at:
+            sh.revoked_at = datetime.now(timezone.utc)
+            db.commit()
+        return share_out(sh)
+
+    @router.get("/shared/{token}")
+    def get_shared(token: str, db: Session = Depends(get_db)):
+        """Publiczny podgląd schematu po linku (bez logowania; zawsze can_edit = False). Nieważny / unieważniony link = 404."""
+        sh = db.query(SH).filter(SH.token_hash == _hash(str(token)[:100])).first() if token else None
+        if not sh or share_state(sh) != "active":
+            raise HTTPException(404, detail="Link do schematu jest nieważny albo wygasł")
+        row = db.query(S).filter(S.id == sh.schema_id).first()
+        if not row:
+            raise HTTPException(404, detail="Link do schematu jest nieważny albo wygasł")
+        sh.views = (sh.views or 0) + 1
+        sh.last_used_at = datetime.now(timezone.utc)
+        db.commit()
+        d = doc(row, None, db)
+        d["shared"] = True
+        return d
 
     @router.get("/by-project/{project_id}")
     def by_project(project_id: int, db: Session = Depends(get_db), user=Depends(get_optional_user)):

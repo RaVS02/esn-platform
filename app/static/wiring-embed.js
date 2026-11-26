@@ -143,10 +143,55 @@
   function errMsg(e) { var d = e && e.data && e.data.detail; d = typeof d === "string" ? d : (d && d.message) || ""; return d ? global.ESNI18n.err(d) : _t("wr.bladOperacji"); }
   function fmtDate(iso) { try { return iso ? global.ESNI18n.date(new Date(iso), { dateStyle: "medium", timeStyle: "short" }) : ""; } catch (e) { return ""; } }
   function schemaList(box, o) {
-    var state = { items: [], linkFor: null, linkable: null };
+    var state = { items: [], linkFor: null, linkable: null, shareFor: null, shares: null, newLink: null };
     async function refresh() {
       try { state.items = await o.call("GET", "/projects"); } catch (e) { state.items = []; }
       draw();
+    }
+    /* panel „Udostępnij”: linki tylko do podglądu (pełny link widać tylko raz – przy tworzeniu) */
+    async function loadShares(id) {
+      try { state.shares = await o.call("GET", "/projects/" + encodeURIComponent(id) + "/shares"); } catch (e) { state.shares = []; toast(errMsg(e), "error"); }
+      draw();
+    }
+    function shareUrl(tok) { return location.origin + location.pathname + "#tools/schematic/view/" + encodeURIComponent(tok); }
+    function copy(text, btn) {
+      var done = function () { toast(_t("wr.skopiowano"), "success"); if (btn) btn.textContent = _t("wr.skopiowano"); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function () { fallback(); });
+      else fallback();
+      function fallback() { var ta = h("textarea", {}); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); done(); } catch (e) { /* ręcznie */ } ta.remove(); }
+    }
+    function stateName(st) { var k = "wr.stan." + st; return _t(k); }   // klucze wr.stan.active / expired / revoked
+    function sharePanel(it) {
+      var box = h("div", { "class": "wl-link wl-share" });
+      box.appendChild(h("p", { "class": "wiring-note", text: _t("wr.udostepnijOpis") }));
+      if (state.newLink) {
+        var inp = h("input", { "class": "text-input wl-url", readonly: "readonly", value: state.newLink, "aria-label": _t("wr.nowyLink") });
+        inp.value = state.newLink;
+        box.appendChild(h("div", { "class": "wl-newlink" }, [h("strong", { text: _t("wr.nowyLink") }), inp,
+          h("button", { type: "button", "class": "btn-action primary", text: _t("wr.kopiuj"), onclick: function (e) { copy(state.newLink, e.currentTarget); } }),
+          h("small", { "class": "wiring-note", text: _t("wr.linkTylkoRaz") })]));
+      }
+      var days = h("select", { "class": "sort-select", "aria-label": _t("wr.waznosc") }, [
+        h("option", { value: "7", text: _t("wr.dni", { n: 7 }) }), h("option", { value: "30", text: _t("wr.dni", { n: 30 }) }),
+        h("option", { value: "365", text: _t("wr.dni", { n: 365 }) }), h("option", { value: "", text: _t("wr.bezTerminu") })]);
+      box.appendChild(h("div", { "class": "wl-sharebar" }, [h("span", { text: _t("wr.waznosc") }), days,
+        h("button", { type: "button", "class": "btn-action primary", text: _t("wr.utworzLink"), onclick: function () { act(async function () {
+          var r = await o.call("POST", "/projects/" + encodeURIComponent(it.id) + "/shares", { days: days.value ? +days.value : null });
+          state.newLink = shareUrl(r.token); state.shares = null; await loadShares(it.id);
+        }); } })]));
+      if (state.shares === null) box.appendChild(h("span", { "class": "wiring-note", text: "…" }));
+      else if (!state.shares.length) box.appendChild(h("span", { "class": "wiring-note", text: _t("wr.brakLinkow") }));
+      else box.appendChild(h("div", { "class": "wl-shares" }, state.shares.map(function (s) {
+        var meta = [_t("wr.utworzono", { d: fmtDate(s.created_at) }), s.expires_at ? _t("wr.wazneDo", { d: fmtDate(s.expires_at) }) : _t("wr.bezTerminu"),
+          _t("wr.wyswietlen", { n: s.views })];
+        return h("div", { "class": "wl-sh " + s.state }, [
+          h("span", { "class": "wl-st", text: stateName(s.state) }), h("small", { text: meta.join(" · ") }),
+          s.state === "active" ? h("button", { type: "button", "class": "btn-action wl-del", text: _t("wr.uniewaznij"), onclick: function () {
+            if (!confirm(_t("wr.uniewaznicLink"))) return;
+            act(async function () { await o.call("DELETE", "/projects/" + encodeURIComponent(it.id) + "/shares/" + s.id); await loadShares(it.id); toast(_t("wr.uniewazniono"), "success"); });
+          } }) : null]);
+      })));
+      return box;
     }
     function cur() { var ed = o.editor(); return ed && ed.project ? ed.project.id : null; }
     async function act(fn) { try { await fn(); } catch (e) { toast(errMsg(e), "error"); } await refresh(); }
@@ -172,6 +217,10 @@
           var ed = o.editor(); if (ed) await ed.open(n.id);
         }); } })
       ];
+      if (o.logged) btns.push(h("button", { type: "button", "class": "btn-action", text: _t("wr.udostepnij"), onclick: function () {
+        if (state.shareFor === it.id) { state.shareFor = null; draw(); return; }
+        state.shareFor = it.id; state.shares = null; state.newLink = null; draw(); loadShares(it.id);
+      } }));
       if (o.logged) btns.push(it.project
         ? h("button", { type: "button", "class": "btn-action", text: _t("wr.odepnij"), onclick: function () {
             if (!confirm(_t("wr.odpiacSchemat", { p: it.project.title }))) return;
@@ -190,6 +239,7 @@
       var r = h("div", { "class": "wl-row" + (open ? " on" : "") }, [
         h("div", { "class": "wl-main" }, [h("strong", { text: it.title || it.id }), h("small", { text: meta.join(" · ") }), proj]),
         h("div", { "class": "wl-btns" }, btns)]);
+      if (state.shareFor === it.id) r.appendChild(sharePanel(it));
       if (state.linkFor === it.id) {
         var pick = h("div", { "class": "wl-link" });
         if (state.linkable === null) pick.appendChild(h("span", { "class": "wiring-note", text: "…" }));
@@ -321,7 +371,27 @@
     toast(_t("wr.zapisanoLokalnie"), "warn");
   }
 
+  /* podgląd po linku: #tools/schematic/view/<token> – bez logowania, tylko do odczytu, bez list i banera */
+  function mountShared(el, tok) {
+    var host = h("div"), wrap = h("div", { "class": "wiring-section" }, [host]);
+    el.appendChild(h("div", { "class": "wiring-guest wl-viewnote", role: "note" }, [h("strong", { text: _t("wr.podgladTytul") }), h("p", { text: _t("wr.podgladOpis") })]));
+    el.appendChild(wrap);
+    var api = { call: function (m, u, b) {
+      if (m === "GET" && /^\/projects\/[^/]+$/.test(u)) return req("GET", "/shared/" + encodeURIComponent(tok));
+      if (m === "GET" && u === "/projects") return Promise.resolve([]);
+      if (m === "GET" && /^\/parts/.test(u)) return req(m, u);
+      var e = new Error("read-only"); e.status = 403; e.data = { detail: "Brak uprawnień do edycji schematu" }; return Promise.reject(e);
+    } };
+    var ed = mountEditor(host, { api: api, project: "shared", single: true, readOnly: true });
+    ed.ready.catch(function () {
+      host.textContent = ""; host.classList.remove("sch");
+      host.appendChild(h("div", { "class": "wiring-empty", text: _t("wr.linkNiewazny") }));
+    });
+    return function () { destroyCurrent(); };
+  }
+
   function mountTool(el, ctx) {
+    if (ctx.sub && ctx.sub[0] === "view" && ctx.sub[1]) return mountShared(el, decodeURIComponent(ctx.sub[1]));
     var logged = !!token(), wrap = h("div", { "class": "wiring-section" }), host = h("div");
     el.appendChild(h("p", { "class": "hero-sub tp-lead", text: _t("wr.lead") }));
     var guestCount = Object.keys(guestLoad().projects).length;

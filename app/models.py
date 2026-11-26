@@ -309,3 +309,18 @@ class WiringPart(Base):
     part_id = Column(String(64), nullable=False, index=True)
     data = Column(JSON, nullable=False, default=dict)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class WiringShare(Base):
+    """Link tylko do podglądu schematu (etap 8 edytora). W bazie tylko skrót tokenu (SHA-256) – pełny link widać raz, przy tworzeniu."""
+    __tablename__ = "wiring_shares"
+
+    id = Column(Integer, primary_key=True)
+    schema_id = Column(String(16), ForeignKey("wiring_schemas.id", ondelete="CASCADE"), nullable=False, index=True)
+    token_hash = Column(String(64), nullable=False, unique=True, index=True)
+    created_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    expires_at = Column(DateTime(timezone=True), nullable=True)      # brak = bez terminu
+    revoked_at = Column(DateTime(timezone=True), nullable=True)
+    last_used_at = Column(DateTime(timezone=True), nullable=True)
+    views = Column(Integer, nullable=False, default=0, server_default="0")

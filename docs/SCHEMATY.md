@@ -66,6 +66,15 @@ Baner nad edytorem (tylko bez logowania): ostrzeżenie, że dane są tylko w tej
 projects, parts}`), **Przywróć z kopii…** (scalenie; schematy o tym samym id są zastępowane po potwierdzeniu), **Zaloguj się** (okno logowania portalu).
 Po pierwszym zapisie w sesji – jednorazowy komunikat (sessionStorage `esn-wiring-guest-told`). Kopia ≠ eksport JSON jednego schematu z menu Eksport edytora.
 
+## 2e. Linki tylko do podglądu (v46, etap 8 edytora)
+
+- „Moje schematy” → **Udostępnij**: ważność 7 / 30 / 365 dni albo bez terminu → **Utwórz link** → pełny link widać **tylko raz** (przycisk Kopiuj);
+  lista linków ze stanem (aktywny / wygasł / unieważniony), datą ważności, liczbą wyświetleń i przyciskiem **Unieważnij**. Limit 10 aktywnych linków na schemat.
+- Adres podglądu: `/#tools/schematic/view/<token>` – bez logowania, edytor w trybie tylko do odczytu (eksport działa), bez list i banera.
+- Bezpieczeństwo: token `secrets.token_urlsafe(24)`, w bazie tylko SHA-256 (`wiring_shares.token_hash`); nieważny/wygasły/unieważniony link = 404;
+  usunięcie schematu usuwa jego linki (ON DELETE CASCADE). Odpowiedzi z `Cache-Control: no-store`.
+- API: `GET/POST /api/wiring/projects/{id}/shares`, `DELETE /api/wiring/projects/{id}/shares/{share_id}` (autor/admin), `GET /api/wiring/shared/{token}` (publiczne).
+
 ## 3. Haki dodane w `app.js` (komentarz `ESN:`)
 
 | Hak | Po co |
@@ -131,7 +140,8 @@ Tylko dopisuje – nic nie usuwa, więc ręcznie dodane pozycje zostają. Lista 
 | 10.5 lista części bez kolumny pinout, liczba pinów w SQL, wyszukiwanie, limit 100 | zrobione (cache ETag – później) |
 | 10.6 rozmiar żądania, limit zapisów, testy ręczne | zrobione (testy automatyczne + Playwright) |
 | 10.7 podzespoły projektu ze schematu | zrobione (v39, tylko dopisywanie) |
-| 10.7 moderacja, `generated_with_ai`, powiązanie z magazynem, PDF z serwera; etap 8 (link tylko do odczytu) | do zrobienia (pole `generated_with_ai` jest już przepuszczane przez walidację) |
+| etap 8 – link tylko do odczytu | zrobione (v46) |
+| 10.7 moderacja, `generated_with_ai`, powiązanie z magazynem, PDF z serwera | do zrobienia (pole `generated_with_ai` jest już przepuszczane przez walidację) |
 
 ## 7. Wdrożenie
 
