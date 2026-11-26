@@ -1081,5 +1081,7 @@ ESNI18n.add("en", {
   "ci.parametryHint": "One per line: base key = translation (values stay unchanged).",
   "tp.powieksz": "⤢ Enlarge preview",
   "tp.powieszPodglad": "Full-screen preview",
-  "tp.zamknij": "Close"
+  "tp.zamknij": "Close",
+  "cat.wersjeJezykowe": "Available language versions: {list}",
+  "cat.wersjaPodstawowa": "Not translated into your language – showing the {lang} version"
 }, { name: "English", locale: "en-GB" });

@@ -14,7 +14,7 @@ import os
 from fastapi import UploadFile, File
 import shutil
 from pydantic import BaseModel
-import models, schemas, utils, auth
+import models, schemas, utils, auth, mail_i18n
 from database import engine, get_db, SessionLocal
 import media_service
 import ai_service
@@ -36,6 +36,7 @@ with engine.begin() as _conn:
         _conn.execute(_sql_text("CREATE INDEX IF NOT EXISTS ix_" + _tbl + "_lang ON " + _tbl + " (lang)"))
         _conn.execute(_sql_text("CREATE INDEX IF NOT EXISTS ix_" + _tbl + "_translation_group ON " + _tbl + " (translation_group)"))
     # Komponenty: język bazowy i tłumaczenia (jeden rekord, wiele wersji językowych)
+    _conn.execute(_sql_text("ALTER TABLE users ADD COLUMN IF NOT EXISTS lang VARCHAR(5)"))
     _conn.execute(_sql_text("ALTER TABLE official_components ADD COLUMN IF NOT EXISTS base_lang VARCHAR(5) NOT NULL DEFAULT 'pl'"))
     _conn.execute(_sql_text("ALTER TABLE official_components ADD COLUMN IF NOT EXISTS translations JSON"))
     # Projekty: język treści
@@ -119,7 +120,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
 # --- AUTORYZACJA I KONTA ---
 
 @app.post("/api/register",tags=["Konta i Uwierzytelnianie (JWT)"])
-def register(user_data: schemas.UserCreate, db: Session = Depends(get_db)):
+def register(user_data: schemas.UserCreate, request: Request, db: Session = Depends(get_db)):
     # 1. Sprawdzamy czy login/email zajęty (jak w HotWheels)
     if db.query(models.User).filter(models.User.email == user_data.email).first():
         raise HTTPException(status_code=400, detail="Email już zarejestrowany")
@@ -132,7 +133,8 @@ def register(user_data: schemas.UserCreate, db: Session = Depends(get_db)):
         login=user_data.login,
         email=user_data.email,
         hashed_password=utils.hash_password(user_data.password),
-        role="user"
+        role="user",
+        lang=mail_i18n.request_lang(request)
     )
     db.add(new_user)
     db.commit()
@@ -151,14 +153,9 @@ def register(user_data: schemas.UserCreate, db: Session = Depends(get_db)):
     db.add(db_code)
     db.commit()
 
-    subject = "Weryfikacja konta - ESN Platform"
-    body = (
-        f"Witaj {new_user.username}!\n\n"
-        f"Twój Login: {new_user.login}\n\n"
-        f"Twój kod weryfikacyjny to: {code}\n\n"
-        f"Jeśli to nie Ty zakładałeś konto, prosimy o zignorowanie tej wiadomości.\n\n"
-        f"Pozdrawiamy,\nZespół ESN Platform"
-    )
+    ml = new_user.lang or "pl"
+    subject = mail_i18n.render(ml, "register_subject")
+    body = mail_i18n.render(ml, "register_body", username=new_user.username, login=new_user.login, code=code)
     mailer.send_email(new_user.email, subject, body)
     
     return {"message": "Kod weryfikacyjny został wysłany na maila"}
@@ -325,6 +322,7 @@ def ai_test(current_user: models.User = Depends(get_current_user), db: Session =
 @app.post("/api/users/me/request-code",tags=["Konta i Uwierzytelnianie (JWT)"])
 def request_action_code(
     data: schemas.CodeRequest, 
+    request: Request,
     current_user: models.User = Depends(get_current_user), 
     db: Session = Depends(get_db)
 ):
@@ -340,9 +338,12 @@ def request_action_code(
     db.add(db_code)
     db.commit()
     
-    cel_map = {"email": "zmiany adresu e-mail", "password": "zmiany hasła", "delete": "usunięcia konta"}
-    cel = cel_map.get(data.purpose, "akcji w systemie")
-    mailer.send_email(current_user.email, f"Kod autoryzacyjny: {cel}", f"Twój kod to: {code}\nWażny przez 15 minut.")
+    ml = mail_i18n.request_lang(request, current_user.lang)
+    if current_user.lang != ml:
+        current_user.lang = ml
+        db.commit()
+    cel = mail_i18n.purpose_label(ml, data.purpose)
+    mailer.send_email(current_user.email, mail_i18n.render(ml, "code_subject", purpose=cel), mail_i18n.render(ml, "code_body", code=code))
     return {"message": "Kod wysłany."}
 
 def verify_action_code(db: Session, user_id: int, code: str, purpose: str):
@@ -424,7 +425,7 @@ def delete_my_account(data: schemas.AccountDelete, current_user: models.User = D
     return {"message": "Konto usunięte. Twoje projekty zostały zachowane dla społeczności."}
 
 @app.post("/api/auth/forgot-password",tags=["Konta i Uwierzytelnianie (JWT)"])
-def forgot_password(data: schemas.ForgotPasswordRequest, db: Session = Depends(get_db)):
+def forgot_password(data: schemas.ForgotPasswordRequest, request: Request, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == data.email).first()
     if not user:
         # Bezpieczeństwo: Nie zdradzamy hakerom, czy dany email jest w naszej bazie!
@@ -444,13 +445,9 @@ def forgot_password(data: schemas.ForgotPasswordRequest, db: Session = Depends(g
     db.add(db_code)
     db.commit()
     
-    subject = "Odzyskiwanie dostępu - ESN Platform"
-    body = (
-        f"Witaj {user.username}!\n\n"
-        f"Przypominamy, że Twój Login ID to: {user.login}\n\n"
-        f"Twój kod do zresetowania hasła to: {code}\n"
-        f"Kod jest ważny przez 15 minut."
-    )
+    ml = mail_i18n.request_lang(request, user.lang)
+    subject = mail_i18n.render(ml, "reset_subject")
+    body = mail_i18n.render(ml, "reset_body", username=user.username, login=user.login, code=code)
     
     mailer.send_email(user.email, subject, body)
     return {"message": "Jeśli mail istnieje w bazie, wysłano kod."

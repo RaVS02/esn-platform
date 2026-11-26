@@ -28,6 +28,8 @@ os.makedirs(INSTANCE_DIR, exist_ok=True)
 
 # ─── KONFIGURACJA ─────────────────────────────────────────────────────────────
 SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'brak_klucza_w_env_file!')
+if SECRET_KEY == 'brak_klucza_w_env_file!':
+    print("OSTRZEŻENIE: brak JWT_SECRET_KEY w .env – używany jest klucz domyślny (każdy może podrobić token). Ustaw losowy klucz.")
 app.secret_key = SECRET_KEY
 ALGORITHM  = "HS256"
 
@@ -502,6 +504,8 @@ def create_component():
         description: Komponent zostal utworzony
     """
     d = request.json
+    if not d.get('name') or not isinstance(d.get('category_id'), int):
+        return jsonify({'error': 'Wybierz kategorię komponentu'}), 400
     comp = Component(
         name=d['name'],
         symbol=d.get('symbol'),

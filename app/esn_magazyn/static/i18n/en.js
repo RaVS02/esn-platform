@@ -223,5 +223,9 @@ ESNI18n.add("en", {
   "api.bladHttp": "HTTP error {n}",
   "mag.title": "ElectroLab – My Warehouse",
   "mag.projektN": "Project: {name}",
-  "footer.kupMiKaweNa": "Buy me a coffee on buycoffee.to"
+  "footer.kupMiKaweNa": "Buy me a coffee on buycoffee.to",
+  "cat.wersjeJezykowe": "Available language versions: {list}",
+  "cat.wersjaPodstawowa": "Not translated into your language – showing the {lang} version",
+  "mag.wybierzKategorie": "Choose a component category",
+  "api.wybierzKategorieKomponentu": "Choose a component category"
 }, { name: "English", locale: "en-GB" });

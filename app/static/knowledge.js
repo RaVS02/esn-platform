@@ -551,13 +551,17 @@
   }
 
   /* ── instrukcja redakcji: ten sam renderer co artykuły, więc przykłady są „na żywo” ── */
+  // szablony i instrukcja w języku interfejsu (angielskie wersje: knowledge-*-en.js; brak = polski oryginał)
+  function locWidgets() { return global.ESNKnowledgeL10n ? global.ESNKnowledgeL10n.widgets() : (global.ESNKnowledgeTemplates || []); }
+  function locDocs() { return global.ESNKnowledgeL10n ? global.ESNKnowledgeL10n.docs() : (global.ESNKnowledgeDocTemplates || {}); }
+  function guideSections(G) { return (G.byLang && G.byLang[ESNI18n.lang()]) || G.sections; }
   function renderGuide(el) {
     el.textContent = "";
-    var G = global.ESNKnowledgeGuide, TPL = global.ESNKnowledgeTemplates || [];
+    var G = global.ESNKnowledgeGuide, TPL = locWidgets();
     if (!G) { el.appendChild(h("div", { "class": "kn-empty", text: _t('kn.brakPlikuInstrukcjiKnowledge') })); return; }
     var wrap = h("div", { "class": "kn-guide" });
     var toc = h("nav", { "class": "kn-toc", "aria-label": _t('kn.spisTresciInstrukcji') });
-    G.sections.forEach(function (sec) {
+    guideSections(G).forEach(function (sec) {
       var anchor = h("section", { "class": "kn-guide-sec" }, [h("h2", { "class": "kn-guide-h", text: sec.title })]);
       toc.appendChild(h("button", { type: "button", "class": "kn-snip", text: sec.title, onclick: function () { anchor.scrollIntoView({ behavior: "smooth", block: "start" }); } }));
       var body = h("div", { "class": "kn-body" });
@@ -733,7 +737,7 @@
       var pvTimer = null;
       /* tryb prosty (kreator blokowy) / zaawansowany (markdown) – wybór zapamiętany w przeglądarce */
       var mode = "simple"; try { mode = localStorage.getItem("kn_mode") === "adv" ? "adv" : "simple"; } catch (e) {}
-      var wiz = global.ESNKnowledgeWizard ? global.ESNKnowledgeWizard.create({ ta: ta, h: h, parseBlocks: parseBlocks, toast: toast, getWidgets: function () { return widgets; }, templates: (global.ESNKnowledgeDocTemplates || {}).article,
+      var wiz = global.ESNKnowledgeWizard ? global.ESNKnowledgeWizard.create({ ta: ta, h: h, parseBlocks: parseBlocks, toast: toast, getWidgets: function () { return widgets; }, templates: locDocs().article,
         getImages: function () { return rec ? jfetch("/api/media?owner_type=article&owner_id=" + rec.id) : Promise.resolve([]); },
         onChange: function () { ta.dispatchEvent(new Event("input")); } }) : null;
       if (!wiz) mode = "adv";
@@ -761,7 +765,7 @@
           wbox.appendChild(h("div", { "class": "kn-widget-ed" }, [h("div", { "class": "kn-inline" }, [h("strong", { "class": "kn-wname", text: name }), h("span", { "class": "kn-meta", text: _t('kn.uzycieWidget') + " " + name + " 320" }),
             h("button", { type: "button", "class": "btn-action", text: _t('kn.usunWidget'), onclick: function () { delete widgets[name]; mark(); drawWidgets(); drawPreview(); } })]), code]));
         });
-        var TPL = global.ESNKnowledgeTemplates || [];
+        var TPL = locWidgets();
         var tsel = h("select", { "class": "sort-select", "aria-label": _t('kn.szablonWidgetu') }, TPL.map(function (t) { return h("option", { value: t.id, text: t.name + " – " + t.desc }); }));
         var nameIn = h("input", { "class": "text-input kn-wnew", placeholder: _t('kn.nazwaAz09'), maxlength: 30, "aria-label": _t('kn.nazwaNowegoWidgetu') });
         wbox.appendChild(h("div", { "class": "kn-inline" }, [nameIn, h("button", { type: "button", "class": "btn-action", text: _t('kn.dodajWidget'), onclick: function () {
@@ -886,7 +890,7 @@
     var max = o.max || 100000, dirty = false;
     var ta = h("textarea", { "class": "text-input kn-md", spellcheck: "true", "aria-label": _t('kn.trescOpisuMarkdownZ'), rows: 12 }); ta.value = o.value || "";
     var preview = h("div", { "class": "kn-body kn-preview" }), counter = h("span", { "class": "kn-meta" });
-    var wiz = global.ESNKnowledgeWizard ? global.ESNKnowledgeWizard.create({ ta: ta, h: h, parseBlocks: parseBlocks, toast: toast, allow: SAFE_ALLOW, getWidgets: function () { return {}; }, templates: (global.ESNKnowledgeDocTemplates || {}).project,
+    var wiz = global.ESNKnowledgeWizard ? global.ESNKnowledgeWizard.create({ ta: ta, h: h, parseBlocks: parseBlocks, toast: toast, allow: SAFE_ALLOW, getWidgets: function () { return {}; }, templates: locDocs().project,
       getImages: o.getImages, onChange: function () { ta.dispatchEvent(new Event("input")); } }) : null;
     var tbar = h("div", { "class": "kn-snips", role: "toolbar", "aria-label": _t('kn.wstawBlok') }, SNIPPETS.filter(function (s) { return !/^:::(figure|widget)/.test(s[1]); }).map(function (s) {
       return h("button", { type: "button", "class": "kn-snip", text: s[0], onclick: function () {

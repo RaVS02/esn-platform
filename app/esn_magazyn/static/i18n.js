@@ -160,6 +160,24 @@
   };
   window.t = t; window._t = t; window._tn = tn; window._L = label; window._E = err;   // _t / _tn: aliasy odporne na lokalne zmienne o nazwie t (np. callback(t) w kodzie modułów)
 
+  // każde zapytanie do /api niesie język interfejsu – serwer używa go m.in. do wiadomości e-mail
+  if (window.fetch && !window.fetch.__esnLang) {
+    var _f = window.fetch;
+    window.fetch = function (input, init) {
+      try {
+        var url = typeof input === "string" ? input : (input && input.url) || "";
+        if (/^(https?:\/\/[^/]+)?\/(magazyn\/)?api\//.test(url)) {
+          init = Object.assign({}, init || {});
+          var h = new Headers(init.headers || (typeof input !== "string" && input.headers) || {});
+          if (!h.has("X-ESN-Lang")) h.set("X-ESN-Lang", lang());
+          init.headers = h;
+        }
+      } catch (e) { /* nagłówek jest dodatkiem – nigdy nie blokuje zapytania */ }
+      return _f.call(this, input, init);
+    };
+    window.fetch.__esnLang = true;
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     document.documentElement.setAttribute("lang", lang());
     apply(document);

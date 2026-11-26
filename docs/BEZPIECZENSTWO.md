@@ -67,3 +67,12 @@ Nie wolno poluzowywać flag `sandbox` ani dodawać `allow-same-origin` do widget
 - Porty `5432` i `8000` w `docker-compose.yaml` są publikowane na hoście. Za tunelem Cloudflare z autoryzacją nie są
   widoczne z internetu, ale są dostępne w sieci lokalnej. Można je zawęzić do `127.0.0.1:5432:5432`, jeśli nic
   zewnętrznego z nich nie korzysta.
+
+
+## Sekrety wyłącznie w `.env` (v35)
+
+- Hasła, klucze API i dane SMTP są czytane ze zmiennych środowiskowych (`.env`, plik w `.gitignore`). W kodzie, dokumentacji i na czacie nie wpisujemy prawdziwych wartości.
+- Szablon wszystkich zmiennych: `.env.example` (do skopiowania jako `.env`). Poczta: `MAIL_USERNAME`, `MAIL_PASSWORD` (hasło aplikacji Google), opcjonalnie `MAIL_SERVER`, `MAIL_PORT`, `MAIL_FROM` (zamienniki: `SMTP_*`). Bez nich `MailBot` nie wysyła wiadomości (zapis w logu), a aplikacja działa dalej.
+- Brak `JWT_SECRET_KEY` powoduje głośne ostrzeżenie w logu (klucz domyślny pozwala podrobić token) – na serwerze zawsze ustaw losowy klucz.
+- Test `tests/test_secrets.py` blokuje wpisanie stałych haseł/kluczy w plikach `*.py`.
+- **Po wycieku** (hasło było kiedyś w historii gita): samo usunięcie z kodu nie wystarcza – unieważnij stare hasło u dostawcy (Google → Hasła aplikacji → usuń) i wygeneruj nowe. Przepisywanie historii gita nie jest potrzebne, jeśli stare hasło jest unieważnione.

@@ -223,5 +223,9 @@ ESNI18n.add("pl", {
   "api.bladHttp": "Błąd HTTP {n}",
   "mag.title": "ElectroLab – Mój Magazyn",
   "mag.projektN": "Projekt: {name}",
-  "footer.kupMiKaweNa": "Kup mi kawę na buycoffee.to"
+  "footer.kupMiKaweNa": "Kup mi kawę na buycoffee.to",
+  "cat.wersjeJezykowe": "Dostępne wersje językowe: {list}",
+  "cat.wersjaPodstawowa": "Brak tłumaczenia na Twój język – wyświetlana wersja: {lang}",
+  "mag.wybierzKategorie": "Wybierz kategorię komponentu",
+  "api.wybierzKategorieKomponentu": "Wybierz kategorię komponentu"
 }, { name: "Polski", locale: "pl-PL" });

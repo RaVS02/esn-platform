@@ -1081,5 +1081,7 @@ ESNI18n.add("pl", {
   "ci.parametryHint": "Po jednej linii: klucz bazowy = tłumaczenie (wartości zostają bez zmian).",
   "tp.powieksz": "⤢ Powiększ podgląd",
   "tp.powieszPodglad": "Podgląd na pełnym ekranie",
-  "tp.zamknij": "Zamknij"
+  "tp.zamknij": "Zamknij",
+  "cat.wersjeJezykowe": "Dostępne wersje językowe: {list}",
+  "cat.wersjaPodstawowa": "Brak tłumaczenia na Twój język – wyświetlana wersja: {lang}"
 }, { name: "Polski", locale: "pl-PL" });

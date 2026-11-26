@@ -162,7 +162,7 @@ ESN-PLATFORM/
 Aby uruchomić całą platformę lokalnie:
 
 1. Sklonuj repozytorium na serwer.
-2. Utwórz plik `.env` i uzupełnij go sekretami (JWT, hasła do bazy, API Key dla Gemini).
+2. Skopiuj `.env.example` jako `.env` i uzupełnij go sekretami (JWT, hasła do bazy, dane SMTP, API Key dla Gemini). Zob. `docs/BEZPIECZENSTWO.md`.
 
 3. Zbuduj i podnieś kontenery w tle:
    ```bash
