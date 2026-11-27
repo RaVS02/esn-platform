@@ -12,8 +12,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=2.31">
-<link rel="stylesheet" href="{{ url_for('static', path='/pinout.css') }}?v=10">
+<link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=2.32">
+<link rel="stylesheet" href="{{ url_for('static', path='/pinout.css') }}?v=11">
 <link rel="stylesheet" href="{{ url_for('static', path='/calc.css') }}?v=7">
 <link rel="stylesheet" href="{{ url_for('static', path='/wiring/style.css') }}?v=4">
 <link rel="stylesheet" href="{{ url_for('static', path='/wiring/platform.css') }}?v=8">
@@ -45,7 +45,7 @@
 <script src="{{ url_for('static', path='/vendor/arduino.min.js') }}?v=11.12.0"></script>
 <link rel="stylesheet" href="{{ url_for('static', path='/vendor/vs2015.min.css') }}?v=11.12.0">
 <script src="{{ url_for('static', path='/content.js') }}?v=7"></script>
-<link rel="stylesheet" href="{{ url_for('static', path='/knowledge.css') }}?v=13">
+<link rel="stylesheet" href="{{ url_for('static', path='/knowledge.css') }}?v=14">
 <link rel="stylesheet" href="{{ url_for('static', path='/mobile.css') }}?v=3">
 <script src="{{ url_for('static', path='/knowledge-templates.js') }}?v=2"></script>
 <script src="{{ url_for('static', path='/knowledge-templates-en.js') }}?v=1"></script>
@@ -1695,7 +1695,7 @@ function openFullCatalogView(id) {
         
         <div class="cat-tags" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom: 30px;">${tagsHtml}</div>
         
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; align-items: start; margin-bottom: 40px; background: var(--bg2); padding: 24px; border-radius: 12px;">
+        <div class="cat-desc-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 40px; align-items: start; margin-bottom: 40px; background: var(--bg2); padding: 24px; border-radius: 12px;">
             <div>
                 <h3 class="section-title">${_t('cat.descTitle')}</h3>
                 <p style="font-size: 14px; color: var(--text2); line-height: 1.7; font-family: var(--sans);white-space: pre-line;">

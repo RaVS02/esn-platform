@@ -353,7 +353,7 @@ pre { padding: 18px 20px; overflow-x: auto; font-family: var(--mono); font-size:
 .diagram-title { font-family: var(--mono); font-size: 11px; color: var(--text3); text-transform: uppercase; margin-bottom: 16px; letter-spacing: 0.1em;}
 
 /* ─── HOME GRID & TILES ─── */
-.grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+.grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 24px; }
 /* 2. Lepsze przejścia dla kafelków na stronie głównej */
 .module-card {
   background: var(--card); border: 1px solid var(--border);
@@ -1246,3 +1246,14 @@ pre { padding: 18px 20px; overflow-x: auto; font-family: var(--mono); font-size:
 a i.fa-arrow-up-right-from-square, small i.fa-arrow-up-right-from-square { font-size: .8em; opacity: .75; }
 .kn-back i, .btn-action i, .kn-pg small i { font-size: .9em; }
 .lang-caret { font-size: .7em; opacity: .7; margin-left: 2px; }
+
+/* v58: specyfikacja – długie wartości się łamią; na telefonie nazwa nad wartością, karta opisu z mniejszym marginesem */
+.kv-row { gap: 12px; }
+.kv-key { flex: 0 1 auto; min-width: 0; }
+.kv-val { flex: 1 1 auto; min-width: 0; text-align: right; overflow-wrap: anywhere; }
+.cat-desc-grid > * { min-width: 0; }
+@media (max-width: 600px) {
+  .kv-row { flex-direction: column; align-items: flex-start; gap: 3px; padding: 9px 12px; }
+  .kv-val { text-align: left; font-size: 13px; }
+  .cat-desc-grid { padding: 16px !important; gap: 24px !important; }
+}

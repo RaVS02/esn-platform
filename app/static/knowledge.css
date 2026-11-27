@@ -9,7 +9,7 @@
 .kn-group { margin: 26px 0 8px; }
 .kn-group-title { font-family: var(--display); font-size: 20px; margin-bottom: 4px; }
 .kn-group-note { color: var(--text3); font-size: 13px; margin-bottom: 10px; }
-.kn-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin-top: 10px; }
+.kn-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)); gap: 14px; margin-top: 10px; }
 .kn-card { text-align: left; display: flex; flex-direction: column; gap: 8px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; color: var(--text); cursor: pointer; font: inherit; transition: border-color .15s, transform .15s; }
 .kn-card:hover, .kn-card:focus-visible { border-color: var(--accent); transform: translateY(-2px); outline: none; }
 .kn-course { background: linear-gradient(135deg, rgba(var(--purple-rgb),.08), var(--card)); }
