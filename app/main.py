@@ -1,4 +1,9 @@
 import re
+import sys
+try:   # v56: komunikaty startowe od razu w `docker compose logs` (bez PYTHONUNBUFFERED stdout w kontenerze jest buforowany)
+    sys.stdout.reconfigure(line_buffering=True)
+except Exception:
+    pass
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt
 from fastapi import FastAPI, Request, Depends, HTTPException, status, Query,Form
@@ -65,6 +70,10 @@ try:
     print("[content] migracja relacji i kodu:", content_service.migrate(SessionLocal))
 except Exception as _e:
     print("[content] UWAGA: migracja relacji/kodu nie powiodła się:", _e)
+try:
+    print("[content] datasheet/GitHub → zasoby:", content_service.migrate_legacy_links(SessionLocal))
+except Exception as _e:
+    print("[content] UWAGA: przeniesienie linków do zasobów nie powiodło się:", _e)
 
 
 @app.middleware("http")
@@ -560,6 +569,9 @@ def create_project(
     db.add(new_project)
     db.commit()
     db.refresh(new_project)
+    if content_service.adopt_legacy(db, new_project, "project"):   # v55: github_url (starszy klient) → zasoby
+        db.commit()
+        db.refresh(new_project)
     return new_project
 
 # ENDPOINT: Edycja projektu
@@ -599,9 +611,12 @@ def update_project(
     for _f in ("image_main", "image_schematic", "image_gallery_1", "image_gallery_2", "markdown_path", "code_snippet", "code_lang"):
         update_data.pop(_f, None)   # ścieżki plików ustala wyłącznie serwer (system mediów) – nigdy klient
 
+    if "github_url" not in _fs or not update_data.get("github_url"):
+        update_data.pop("github_url", None)   # v55: repozytorium tylko w zasobach; podany adres (starszy klient) trafi do zasobów niżej
     # Aktualizacja pól tekstowych
     for key, value in update_data.items():
         setattr(db_project, key, value)
+    content_service.adopt_legacy(db, db_project, "project")
     
     # --- LOGIKA ZABEZPIECZAJĄCA STATUS ---
     # Sprawdzamy rolę faktycznego TWÓRCY projektu (db_project.owner)
@@ -1035,6 +1050,7 @@ def list_catalog(
     total_count = query.count()
     items = query.order_by(models.OfficialComponent.name).offset(skip).limit(limit).all()
 
+    ds_links = content_service.first_links(db, "component", [i.id for i in items], "datasheet")
     result = []
     for item in items:
         d = {
@@ -1046,7 +1062,7 @@ def list_catalog(
             "tags": getattr(item, 'tags', []),
             "technical_specs": item.technical_specs or {},
             "description": item.description,
-            "datasheet_url": item.datasheet_url,
+            "datasheet_url": ds_links.get(item.id) or item.datasheet_url,   # v55: z zasobów (magazyn, schematy)
             "image_main": getattr(item, 'image_main', None),
             "image_gallery_1": getattr(item, 'image_gallery_1', None),
             "image_gallery_2": getattr(item, 'image_gallery_2', None),
@@ -1123,7 +1139,7 @@ def get_catalog_item(item_id: int, lang: Optional[str] = Query(None), db: Sessio
         "tags": getattr(item, 'tags', []),
         "technical_specs": item.technical_specs or {},
         "description": item.description,
-        "datasheet_url": item.datasheet_url,
+        "datasheet_url": content_service.first_links(db, "component", [item.id], "datasheet").get(item.id) or item.datasheet_url,   # v55: z zasobów
         "image_main": getattr(item, 'image_main', None),
         "image_gallery_1": getattr(item, 'image_gallery_1', None),
         "image_gallery_2": getattr(item, 'image_gallery_2', None),
@@ -1160,6 +1176,8 @@ def create_catalog_item(
     db.add(item)
     db.commit()
     db.refresh(item)
+    if content_service.adopt_legacy(db, item, "component") or item.datasheet_url is None:   # starszy klient: datasheet_url → zasoby
+        db.commit()
     return {"id": item.id, "name": item.name, "message": "Dodano do katalogu"}
 
 @app.put("/api/catalog/{item_id}",tags=["Globalny Katalog Sprzętowy"])
@@ -1186,6 +1204,7 @@ def update_catalog_item(
     if "translations" in data or "base_lang" in data:
         item.translations = clean_comp_translations(data.get("translations", item.translations), item.base_lang)
 
+    content_service.adopt_legacy(db, item, "component")   # v55: datasheet_url (starszy klient / import) → zasoby
     db.commit()
     db.refresh(item)
     return {"id": item.id, "name": item.name, "message": "Zaktualizowano"}

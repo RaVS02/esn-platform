@@ -164,6 +164,65 @@ def code_dict(c) -> dict:
     return {"id": c.id, "lang": c.lang, "lang_label": CODE_LANGS.get(c.lang, "Inne"), "title": c.title or "", "code": c.code}
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# v55: datasheet komponentu i repozytorium projektu tylko w Zasobach
+# (dawne kolumny official_components.datasheet_url / projects.github_url są przenoszone do resources i zerowane)
+# ─────────────────────────────────────────────────────────────────────────────
+LEGACY_FIELDS = {"component": ("datasheet_url", "datasheet"), "project": ("github_url", "repo")}
+
+
+def _legacy_label(rtype: str, url: str) -> str:
+    if rtype == "datasheet":
+        return "Datasheet"
+    return "GitHub" if "github.com" in url.lower() else RTYPES["repo"]
+
+
+def adopt_legacy(db: Session, obj, owner_type: str) -> bool:
+    """Przenosi link z dawnej kolumny (datasheet_url / github_url) do zasobów jako pierwszą pozycję i zeruje kolumnę.
+    Bez commitu. Nieprawidłowy adres jest pomijany (kolumna i tak zerowana – nie da się go edytować w interfejsie)."""
+    field, rtype = LEGACY_FIELDS[owner_type]
+    url = (getattr(obj, field, None) or "").strip()
+    if not url:
+        return False
+    setattr(obj, field, None)
+    if not URL_RE.match(url):
+        return False
+    q = db.query(models.Resource).filter(models.Resource.owner_type == owner_type, models.Resource.owner_id == obj.id)
+    if q.filter(models.Resource.url == url).first():
+        return False
+    minpos = q.with_entities(func.min(models.Resource.position)).scalar()
+    db.add(models.Resource(owner_type=owner_type, owner_id=obj.id, kind="link", rtype=rtype, label=_legacy_label(rtype, url),
+                           url=url, position=(minpos if minpos is not None else 1) - 1))
+    return True
+
+
+def migrate_legacy_links(session_factory) -> dict:
+    stats = {"datasheets": 0, "repos": 0}
+    db = session_factory()
+    try:
+        for c in db.query(models.OfficialComponent).filter(models.OfficialComponent.datasheet_url.isnot(None)).all():
+            stats["datasheets"] += adopt_legacy(db, c, "component")
+        for p in db.query(models.Project).filter(models.Project.github_url.isnot(None)).all():
+            stats["repos"] += adopt_legacy(db, p, "project")
+        db.commit()
+    finally:
+        db.close()
+    return stats
+
+
+def first_links(db: Session, owner_type: str, ids, rtype: str) -> dict:
+    """{owner_id: url} – pierwszy link danego rodzaju (wg kolejności w zasobach)."""
+    ids = list(ids)
+    if not ids:
+        return {}
+    out = {}
+    for r in db.query(models.Resource).filter(models.Resource.owner_type == owner_type, models.Resource.owner_id.in_(ids),
+                                              models.Resource.kind == "link", models.Resource.rtype == rtype) \
+            .order_by(models.Resource.position, models.Resource.id).all():
+        out.setdefault(r.owner_id, r.url)
+    return out
+
+
 def list_resources(db: Session, owner_type: str, owner_id: int):
     return db.query(models.Resource).filter(models.Resource.owner_type == owner_type, models.Resource.owner_id == owner_id) \
         .order_by(models.Resource.position, models.Resource.id).all()

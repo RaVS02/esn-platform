@@ -30,6 +30,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy import func, or_, String as SAString
 from sqlalchemy.orm import Session, defer
 
+import content_service
 import models
 from wiring_builtin import BUILTIN_PARTS, BY_ID as BUILTIN_BY_ID
 
@@ -155,10 +156,10 @@ def localized_comp(c, lang: Optional[str]):
     return name, desc
 
 
-def catalog_part(c, lang: Optional[str]) -> dict:
+def catalog_part(c, lang: Optional[str], datasheet: Optional[str] = None) -> dict:
     name, desc = localized_comp(c, lang)
     image = ("/static/" + c.image_main.lstrip("/")) if c.image_main and not c.image_main.startswith(("/", "http")) else c.image_main
-    return component_to_part(c.id, name, c.inventory_category, desc, localized_pinout(c.pinout, lang), c.datasheet_url, image)
+    return component_to_part(c.id, name, c.inventory_category, desc, localized_pinout(c.pinout, lang), datasheet or c.datasheet_url, image)
 
 
 # ── walidacja ────────────────────────────────────────────────────────────────────────────────────────
@@ -514,9 +515,10 @@ def build_router(get_db, get_current_user, get_optional_user) -> APIRouter:
         cat_ids = [int(m.group(1)) for m in (CAT_ID_RE.match(i) for i in ids) if m]
         out = {}
         if cat_ids:
+            ds = content_service.first_links(db, "component", cat_ids, "datasheet")   # v55: datasheet z zasobów
             for c in db.query(C).filter(C.id.in_(cat_ids)).all():
                 if c.pinout and c.pinout.get("pins"):
-                    p = catalog_part(c, lang)
+                    p = catalog_part(c, lang, ds.get(c.id))
                     out[p["id"]] = p
         for i in ids:
             if i in BUILTIN_BY_ID:

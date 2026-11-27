@@ -730,7 +730,7 @@ ESNI18n.add("pl", {
   "ct.usun": "Usuń",
   "ct.usunacTenZasob": "Usunąć ten zasób?",
   "ct.osiagnietoLimitZasobow": "Osiągnięto limit zasobów (",
-  "ct.opisNpDatasheetProducenta": "Opis (np. Datasheet producenta)",
+  "ct.opisNpDatasheetProducenta": "Opis (opcjonalnie, np. Datasheet producenta)",
   "ct.opisLinku": "Opis linku",
   "ct.dodajLink": "+ Dodaj link",
   "ct.adresMusiZaczynacSie": "Adres musi zaczynać się od http:// lub https://",
@@ -1629,5 +1629,9 @@ ESNI18n.add("pl", {
   "calc.op.duzeR": "Rezystory powyżej 1 MΩ zwiększają szum i wpływ prądów polaryzacji wejść.",
   "calc.op.maleR": "Bardzo małe rezystory mocno obciążają wyjście wzmacniacza i źródło sygnału.",
   "calc.op.fZin": "wejście „widzi” Rin do masy wirtualnej",
-  "calc.op.note": "Wzór zakłada idealny wzmacniacz. W praktyce ogranicza go zakres wyjścia, pasmo (GBW), szybkość narastania (slew rate) i offset. Typowe Rg to 1–100 kΩ."
+  "calc.op.note": "Wzór zakłada idealny wzmacniacz. W praktyce ogranicza go zakres wyjścia, pasmo (GBW), szybkość narastania (slew rate) i offset. Typowe Rg to 1–100 kΩ.",
+  "ct.podajAdresLinku": "Podaj adres linku (https://…).",
+  "ct.plikNieDodany": "wybrany plik nie został dodany – kliknij „Dodaj plik”, uzupełnij licencję i zapisz ponownie",
+  "ct.dodaneZasoby": "Dodane zasoby ({n})",
+  "ct.dodajNowyZasob": "Dodaj nowy zasób"
 }, { name: "Polski", locale: "pl-PL" });

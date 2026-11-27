@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="dark light">
 <script src="{{ url_for('static', path='/i18n.js') }}?v=14"></script>
-<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=27"></script>
-<script src="{{ url_for('static', path='/i18n/en.js') }}?v=27"></script>
+<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=29"></script>
+<script src="{{ url_for('static', path='/i18n/en.js') }}?v=29"></script>
 <script src="{{ url_for('static', path='/theme.js') }}?v=4"></script>
 <title data-i18n="meta.title">Platforma Systemów Wbudowanych</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -40,11 +40,11 @@
 <script src="{{ url_for('static', path='/media.js') }}?v=5"></script>
 <script src="{{ url_for('static', path='/ai-local.js') }}?v=2"></script>
 <script src="{{ url_for('static', path='/ai-settings.js') }}?v=1"></script>
-<link rel="stylesheet" href="{{ url_for('static', path='/content.css') }}?v=6">
+<link rel="stylesheet" href="{{ url_for('static', path='/content.css') }}?v=7">
 <script src="{{ url_for('static', path='/vendor/highlight.min.js') }}?v=11.12.0"></script>
 <script src="{{ url_for('static', path='/vendor/arduino.min.js') }}?v=11.12.0"></script>
 <link rel="stylesheet" href="{{ url_for('static', path='/vendor/vs2015.min.css') }}?v=11.12.0">
-<script src="{{ url_for('static', path='/content.js') }}?v=5"></script>
+<script src="{{ url_for('static', path='/content.js') }}?v=7"></script>
 <link rel="stylesheet" href="{{ url_for('static', path='/knowledge.css') }}?v=13">
 <link rel="stylesheet" href="{{ url_for('static', path='/mobile.css') }}?v=3">
 <script src="{{ url_for('static', path='/knowledge-templates.js') }}?v=2"></script>
@@ -360,10 +360,6 @@
             placeholder="Krótki opis działania i zastosowań..." data-i18n-attr="placeholder:components.krotkiOpisDzialaniaI" style="resize:vertical;"></textarea>
         </div>
         <div style="grid-column:1/-1;" id="cm-i18n"></div>
-        <div style="grid-column:1/-1;">
-          <label class="form-label" data-i18n="components.linkDoDatasheetu">Link do datasheetu</label>
-          <input class="text-input" id="cm-datasheet" placeholder="https://...">
-        </div>
         <div style="grid-column:1/-1;" id="cm-shops"></div>
         <div style="grid-column:1/-1;">
           <label class="form-label"><span data-i18n="components.pinoutLabel">Pinout (opis wyprowadzeń)</span>
@@ -575,7 +571,6 @@
       <input type="text" id="p-components" placeholder="Inne elementy po przecinku (np. rezystor 10k, przewody)" data-i18n-attr="placeholder:contact.inneElementyPoPrzecinku" class="text-input">
       <textarea id="p-desc" placeholder="Krótki opis działania..." data-i18n-attr="placeholder:contact.krotkiOpisDzialania" class="text-input" style="height:80px; resize:vertical; font-family:var(--sans)"></textarea>
       
-      <input type="text" id="p-github" placeholder="Link do GitHub (opcjonalnie)" data-i18n-attr="placeholder:contact.linkDoGithubOpcjonalnie" class="text-input">
       <div style="margin-bottom: 5px; font-size: 11px; color: var(--text3); font-family: var(--mono);" data-i18n="contact.statusProjektu">Status Projektu</div>
       <div style="margin-bottom: 5px; font-size: 11px; color: var(--text3); font-family: var(--mono);" data-i18n="projects.jezykTresci">Język treści</div>
       <select id="p-lang" class="text-input" style="font-family: var(--mono); font-size: 13px; margin-bottom: 12px;">
@@ -621,6 +616,15 @@ function escJs(s) {
     return esc(String(s ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, '\\n'));
 }
 // tylko http(s) i ścieżki względne – blokuje javascript:, data: itp.
+/* v55: szybki przycisk w nagłówku karty z pierwszego zasobu danego rodzaju (datasheet komponentu, repozytorium projektu) */
+function resHeadLink(slotId, items, rtype) {
+    const el = document.getElementById(slotId);
+    if (!el) return;
+    const r = (items || []).find(x => x.rtype === rtype && x.url);
+    if (!r) { el.innerHTML = ''; return; }
+    const label = rtype === 'datasheet' ? 'Datasheet' : (/github\.com/i.test(r.url) ? 'GitHub' : _t('ct.repozytorium'));
+    el.innerHTML = `<a href="${safeUrl(r.url)}" target="_blank" rel="noopener noreferrer nofollow" class="btn-action primary" style="font-size: 11px; padding: 4px 10px;">[ ${esc(label)} ]</a>`;
+}
 function safeUrl(u) {
     u = String(u ?? '').trim();
     return /^(https?:\/\/|\/(?!\/))/i.test(u) ? esc(u) : '#';
@@ -1034,7 +1038,7 @@ function openFullProjectView(slug) {
         <div style="background: var(--card);  padding: 10px; border-radius: 16px; margin-bottom: 30px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px;">
                 <div style="display:flex; gap:10px;">${officialBadge} ${myBadge} ${ESNLangFilter.showBadge(p.lang) ? `<span class="badge badge-blue">${esc(p.lang.toUpperCase())}</span>` : ''}</div>
-                ${p.github_url ? `<a href="${safeUrl(p.github_url)}" target="_blank" rel="noopener noreferrer" class="btn-action primary" style="font-size: 11px; padding: 4px 10px;">[ github_repo ]</a>` : ''}
+                <span id="project-head-links"></span>
             </div>
             
             <h1 class="cat-title" style="font-size: 42px; color: var(--text); font-family: var(--mono); font-weight: 700; letter-spacing: -1px; margin-bottom: 20px;">${esc(p.title)}</h1>
@@ -1075,7 +1079,7 @@ function openFullProjectView(slug) {
         onSaved: () => ESNContent.usedComponentsView(document.getElementById('project-parts-slot'), p.id, { onOpen: openComponentFromProject, others: otherParts })
     });
     ESNContent.codeView(document.getElementById('project-code-slot'), 'project', p.id, { fallback: { lang: p.code_lang, code: p.code_snippet } });
-    ESNContent.resourcesView(document.getElementById('project-res-slot'), 'project', p.id);
+    ESNContent.resourcesView(document.getElementById('project-res-slot'), 'project', p.id).then(items => resHeadLink('project-head-links', items, 'repo'));
 
     if (p.full_content_md && window.ESNKnowledge) {
         ESNKnowledge.renderBody(document.getElementById(`project-article-${p.id}`), p.full_content_md, {}, { safe: true });
@@ -1280,7 +1284,7 @@ function mountProjectExtras(projectId) {
     destroyProjectExtras();
     projParts = ESNContent.componentPicker(document.getElementById('p-parts-picker'), { projectId: projectId });
     projCode = ESNContent.codeEditor(document.getElementById('p-code-editor'), { ownerType: 'project', ownerId: projectId });
-    projRes = ESNContent.resourcesManager(document.getElementById('p-res-manager'), { ownerType: 'project', ownerId: projectId, canFiles: true });
+    projRes = ESNContent.resourcesManager(document.getElementById('p-res-manager'), { ownerType: 'project', ownerId: projectId, canFiles: true, defaultType: 'repo' });
 }
 let projArticle = null;   // edytor opisu projektu (blokowy, bezpieczny) – knowledge.js
 function mountProjectArticle(value, projectId) {
@@ -1308,7 +1312,6 @@ function editProject(slug) {
     document.getElementById('p-title').value = p.title;
     document.getElementById('p-tags').value = p.tags;
     document.getElementById('p-desc').value = p.short_desc;
-    document.getElementById('p-github').value = p.github_url || "";
     document.getElementById('p-notes').value = p.technical_notes || "";
     document.getElementById('p-components').value = p.components || "";
     document.getElementById('p-status').value = p.status || 'stable'
@@ -1464,7 +1467,6 @@ async function submitProject() {
         tags: document.getElementById('p-tags').value,
         components: document.getElementById('p-components').value || null,
         short_desc: document.getElementById('p-desc').value,
-        github_url: document.getElementById('p-github').value || null,
         technical_notes: document.getElementById('p-notes').value || null,
         status: document.getElementById('p-status').value,
         lang: document.getElementById('p-lang').value
@@ -1675,7 +1677,7 @@ function openFullCatalogView(id) {
             <button class="btn-action" style="border-color:var(--red); color:var(--red);" onclick="catalogEditingId=${item.id}; deleteCatalogItem();"><i class="fa-solid fa-trash" aria-hidden="true"></i> ${_t('act.deleteComponent')}</button>
         </div>` : '';
 
-    const dsBtn = item.datasheet_url ? `<a href="${safeUrl(item.datasheet_url)}" target="_blank" rel="noopener noreferrer" class="btn-action primary" style="font-size: 11px; padding: 4px 10px;">[ Datasheet ]</a>` : '';
+    const dsBtn = '<span id="catalog-head-links"></span>';   // v55: wypełniane z Zasobów (pierwszy datasheet)
 
     document.getElementById('catalog-full-content').innerHTML = `
         <div class="cat-hero" style="background: var(--card); padding: 10px; border-radius: 16px; margin-bottom: 30px;">
@@ -1717,7 +1719,7 @@ function openFullCatalogView(id) {
     ESNMedia.mountGallery(document.getElementById('catalog-gallery-slot'), 'component', item.id, { fallback: allImages });
     loadCatalogPinout(item, isAdmin);
     ESNContent.codeView(document.getElementById('catalog-code-slot'), 'component', item.id);
-    ESNContent.resourcesView(document.getElementById('catalog-res-slot'), 'component', item.id);
+    ESNContent.resourcesView(document.getElementById('catalog-res-slot'), 'component', item.id).then(items => resHeadLink('catalog-head-links', items, 'datasheet'));
     ESNContent.usedInProjectsView(document.getElementById('catalog-usedin-slot'), item.id, { onOpen: openProjectFromComponent });
 }
 
@@ -2041,7 +2043,6 @@ async function openCatalogModal(id = null) {
         document.getElementById('cm-tags').value = '';
         document.getElementById('cm-specs').value = '';
         document.getElementById('cm-description').value = '';
-        document.getElementById('cm-datasheet').value = '';
         document.getElementById('cm-pinout').value = '';
         window._cmShops = ESNShops.editor(document.getElementById('cm-shops'), []);
 
@@ -2056,7 +2057,6 @@ async function openCatalogModal(id = null) {
         document.getElementById('cm-tags').value = (data.tags || []).join(', ');
         document.getElementById('cm-specs').value = specsObjToText(data.technical_specs);
         document.getElementById('cm-description').value = data.description || '';
-        document.getElementById('cm-datasheet').value = data.datasheet_url || '';
         document.getElementById('cm-pinout').value = ESNPinout.toText(data.pinout);
         bl.value = data.base_lang || 'pl';
         _cmI18n.setBaseLang(bl.value); _cmI18n.set(data.translations || {});
@@ -2134,7 +2134,6 @@ async function saveCatalogItem() {
         tags: tagsArray,
         technical_specs: specsObj,
         description: document.getElementById('cm-description').value,
-        datasheet_url: document.getElementById('cm-datasheet').value,
         shops: window._cmShops ? _cmShops.get() : undefined
     };
 

@@ -100,3 +100,13 @@ details.esn-form > summary { list-style: revert; }
 :root[data-theme="light"] .esn-copy, :root[data-theme="light"] .copy-btn { background: #ffffff; color: var(--text2); border-color: var(--border2); }
 :root[data-theme="light"] .esn-copy:hover, :root[data-theme="light"] .copy-btn:hover { color: var(--accent); border-color: var(--accent); background: rgba(var(--accent-rgb),0.08); }
 :root[data-theme="light"] .code-header { background: var(--bg3); border-bottom-color: var(--border2); }
+
+/* v56: zasoby – długie adresy się łamią (karta nie wychodzi poza okno), nagłówki „Dodane” / „Dodaj nowy” */
+.esn-ed-list { grid-template-columns: minmax(0, 1fr); }
+.esn-ed-card { min-width: 0; }
+.esn-ed-card .esn-ed-note { overflow-wrap: anywhere; word-break: break-word; }
+.esn-ed-row > .esn-ed-in { min-width: 0; }
+.esn-res-sub { font: 600 11px var(--mono); letter-spacing: .04em; color: var(--text3); text-transform: uppercase; margin: 10px 0 8px; }
+.esn-res-sub[hidden] { display: none; }
+.esn-res-sub-new { color: var(--accent); }
+.esn-res-sub-new.has-list { border-top: 1px dashed var(--border2); padding-top: 14px; margin-top: 14px; }

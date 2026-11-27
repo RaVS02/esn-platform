@@ -730,7 +730,7 @@ ESNI18n.add("en", {
   "ct.usun": "Delete",
   "ct.usunacTenZasob": "Delete this resource?",
   "ct.osiagnietoLimitZasobow": "Resource limit reached (",
-  "ct.opisNpDatasheetProducenta": "Description (e.g. manufacturer's datasheet)",
+  "ct.opisNpDatasheetProducenta": "Description (optional, e.g. manufacturer's datasheet)",
   "ct.opisLinku": "Link description",
   "ct.dodajLink": "+ Add link",
   "ct.adresMusiZaczynacSie": "The address must start with http:// or https://",
@@ -1629,5 +1629,9 @@ ESNI18n.add("en", {
   "calc.op.duzeR": "Resistors above 1 MΩ increase noise and the effect of input bias currents.",
   "calc.op.maleR": "Very small resistors load the amplifier output and the signal source heavily.",
   "calc.op.fZin": "the input \"sees\" Rin to the virtual ground",
-  "calc.op.note": "The formula assumes an ideal op-amp. In practice it is limited by the output range, bandwidth (GBW), slew rate and offset. Typical Rg is 1–100 kΩ."
+  "calc.op.note": "The formula assumes an ideal op-amp. In practice it is limited by the output range, bandwidth (GBW), slew rate and offset. Typical Rg is 1–100 kΩ.",
+  "ct.podajAdresLinku": "Enter the link address (https://…).",
+  "ct.plikNieDodany": "the selected file was not added – click \"Add file\", fill in the licence and save again",
+  "ct.dodaneZasoby": "Added resources ({n})",
+  "ct.dodajNowyZasob": "Add a new resource"
 }, { name: "English", locale: "en-GB" });

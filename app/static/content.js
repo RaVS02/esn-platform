@@ -156,7 +156,7 @@
       items = (opts.legacy || []).filter(function (x) { return x && x.url; }).map(function (x) {
         return { kind: "link", url: x.url, label: x.label, type_label: ({ datasheet: _t('ct.datasheet'), repo: _t('ct.repozytorium') })[x.rtype] || _t('ct.link'), rtype: x.rtype || "other" };
       }).concat(items);
-      if (!items.length) { slot.textContent = ""; return; }
+      if (!items.length) { slot.textContent = ""; return items; }
       var box = section(slot, _t('ct.zasobyIPlikiDo')), list = h("ul", { "class": "esn-res" });
       var hasFile = false;
       items.forEach(function (r) {
@@ -186,7 +186,8 @@
         }
         box.appendChild(note);
       }
-    }).catch(function () { if (slot.isConnected) slot.textContent = ""; });
+      return items;                                // v55: karta bierze z nich przycisk w nagłówku (datasheet / repozytorium)
+    }).catch(function () { if (slot.isConnected) slot.textContent = ""; return []; });
   }
 
   function usedComponentsView(slot, projectId, opts) {
@@ -328,11 +329,13 @@
 
   function resourcesManager(root, opts) {
     var type = opts.ownerType, ownerId = opts.ownerId || null, canFiles = !!opts.canFiles, items = [], pending = [], pol = null, dead = false;
+    var takeDraft = function () { return null; }, fileDraft = function () { return null; };   // v54: wpisany, a niedodany link/plik (ustawiane w buildForms)
     root.textContent = ""; root.classList.add("esn-ed");
     var head = h("div", { "class": "esn-ed-head" }, [h("strong", { text: _t('ct.zasobyIPlikiDo') + " " }),
       h("span", { "class": "esn-ed-note", text: _t('ct.domyslnieWstawLinkiDo') })]);
-    var list = h("div", { "class": "esn-ed-list" }), forms = h("div", { "class": "esn-res-forms" });
-    root.appendChild(head); root.appendChild(list); root.appendChild(forms);
+    var listHead = h("div", { "class": "esn-res-sub" }), list = h("div", { "class": "esn-ed-list" }), forms = h("div", { "class": "esn-res-forms" });
+    var formsHead = h("div", { "class": "esn-res-sub esn-res-sub-new", icon: "plus", text: " " + _t('ct.dodajNowyZasob') });   // v56: oddziela dodane od nowych
+    root.appendChild(head); root.appendChild(listHead); root.appendChild(list); root.appendChild(formsHead); root.appendChild(forms);
     var FALLBACK_TYPES = { datasheet: _t('ct.datasheet'), docs: _t('ct.dokumentacja'), schematic: _t('ct.schemat'), pcb: "PCB / Gerbery", firmware: "Kod / firmware", model3d: "Model 3D", guide: _t('ct.poradnik'), repo: _t('ct.repozytorium'), other: _t('ct.inne') };
     function typeSel(cur) {
       var T = (pol && pol.types) || FALLBACK_TYPES;   // formularz powstaje zanim wczyta się polityka z serwera
@@ -360,6 +363,8 @@
     }
     function render() {
       list.textContent = "";
+      var n = items.length + pending.length;
+      listHead.textContent = n ? _t('ct.dodaneZasoby', { n: n }) : ""; listHead.hidden = !n; formsHead.classList.toggle("has-list", !!n);
       items.forEach(function (it, i) { list.appendChild(row(it, true, i, items)); });
       pending.forEach(function (it, i) { list.appendChild(row(it, false, i, pending)); });
     }
@@ -373,12 +378,24 @@
     function buildForms() {
       forms.textContent = "";
       // — link —
-      var lt = typeSel("datasheet"), ll = h("input", { type: "text", "class": "esn-ed-in", placeholder: _t('ct.opisNpDatasheetProducenta'), maxlength: "200", "aria-label": _t('ct.opisLinku') });
+      var lt = typeSel(opts.defaultType || "datasheet"), ll = h("input", { type: "text", "class": "esn-ed-in", placeholder: _t('ct.opisNpDatasheetProducenta'), maxlength: "200", "aria-label": _t('ct.opisLinku') });
       var lu = h("input", { type: "url", "class": "esn-ed-in", placeholder: "https://…", maxlength: "490", "aria-label": _t('ct.adresLinku') });
+      /* link z pól formularza; opis opcjonalny – domyślnie nazwa rodzaju (np. „Datasheet”) */
+      function draft() {
+        var url = lu.value.trim(); if (!url) return null;
+        var lbl = ll.value.trim() || (lt.options[lt.selectedIndex] ? lt.options[lt.selectedIndex].text : _t('ct.link'));
+        return { kind: "link", rtype: lt.value, label: lbl, url: url };
+      }
+      takeDraft = function () {                   // przy zapisie formularza: dołącz wpisany link, którego nie dodano przyciskiem
+        var rec = draft(); if (!rec) return null;
+        if (!/^https?:\/\//i.test(rec.url)) return { error: _t('ct.adresMusiZaczynacSie'), name: rec.url };
+        if (pol && total() >= pol.max_per_owner) return { error: _t('ct.osiagnietoLimitZasobow') + pol.max_per_owner + ").", name: rec.label };
+        pending.push(rec); ll.value = lu.value = ""; return rec;
+      };
       var lb = h("button", { type: "button", "class": "esn-ed-add", text: _t('ct.dodajLink'), onclick: function () {
         if (overLimit()) return;
-        var rec = { kind: "link", rtype: lt.value, label: ll.value.trim(), url: lu.value.trim() };
-        if (!rec.label || !rec.url) return notify(_t('ct.podajOpisIAdres'), "warn");
+        var rec = draft();
+        if (!rec) return notify(_t('ct.podajAdresLinku'), "warn");
         if (!/^https?:\/\//i.test(rec.url)) return notify(_t('ct.adresMusiZaczynacSie'), "warn");
         if (ownerId) api.addLink(Object.assign({ owner_type: type, owner_id: ownerId }, rec)).then(function () { ll.value = lu.value = ""; return reload(); }).catch(fail);
         else { pending.push(rec); ll.value = lu.value = ""; render(); }
@@ -411,6 +428,7 @@
             .then(function () { reset(); notify(_t('ct.plikWgrany'), "success"); return reload(); }).catch(fail).then(function () { fb.disabled = false; });
         } else { pending.push(rec); reset(); render(); }
       } });
+      fileDraft = function () { return fi.files && fi.files[0] ? { name: fi.files[0].name, error: _t('ct.plikNieDodany') } : null; };
       [h("div", { "class": "esn-ed-row" }, [ft, fl]), h("div", { "class": "esn-ed-row" }, [fi]), h("div", { "class": "esn-ed-row" }, [lic, note]), rl, hint, h("div", { "class": "esn-ed-row" }, [fb])].forEach(function (x) { d.appendChild(x); });
       forms.appendChild(d);
     }
@@ -424,6 +442,8 @@
       // po pierwszym zapisie nowego obiektu: dodaj oczekujące linki i pliki
       flush: function (id) {
         ownerId = id || ownerId; var okCount = 0, failed = [];
+        var d = takeDraft(); if (d && d.error) failed.push({ name: d.name, error: d.error });
+        var fd = fileDraft(); if (fd) failed.push(fd);
         return pending.slice().reduce(function (p, rec) {
           return p.then(function () {
             var req = rec.kind === "link"
