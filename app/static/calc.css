@@ -101,3 +101,23 @@
 .calc-s-plate { stroke: var(--accent); stroke-width: 3; }
 .calc-s-coil { stroke: var(--accent); }
 @media (min-width: 641px) { .calc-nav { flex-wrap: wrap; overflow: visible; } }
+
+/* v53: wykres Bodego, schematy filtra i wzmacniacza, pasek baterii, objaśnienie szeregów */
+.calc-graph { width: 100%; max-width: 560px; height: auto; display: block; margin: 0 auto 10px; }
+.calc-g-grid { stroke: var(--border); stroke-width: 1; }
+.calc-g-ref { stroke: var(--text3); stroke-width: 1; stroke-dasharray: 4 4; }
+.calc-g-line { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; }
+.calc-g-dot { fill: var(--accent); }
+.calc-g-sig { stroke: var(--orange); stroke-width: 1.5; stroke-dasharray: 3 3; }
+.calc-g-sigdot { fill: var(--orange); }
+.calc-g-lbl { fill: var(--text3); font: 10px var(--mono); }
+.calc-g-acc { fill: var(--accent); font: 600 11px var(--mono); }
+.calc-schem-wide { max-width: 360px; }
+.calc-bt-bar { display: flex; height: 10px; border-radius: 6px; overflow: hidden; margin: 10px 0 2px; background: var(--bg3); }
+.calc-bt-a { background: var(--orange); } .calc-bt-s { background: var(--accent); opacity: .7; }
+.calc-explain { margin: 0 0 18px; border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; background: var(--card); }
+.calc-ex-series { display: grid; gap: 6px; margin: 10px 0 4px; font-size: 12px; }
+.calc-ex-series code { font-family: var(--mono); color: var(--text2); overflow-wrap: anywhere; }
+.calc-inrow .text-input { margin: 0; }
+.calc-split { grid-template-columns: minmax(0, 1fr) minmax(220px, 340px); }
+@media (max-width: 640px) { .calc-split { grid-template-columns: minmax(0, 1fr); } }

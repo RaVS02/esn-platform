@@ -13,7 +13,7 @@ HARNESS = r"""
 global.window = global; global.localStorage = { getItem: () => null, setItem: () => {} };
 global.ESNI18n = { t: k => k, lang: () => 'en' };
 global.ESNTools = { register: () => {} };
-require(process.argv[2]); require(process.argv[3]); require(process.argv[4]); require(process.argv[5]);
+require(process.argv[2]); require(process.argv[3]); require(process.argv[4]); require(process.argv[5]); require(process.argv[6]); require(process.argv[7]);
 const M = ESNCalc.math, B = ESNCalcBasic, out = {};
 out.parse = ['4k7', '2R2', '4u7', '1,5', '100n', '10 k', '3.3V', '10kΩ', '1M', '1m', 'abc', '', '100N'].map(s => { const r = M.parse(s); return r ? r.v : null; });
 out.near = [M.nearest('E12', 4700), M.nearest('E12', 5000), M.nearest('E12', 150.5, 'up'), M.nearest('E24', 0.33), M.nearest('E96', 10100)];
@@ -32,6 +32,10 @@ out.rkm = [P.rkm(4.7e-9), P.rkm(1e-7), P.rkm(2.2e-6)];
 out.frame = K.uartFrame(8, 'N', 1); out.udiv = K.uartDiv(16e6, 115200, 16); out.div2 = K.uartDiv(16e6, 9600, 16);
 out.tm = K.timer(16e6, 1000, 16, 'avr')[0]; out.tm8 = K.timer(16e6, 1000, 8, 'avr')[0]; out.ledc = K.ledcBits(5000);
 out.rc = K.rc(1e4, 1e-7); out.rcAt = K.rcAt(1e4, 1e-7, 1 / (2 * Math.PI * 1e-3), 'lp');
+const W = ESNCalcPower, A = ESNCalcAnalog;
+out.bat = W.battery(2.5, 0.08, 2, 20e-6, 600, 0.8); out.ldo = W.ldo(5, 3.3, 0.3, 0.005, 1.1, 90, 25);
+out.tr = W.trace(1, 10, 1, 'ext', 0.05, 25); out.trI = W.trace(1, 10, 1, 'int', 0, 25);
+out.op = [A.opamp('noninv', 47e3, 10e3), A.opamp('inv', 47e3, 10e3)]; out.opPick = A.pickGain('noninv', 11, 'E24', 1e3, 1e5, 3);
 console.log(JSON.stringify(out));
 """
 
@@ -42,7 +46,7 @@ def r(tmp_path_factory):
         pytest.skip("brak node")
     h = tmp_path_factory.mktemp("calc") / "h.js"
     h.write_text(HARNESS, encoding="utf-8")
-    p = subprocess.run([NODE, str(h)] + [str(STATIC / f) for f in ("calc.js", "calc-basic.js", "calc-parts.js", "calc-comm.js")], capture_output=True, text=True, timeout=30)
+    p = subprocess.run([NODE, str(h)] + [str(STATIC / f) for f in ("calc.js", "calc-basic.js", "calc-parts.js", "calc-comm.js", "calc-analog.js", "calc-power.js")], capture_output=True, text=True, timeout=30)
     assert p.returncode == 0, p.stderr
     return json.loads(p.stdout)
 
@@ -91,6 +95,8 @@ def test_power_rating_and_format(r):
 def test_calc_scripts_loaded_in_order():
     html = (STATIC.parent / "templates" / "index.html").read_text(encoding="utf-8")
     assert html.index("/tools.js") < html.index("/calc.js") < html.index("/calc-basic.js") < html.index("/calc-parts.js") < html.index("/calc-comm.js")
+    for f in ("/calc-analog.js", "/calc-power.js"):
+        assert html.index("/calc.js") < html.index(f)
     assert "/calc.css" in html
 
 
@@ -124,3 +130,19 @@ def test_uart_timer_rc(r):
     assert r["ledc"] == 13
     assert approx(r["rc"]["tau"], 1e-3) and approx(r["rc"]["fc"], 159.1549, 1e-5)
     assert abs(r["rcAt"]["db"] + 3.0103) < 0.001 and abs(r["rcAt"]["phase"] + 45) < 1e-6
+
+
+def test_power_pack(r):
+    b = r["bat"]
+    assert approx(b["avg"], (0.08 * 2 + 20e-6 * 598) / 600) and approx(b["hours"], 2.5 * 0.8 / b["avg"])
+    l = r["ldo"]
+    assert approx(l["p"], 1.7 * 0.3 + 5 * 0.005) and approx(l["tj"], 25 + l["p"] * 90) and abs(l["headroom"] - 0.6) < 1e-9
+    assert 0.25 < r["tr"]["wMm"] < 0.35            # 1 A, ΔT 10 °C, 1 oz, zewn. ≈ 0,30 mm (12 mil)
+    assert approx(r["trI"]["wMm"] / r["tr"]["wMm"], 2 ** (1 / 0.725), 1e-6)
+    assert 0.075 < r["tr"]["r"] < 0.1               # 0,3 mm × 35 µm × 50 mm ≈ 86 mΩ
+
+
+def test_opamp(r):
+    assert approx(r["op"][0]["g"], 5.7) and approx(r["op"][1]["g"], -4.7) and approx(r["op"][1]["noise"], 5.7)
+    p = r["opPick"][0]
+    assert abs(p["err"]) < 0.01 and approx(1 + p["rf"] / p["rg"], p["g"])

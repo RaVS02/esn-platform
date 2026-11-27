@@ -1,4 +1,4 @@
-# Kalkulatory (v51–v52)
+# Kalkulatory (v51–v53)
 
 Narzędzia → Kalkulatory (`#tools/calc`), każdy kalkulator ma własny adres `#tools/calc/<id>` (można linkować z Wiedzy i kart komponentów).
 
@@ -8,6 +8,9 @@ Narzędzia → Kalkulatory (`#tools/calc`), każdy kalkulator ma własny adres `
 - `app/static/calc-basic.js` – paczka 1: `ohm`, `divider`, `led`, `rescode` + funkcje `ESNCalcBasic` (ohm, pickDivider, encode/decode kodu paskowego).
 - `app/static/calc-parts.js` (v52) – `rcombo` (łączenie R/C/L szeregowo i równolegle, dobór pary do wartości), `capcode` (kod kondensatora w obie strony); `ESNCalcParts`.
 - `app/static/calc-comm.js` (v52) – `baud` (UART/SPI/I²C, dzielnik UBRR i USARTDIV z błędem), `timer` (preskaler, TOP, PWM, ESP32 LEDC), `rc` (filtr RC, τ, ładowanie, dobór C); `ESNCalcComm`.
+- `app/static/calc-analog.js` (v53) – `opamp` (odwracający/nieodwracający, nasycenie, pasmo z GBW, dobór Rf/Rg); `ESNCalcAnalog`.
+- `app/static/calc-power.js` (v53) – `battery` (cykl pracy, średni prąd), `ldo` (straty, sprawność, Tj), `trace` (IPC-2221, rezystancja i spadek); `ESNCalcPower`.
+- Filtr RC (v53): schemat dolno-/górnoprzepustowy i wykres Bodego (SVG, klasy `calc-g-*`). Strona główna kalkulatorów: objaśnienie szeregów E, tolerancji, kodów i przedrostków.
 - `app/static/calc.css` – wygląd (tylko zmienne motywu; fizyczne kolory pasków rezystora w JS).
 - `app/tests/test_calc.py` – matematyka uruchamiana w Node.
 
@@ -20,12 +23,12 @@ ESNCalc.add({ id: "baud", icon: "gauge-high", group: "comm", title: "calc.baud.t
   api.onChange(function () { res.show([["etykieta", M.fmt(f.get(), "Hz")]]); w.show([["warn", "tekst"]]); });
 } });
 ```
-- Grupy: `basic`, `comm`, `power`. Id z listy zapowiedzi (`PLANNED` w calc.js) znika z zapowiedzi po rejestracji.
+- Grupy: `basic`, `analog`, `comm`, `power`. Id z listy zapowiedzi (`PLANNED` w calc.js) znika z zapowiedzi po rejestracji.
 - api: `field`, `select`, `modes`, `results`, `warn` (poziomy ok/info/warn/bad), `formula`, `copy`, `card`, `svg`, `keep/kept` (stan w localStorage `esn-calc`).
 - Teksty tylko przez `_t('calc.…')` (literalne klucze – pilnuje test_i18n). Plik dołącz w `index.html` po `calc.js`, podbij `?v=`.
 
 ## Zasady
 Liczenie na bieżąco, przedrostki w polu lub z listy, wartości z szeregu E z błędem w %, zapas mocy 2×, ostrzeżenia praktyczne (GPIO, ADC, obciążenie).
 
-## Plan
-Paczka 3: czas pracy na baterii, regulator liniowy (straty, temperatura), szerokość ścieżki PCB (IPC-2221).
+## Pomysły na dalej
+Więcej układów ze wzmacniaczem (różnicowy, sumujący, wtórnik, komparator z histerezą), filtry 2. rzędu (Sallen-Key), timer 555, stabilizator na diodzie Zenera, przetwornica buck/boost (cewka, kondensatory).

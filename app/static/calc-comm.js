@@ -44,6 +44,39 @@
   function h4(api, key) { return api.h("h4", { "class": "calc-h", text: _t(key) }); }
   function us(t) { return fmt(t, "s", 3); }
 
+  /* schemat filtra RC 1. rzędu: dolnoprzepustowy (R w linii, C do masy) albo górnoprzepustowy (C w linii, R do masy) */
+  function rcSchem(api, type) {
+    var S = api.svg, k = [];
+    function wire(p) { return S("polyline", { points: p.map(function (x) { return x.join(","); }).join(" "), "class": "calc-s-wire" }); }
+    function R(x, y, vert) { return vert ? S("rect", { x: x - 7, y: y, width: 14, height: 36, rx: 2, "class": "calc-s-part" }) : S("rect", { x: x, y: y - 7, width: 44, height: 14, rx: 2, "class": "calc-s-part" }); }
+    function Cap(x, y, vert) { return vert ? S("g", {}, [S("line", { x1: x - 13, y1: y, x2: x + 13, y2: y, "class": "calc-s-wire calc-s-plate" }), S("line", { x1: x - 13, y1: y + 7, x2: x + 13, y2: y + 7, "class": "calc-s-wire calc-s-plate" })])
+      : S("g", {}, [S("line", { x1: x, y1: y - 13, x2: x, y2: y + 13, "class": "calc-s-wire calc-s-plate" }), S("line", { x1: x + 7, y1: y - 13, x2: x + 7, y2: y + 13, "class": "calc-s-wire calc-s-plate" })]); }
+    function T(x, y, t, a, c) { return S("text", { x: x, y: y, "text-anchor": a || "middle", "class": c || "calc-s-lbl", text: t }); }
+    var y = 40;
+    if (type === "hp") { k.push(wire([[20, y], [96, y]]), Cap(96, y, false), wire([[103, y], [250, y]]), T(100, y - 20, "C")); k.push(wire([[170, y], [170, 62]]), R(170, 62, true), wire([[170, 98], [170, 110]]), T(190, 84, "R", "start")); }
+    else { k.push(wire([[20, y], [80, y]]), R(80, y, false), wire([[124, y], [250, y]]), T(102, y - 14, "R")); k.push(wire([[170, y], [170, 76]]), Cap(170, 76, true), wire([[170, 83], [170, 110]]), T(190, 84, "C", "start")); }
+    [[14, 0], [9, 5], [4, 10]].forEach(function (d) { k.push(wire([[170 - d[0], 110 + d[1]], [170 + d[0], 110 + d[1]]])); });
+    k.push(S("circle", { cx: 170, cy: y, r: 3, "class": "calc-s-dot" }), T(14, y + 4, "Vin", "end", "calc-s-acc"), T(256, y + 4, "Vout", "start", "calc-s-acc"));
+    return S("svg", { viewBox: "-30 0 330 130", "class": "calc-schem", role: "img", "aria-label": type === "hp" ? _t("calc.rf.gorno") : _t("calc.rf.dolno") }, k);
+  }
+  /* wykres Bodego (amplituda w dB, oś częstotliwości logarytmiczna, fc/100 … fc·100) */
+  function bode(api, fc, type, fsig) {
+    var S = api.svg, W = 360, H = 190, L = 44, Rm = 28, Tp = 12, B = 30, pw = W - L - Rm, ph = H - Tp - B, k = [];
+    var f0 = fc / 100, f1 = fc * 100, dbMin = -45, dbMax = 5;
+    function X(f) { return L + (Math.log10(f) - Math.log10(f0)) / (Math.log10(f1) - Math.log10(f0)) * pw; }
+    function Y(db) { return Tp + (dbMax - Math.max(dbMin, Math.min(dbMax, db))) / (dbMax - dbMin) * ph; }
+    function mag(f) { var x = f / fc; return 20 * Math.log10(type === "hp" ? x / Math.sqrt(1 + x * x) : 1 / Math.sqrt(1 + x * x)); }
+    [0, -10, -20, -30, -40].forEach(function (d) { k.push(S("line", { x1: L, x2: L + pw, y1: Y(d), y2: Y(d), "class": "calc-g-grid" }), S("text", { x: L - 6, y: Y(d) + 4, "text-anchor": "end", "class": "calc-g-lbl", text: d + " dB" })); });
+    for (var e = -2; e <= 2; e++) { var f = fc * Math.pow(10, e); k.push(S("line", { x1: X(f), x2: X(f), y1: Tp, y2: Tp + ph, "class": "calc-g-grid" }), S("text", { x: X(f), y: H - 12, "text-anchor": "middle", "class": "calc-g-lbl", text: fmt(f, "Hz", 2) })); }
+    var pts = []; for (var i = 0; i <= 120; i++) { var ff = f0 * Math.pow(f1 / f0, i / 120); pts.push(X(ff).toFixed(1) + "," + Y(mag(ff)).toFixed(1)); }
+    k.push(S("line", { x1: L, x2: L + pw, y1: Y(-3), y2: Y(-3), "class": "calc-g-ref" }), S("line", { x1: X(fc), x2: X(fc), y1: Tp, y2: Tp + ph, "class": "calc-g-ref" }));
+    k.push(S("polyline", { points: pts.join(" "), "class": "calc-g-line" }));
+    k.push(S("circle", { cx: X(fc), cy: Y(-3), r: 4, "class": "calc-g-dot" }), S("text", { x: X(fc) + 6, y: Y(-3) - 6, "class": "calc-g-acc", text: "fc, −3 dB" }));
+    if (fsig > 0 && fsig >= f0 && fsig <= f1) { k.push(S("line", { x1: X(fsig), x2: X(fsig), y1: Tp, y2: Tp + ph, "class": "calc-g-sig" }), S("circle", { cx: X(fsig), cy: Y(mag(fsig)), r: 4, "class": "calc-g-sigdot" })); }
+    k.push(S("text", { x: L + pw / 2, y: H - 1, "text-anchor": "middle", "class": "calc-g-lbl", text: _t("calc.rf.osF") }));
+    return S("svg", { viewBox: "0 0 " + W + " " + H, "class": "calc-graph", role: "img", "aria-label": _t("calc.rf.wykres") }, k);
+  }
+
   /* ───────── 7. UART / SPI / I²C ───────── */
   var BAUDS = [1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200, 230400, 250000, 460800, 500000, 921600, 1000000];
   C.add({ id: "baud", icon: "gauge-high", group: "comm", title: "calc.bd.t", desc: "calc.bd.d", mount: function (el, api) {
@@ -152,14 +185,15 @@
     var f = api.field({ key: "f", label: _t("calc.rf.fSyg"), unit: "Hz", prefixes: ["", "k", "M"], defPrefix: "k", def: "", hint: _t("calc.rf.fSygHint") });
     var ser = api.select({ key: "ser", label: _t("calc.szereg"), def: "E12", options: [["E6", "E6"], ["E12", "E12"], ["E24", "E24"]] });
     var calcBox = api.h("div", { "class": "calc-grid2" }, [Cf.el, f.el]), pickBox = api.h("div", { "class": "calc-grid2" }, [fc.el, ser.el]);
-    var res = api.results(), w = api.warn(), copyText = "";
+    var res = api.results(), w = api.warn(), copyText = "", schBox = api.h("div", { "class": "calc-rf-sch" }), plot = api.h("div", { "class": "calc-rf-plot" });
     el.appendChild(mode.el);
-    el.appendChild(api.card([h4(api, "calc.dane"), api.h("div", { "class": "calc-grid2" }, [type.el, R.el]), calcBox, pickBox]));
-    el.appendChild(api.card([h4(api, "calc.wynik"), res.el, w.el, api.h("div", { "class": "calc-actions" }, [api.copy(function () { return copyText; })]),
+    el.appendChild(api.card([h4(api, "calc.dane"), api.h("div", { "class": "calc-split" }, [api.h("div", {}, [api.h("div", { "class": "calc-grid2" }, [type.el, R.el]), calcBox, pickBox]), schBox])]));
+    el.appendChild(api.card([h4(api, "calc.wynik"), plot, res.el, w.el, api.h("div", { "class": "calc-actions" }, [api.copy(function () { return copyText; })]),
       api.formula([["τ = R · C", ""], ["fc = 1 / (2π · R · C)", _t("calc.rf.fFc")], ["U(t) = U · (1 − e^(−t/τ))", _t("calc.rf.fLad")], ["C = 1 / (2π · R · fc)", ""]], _t("calc.rf.note"))]));
     mode.on(function (m) { calcBox.hidden = m !== "calc"; pickBox.hidden = m !== "pickC"; api.refresh(); });
     api.onChange(function () {
       var r = R.get(), ws = [], c, rows = [];
+      schBox.textContent = ""; schBox.appendChild(rcSchem(api, type.get())); plot.textContent = "";
       if (!(r > 0)) { res.show([]); w.show([["info", _t("calc.rf.wpisz")]]); copyText = ""; return; }
       if (mode.get() === "pickC") {
         var F0 = fc.get(); if (!(F0 > 0)) { res.show([]); w.show([["info", _t("calc.rf.wpisz")]]); copyText = ""; return; }
@@ -168,6 +202,7 @@
       } else c = Cf.get();
       if (!(c > 0)) { res.show([]); w.show([["info", _t("calc.rf.wpisz")]]); copyText = ""; return; }
       var x = rc(r, c);
+      plot.appendChild(bode(api, x.fc, type.get(), mode.get() === "calc" ? f.get() : NaN));
       rows.push(["τ = R·C", fmt(x.tau, "s", 4)], [_t("calc.rf.fc"), fmt(x.fc, "Hz", 4), _t("calc.rf.minus3")],
         [_t("calc.rf.lad", { p: "63,2" }), fmt(x.tau, "s", 3), "1 τ"], [_t("calc.rf.lad", { p: "95" }), fmt(3 * x.tau, "s", 3), "3 τ"], [_t("calc.rf.lad", { p: "99,3" }), fmt(5 * x.tau, "s", 3), "5 τ"]);
       var fs = f.get();

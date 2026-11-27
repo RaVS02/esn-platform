@@ -120,8 +120,8 @@
     { id: "rcombo", icon: "grip-lines", title: "calc.p.rcombo", group: "basic" },
     { id: "capcode", icon: "barcode", title: "calc.p.capcode", group: "basic" }
   ];
-  var GROUPS = ["basic", "comm", "power"];
-  function groupName(g) { return g === "comm" ? _t("calc.g.comm") : g === "power" ? _t("calc.g.power") : _t("calc.g.basic"); }
+  var GROUPS = ["basic", "analog", "comm", "power"];
+  function groupName(g) { return g === "comm" ? _t("calc.g.comm") : g === "power" ? _t("calc.g.power") : g === "analog" ? _t("calc.g.analog") : _t("calc.g.basic"); }
 
   function add(c) { CALCS = CALCS.filter(function (x) { return x.id !== c.id; }); CALCS.push(c); PLANNED = PLANNED.filter(function (x) { return x.id !== c.id; }); }
 
@@ -254,8 +254,21 @@
     return bar;
   }
 
+  /* krótkie wyjaśnienie szeregów E i oznaczeń (v53) */
+  function explainer() {
+    var d = h("details", { "class": "calc-formula calc-explain" }, [h("summary", { icon: "circle-question", text: " " + _t("calc.ex.t") })]);
+    [["calc.ex.eH", "calc.ex.e"], ["calc.ex.tolH", "calc.ex.tol"], ["calc.ex.kodH", "calc.ex.kod"], ["calc.ex.prefH", "calc.ex.pref"]].forEach(function (x) {
+      d.appendChild(h("p", { "class": "calc-f-note" }, [h("strong", { text: _t(x[0]) + " " }), _t(x[1])]));
+    });
+    var tbl = h("div", { "class": "calc-ex-series" });
+    ["E6", "E12", "E24"].forEach(function (n) { tbl.appendChild(h("div", {}, [h("strong", { text: n + ": " }), h("code", { text: ESER[n].map(function (v) { return num(v / 10, 2); }).join(" · ") })])); });
+    d.appendChild(tbl);
+    return d;
+  }
+
   function home(el, ctx) {
     el.appendChild(h("p", { "class": "hero-sub calc-lead", text: _t("calc.lead") }));
+    el.appendChild(explainer());
     GROUPS.forEach(function (g) {
       var ready = CALCS.filter(function (c) { return (c.group || "basic") === g; });
       var soon = PLANNED.filter(function (c) { return c.group === g; });
