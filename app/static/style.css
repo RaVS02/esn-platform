@@ -1406,3 +1406,18 @@ a i.fa-arrow-up-right-from-square, small i.fa-arrow-up-right-from-square { font-
 #view-people [hidden] { display: none !important; }
 #view-people.ppl-on-profile > .hero { display: none; }
 #view-people.ppl-on-profile .ppl-prof-wrap { padding-top: 96px; }
+
+/* ── Formularz projektu: zakładki (v63) ───────────────────────────────────────────────────────────── */
+.pe-tabs { display: flex; gap: 2px; overflow-x: auto; border-bottom: 1px solid var(--border); margin: 0 0 18px; scrollbar-width: none; position: sticky; top: -1px; z-index: 3; background: var(--card); }
+.pe-tabs::-webkit-scrollbar { display: none; }
+.pe-tab { flex: none; display: inline-flex; align-items: center; gap: 7px; background: none; border: 0; border-bottom: 2px solid transparent; padding: 11px 12px; font-family: var(--mono); font-size: 12px; color: var(--text2); cursor: pointer; white-space: nowrap; min-height: 44px; }
+.pe-tab i { color: var(--text3); }
+.pe-tab:hover { color: var(--text); }
+.pe-tab.on { color: var(--accent); border-bottom-color: var(--accent); }
+.pe-tab.on i { color: var(--accent); }
+.pe-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+#projectModal .pe-panel[hidden] { display: none !important; }
+.pe-panel { min-height: 220px; }
+.pe-foot { position: sticky; bottom: -1px; z-index: 3; background: var(--card); border-top: 1px solid var(--border); padding: 12px 0 2px; margin-top: 16px; display: flex; justify-content: flex-end; }
+.pe-foot .btn-action { min-height: 42px; padding: 0 22px; }
+@media (max-width: 600px) { .pe-foot .btn-action { width: 100%; justify-content: center; } }

@@ -123,6 +123,11 @@ lista użytkowników i ustawienia ról; sekcje moderacji i bezpieczeństwa rosn�
 - API `GET /api/people?q=&skills=&role=team&invites=1&sort=&page=` (limit 240 / 10 min na IP), kod `profile_service.search_people`,
   interfejs `static/people.js` (teksty `ppl.*`). Filtrowanie w Pythonie – przy dużej liczbie profili przenieść do SQL / osobnej tabeli umiejętności.
 
+### Etap 1c (zrobione w v63)
+- Formularz projektu w zakładkach: **Treść** (tytuł, tagi, opis, język, status), **Podzespoły**, **Notatki i kod**, **Zdjęcia**,
+  **Artykuł** (edytor + plik .md), **Zasoby**. Pasek zakładek i przycisk zapisu przyklejone (sticky) w oknie; na telefonie
+  pasek przewija się w poziomie. Pusty tytuł przy zapisie przenosi do „Treść”. Zakładka „Współtwórcy” dojdzie w etapie 2.
+
 ### Zasady dla nowych funkcji
 - **Minimum danych i jawność:** e-mail nigdy publiczny; miejscowość, linki, organizacje – opcjonalne. Profil w społeczności
   dopiero po zgodzie (przełącznik „Pokazuj mój profil”), osobne przełączniki dla aktywności, postępu w kursach i zaproszeń.

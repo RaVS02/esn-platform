@@ -1791,5 +1791,12 @@ ESNI18n.add("en", {
   "ppl.projects": "Projects",
   "ppl.noProjects": "No projects yet.",
   "nav.people": "People",
-  "tab.people": "People"
+  "tab.people": "People",
+  "pe.nav": "Project sections",
+  "pe.main": "Content",
+  "pe.parts": "Parts",
+  "pe.tech": "Notes & code",
+  "pe.media": "Photos",
+  "pe.article": "Article",
+  "pe.res": "Resources"
 }, { name: "English", locale: "en-GB" });

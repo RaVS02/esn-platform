@@ -7,14 +7,14 @@
 <script>window.ESN_USER = {{ esn_user | tojson }};</script>
 <script src="{{ url_for('static', path='/auth.js') }}?v=1"></script>
 <script src="{{ url_for('static', path='/i18n.js') }}?v=15"></script>
-<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=34"></script>
-<script src="{{ url_for('static', path='/i18n/en.js') }}?v=34"></script>
+<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=35"></script>
+<script src="{{ url_for('static', path='/i18n/en.js') }}?v=35"></script>
 <script src="{{ url_for('static', path='/theme.js') }}?v=4"></script>
 <title data-i18n="meta.title">Platforma Systemów Wbudowanych</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=2.37">
+<link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=2.38">
 <link rel="stylesheet" href="{{ url_for('static', path='/pinout.css') }}?v=12">
 <link rel="stylesheet" href="{{ url_for('static', path='/calc.css') }}?v=7">
 <link rel="stylesheet" href="{{ url_for('static', path='/wiring/style.css') }}?v=4">
@@ -593,6 +593,15 @@
         </ul>
       </details>
 
+      <div class="pe-tabs" role="tablist" aria-label="Sekcje projektu" data-i18n-attr="aria-label:pe.nav">
+        <button type="button" role="tab" class="pe-tab on" data-pe="main" aria-controls="pe-main" aria-selected="true"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span data-i18n="pe.main">Treść</span></button>
+        <button type="button" role="tab" class="pe-tab" data-pe="parts" aria-controls="pe-parts" aria-selected="false" tabindex="-1"><i class="fa-solid fa-microchip" aria-hidden="true"></i><span data-i18n="pe.parts">Podzespoły</span></button>
+        <button type="button" role="tab" class="pe-tab" data-pe="tech" aria-controls="pe-tech" aria-selected="false" tabindex="-1"><i class="fa-solid fa-code" aria-hidden="true"></i><span data-i18n="pe.tech">Notatki i kod</span></button>
+        <button type="button" role="tab" class="pe-tab" data-pe="media" aria-controls="pe-media" aria-selected="false" tabindex="-1"><i class="fa-solid fa-images" aria-hidden="true"></i><span data-i18n="pe.media">Zdjęcia</span></button>
+        <button type="button" role="tab" class="pe-tab" data-pe="article" aria-controls="pe-article" aria-selected="false" tabindex="-1"><i class="fa-solid fa-file-lines" aria-hidden="true"></i><span data-i18n="pe.article">Artykuł</span></button>
+        <button type="button" role="tab" class="pe-tab" data-pe="res" aria-controls="pe-res" aria-selected="false" tabindex="-1"><i class="fa-solid fa-paperclip" aria-hidden="true"></i><span data-i18n="pe.res">Zasoby</span></button>
+      </div>
+      <section class="pe-panel" data-pe="main" role="tabpanel" id="pe-main">
       <input type="text" id="p-title" placeholder="Tytuł projektu (np. Stacja Pogodowa)" data-i18n-attr="placeholder:contact.tytulProjektuNpStacja" class="text-input">
       <div style="margin-bottom: 5px; font-size: 11px; color: var(--text3); font-family: var(--mono);" data-i18n="contact.szybkieTagiKliknijBy">Szybkie tagi (kliknij by dodać):</div>
       <div class="filter-chips" style="margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 6px;">
@@ -619,30 +628,36 @@
       </div>
 
       <input type="text" id="p-tags" placeholder="Twoje tagi po przecinku..." data-i18n-attr="placeholder:contact.twojeTagiPoPrzecinku" class="text-input">
-      <div id="p-parts-picker"></div>
-      <div style="margin-bottom: 5px; font-size: 11px; color: var(--text3); font-family: var(--mono);" data-i18n="contact.inneElementySpozaKatalogu">Inne elementy (spoza katalogu)</div>
-      <input type="text" id="p-components" placeholder="Inne elementy po przecinku (np. rezystor 10k, przewody)" data-i18n-attr="placeholder:contact.inneElementyPoPrzecinku" class="text-input">
       <textarea id="p-desc" placeholder="Krótki opis działania..." data-i18n-attr="placeholder:contact.krotkiOpisDzialania" class="text-input" style="height:80px; resize:vertical; font-family:var(--sans)"></textarea>
       
-      <div style="margin-bottom: 5px; font-size: 11px; color: var(--text3); font-family: var(--mono);" data-i18n="contact.statusProjektu">Status Projektu</div>
       <div style="margin-bottom: 5px; font-size: 11px; color: var(--text3); font-family: var(--mono);" data-i18n="projects.jezykTresci">Język treści</div>
       <select id="p-lang" class="text-input" style="font-family: var(--mono); font-size: 13px; margin-bottom: 12px;">
           <option value="pl">Polski</option>
           <option value="en">English</option>
       </select>
+      <div style="margin-bottom: 5px; font-size: 11px; color: var(--text3); font-family: var(--mono);" data-i18n="contact.statusProjektu">Status Projektu</div>
       <select id="p-status" class="text-input" style="font-family: var(--mono); font-size: 13px; color: var(--accent);">
           <option value="stable" style="color: var(--green);" data-i18n="contact.stableUkonczony">STABLE (Ukończony)</option>
           <option value="progress" style="color: var(--orange);" data-i18n="contact.inProgressWTrakcie">IN PROGRESS (W trakcie)</option>
           <option value="archive" style="color: var(--red);" data-i18n="contact.archivedArchiwalnyBledy">ARCHIVED (Archiwalny/Błędy)</option>
       </select>
 
+      </section>
+      <section class="pe-panel" data-pe="parts" role="tabpanel" id="pe-parts" hidden>
+      <div id="p-parts-picker"></div>
+      <div style="margin-bottom: 5px; font-size: 11px; color: var(--text3); font-family: var(--mono);" data-i18n="contact.inneElementySpozaKatalogu">Inne elementy (spoza katalogu)</div>
+      <input type="text" id="p-components" placeholder="Inne elementy po przecinku (np. rezystor 10k, przewody)" data-i18n-attr="placeholder:contact.inneElementyPoPrzecinku" class="text-input">
+      </section>
+      <section class="pe-panel" data-pe="tech" role="tabpanel" id="pe-tech" hidden>
       <textarea id="p-notes" placeholder="Notatki techniczne..." data-i18n-attr="placeholder:contact.notatkiTechniczne2" class="text-input" style="height:80px; resize:none; font-family:var(--sans)"></textarea>
       <div id="p-code-editor"></div>
 
+      </section>
+      <section class="pe-panel" data-pe="media" role="tabpanel" id="pe-media" hidden>
       <div id="p-media-manager"></div>
+      </section>
+      <section class="pe-panel" data-pe="article" role="tabpanel" id="pe-article" hidden>
       <div id="p-article-editor" style="margin-top: 15px;"></div>
-      <div id="p-res-manager"></div>
-
       <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border2);">
           <label style="font-size:11px; color:var(--accent); font-family:var(--mono); display:block; margin-bottom:6px;">
               <i class="fa-solid fa-file-alt"></i> <span data-i18n="contact.artykulMd">Artykuł .md:</span> 
@@ -651,7 +666,15 @@
           </label>
           <input type="file" id="p-markdown-file" accept=".md" style="font-size: 12px; color: var(--text2); width:100%;">
       </div>
-      <button class="btn-action primary" style="width:100%; justify-content:center; margin-top: 10px;" onclick="submitProject()" data-i18n="contact.wyslijProjektDoBazy">Wyślij projekt do bazy</button>
+      </section>
+      <section class="pe-panel" data-pe="res" role="tabpanel" id="pe-res" hidden>
+      <div id="p-res-manager"></div>
+
+      </section>
+      <div class="pe-foot">
+      <button class="btn-action primary" onclick="submitProject()" data-i18n="contact.wyslijProjektDoBazy">Wyślij projekt do bazy</button>
+      </div>
+
     </div>
   </div>
 </div>
@@ -1399,7 +1422,7 @@ function editProject(slug) {
 
     document.querySelector('#projectModal h2').innerText = _t('projects.edytujProjekt');
     document.querySelector('#projectModal button[onclick="submitProject()"]').innerText = _t('projects.zapiszZmiany');
-    document.getElementById('projectModal').style.display = 'flex';
+    document.getElementById('projectModal').style.display = 'flex'; peTab('main');
 }
 
 function openProjectModal() {
@@ -1435,7 +1458,7 @@ function openProjectModal() {
     mountProjectArticle('', null);
 
     // Na koniec pokazujemy modal
-    document.getElementById('projectModal').style.display = 'flex';
+    document.getElementById('projectModal').style.display = 'flex'; peTab('main');
 }
 
 function closeProjectModal() {
@@ -1514,7 +1537,19 @@ async function deleteProjectFile(field) {
 // 4. Zaktualizowana funkcja wysyłania (obsługuje POST i PUT)
 // --- WZMOCOIONE WGRYWANIE (z lepszymi błędami) ---
 // --- NOWE LOGICZNE WYSYŁANIE (1. Projekt -> 2. Zdjęcie do folderu) ---
+function peTab(name, focus) {
+    document.querySelectorAll('#projectModal .pe-tab').forEach(b => { const on = b.dataset.pe === name; b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); b.tabIndex = on ? 0 : -1; if (on && focus) b.focus(); });
+    document.querySelectorAll('#projectModal .pe-panel').forEach(p => { p.hidden = p.dataset.pe !== name; });
+}
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('#projectModal .pe-tab'); if (b) peTab(b.dataset.pe); });
+document.addEventListener('keydown', e => {
+    const b = e.target.closest && e.target.closest('#projectModal .pe-tab'); if (!b) return;
+    const all = [...document.querySelectorAll('#projectModal .pe-tab')], d = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+    if (d) { e.preventDefault(); peTab(all[(all.indexOf(b) + d + all.length) % all.length].dataset.pe, true); }
+});
+
 async function submitProject() {
+    if (!document.getElementById('p-title').value.trim()) { peTab('main'); document.getElementById('p-title').focus(); }
     const token = ESNAuth.token();
 
     // ETAP 1: Przygotowujemy paczkę z tekstem
