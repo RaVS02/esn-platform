@@ -16,7 +16,7 @@
     [].concat(kids || []).forEach(function (c) { if (c != null) e.appendChild(typeof c === "string" ? document.createTextNode(c) : c); });
     return e;
   }
-  function tok() { try { return localStorage.getItem("token"); } catch (e) { return null; } }
+  function tok() { try { return ESNAuth.token(); } catch (e) { return null; } }
   function api(path, method, body) {
     return fetch(path, { method: method || "GET", headers: Object.assign({ Authorization: "Bearer " + tok() }, body ? { "Content-Type": "application/json" } : {}), body: body ? JSON.stringify(body) : undefined })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) throw new Error(_E(j.detail) || ("HTTP " + r.status)); return j; }); });

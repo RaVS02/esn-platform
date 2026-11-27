@@ -171,6 +171,11 @@
           init = Object.assign({}, init || {});
           var h = new Headers(init.headers || (typeof input !== "string" && input.headers) || {});
           if (!h.has("X-ESN-Lang")) h.set("X-ESN-Lang", lang());
+          var m = url.match(/^https?:\/\/[^/]+/);
+          if (!m || m[0] === location.origin) {         // v60: tylko własny serwer
+            h.set("X-ESN-Req", "1");                     // ochrona CSRF dla zapisów przez ciasteczko sesji
+            if (/^Bearer esn\./.test(h.get("Authorization") || "")) h.delete("Authorization");   // pseudo-token ESNAuth – sesja jest w ciasteczku
+          }
           init.headers = h;
         }
       } catch (e) { /* nagłówek jest dodatkiem – nigdy nie blokuje zapytania */ }

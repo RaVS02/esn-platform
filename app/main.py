@@ -24,6 +24,7 @@ from database import engine, get_db, SessionLocal
 import media_service
 import ai_service
 import content_service
+import security_service
 import knowledge_service
 import wiring_service
 from fastapi.responses import JSONResponse
@@ -76,6 +77,14 @@ except Exception as _e:
     print("[content] UWAGA: przeniesienie linków do zasobów nie powiodło się:", _e)
 
 
+
+@app.middleware("http")
+async def _security_headers(request: Request, call_next):
+    """v60: nagłówki bezpieczeństwa (security_service.security_headers)."""
+    response = await call_next(request)
+    security_service.security_headers(request, response)
+    return response
+
 @app.middleware("http")
 async def upload_guard(request: Request, call_next):
     """1) odrzuca zbyt duże żądania zanim zostaną wczytane, 2) utwardza pliki wgrane przez użytkowników."""
@@ -111,29 +120,48 @@ def create_user_inventory(user_id: int):
 
 optional_security = HTTPBearer(auto_error=False)
 
-def get_optional_user(credentials: Optional[HTTPAuthorizationCredentials] = Depends(optional_security), db: Session = Depends(get_db)):
-    """Użytkownik z tokenu albo None (gość) – dla endpointów publicznych, które zalogowanym pokazują więcej."""
-    if not credentials:
+SESSION_COOKIE = "esn_access_token"
+SAFE_METHODS = ("GET", "HEAD", "OPTIONS")
+CSRF_HEADER = "x-esn-req"          # dodaje go owinięty fetch w static/i18n.js; strona obca nie ustawi go bez zgody CORS
+
+
+def _session_payload(request: Request, credentials: Optional[HTTPAuthorizationCredentials]):
+    """v60: token z nagłówka Bearer (klienci API, testy) albo z ciasteczka HttpOnly (przeglądarka).
+    Nieprawidłowy Bearer (np. pseudo-token interfejsu) nie blokuje ciasteczka. Zapis przez ciasteczko wymaga nagłówka X-ESN-Req."""
+    if credentials and credentials.credentials:
+        try:
+            return jwt.decode(credentials.credentials, auth.SECRET_KEY, algorithms=[auth.ALGORITHM])
+        except Exception:
+            pass
+    tok = request.cookies.get(SESSION_COOKIE)
+    if not tok:
         return None
     try:
-        payload = jwt.decode(credentials.credentials, auth.SECRET_KEY, algorithms=[auth.ALGORITHM])
+        payload = jwt.decode(tok, auth.SECRET_KEY, algorithms=[auth.ALGORITHM])
     except Exception:
+        return None
+    if request.method.upper() not in SAFE_METHODS and request.headers.get(CSRF_HEADER) != "1":
+        raise HTTPException(status_code=403, detail="Brak nagłówka zabezpieczającego żądanie")
+    return payload
+
+
+def get_optional_user(request: Request, credentials: Optional[HTTPAuthorizationCredentials] = Depends(optional_security), db: Session = Depends(get_db)):
+    """Użytkownik z tokenu albo None (gość) – dla endpointów publicznych, które zalogowanym pokazują więcej."""
+    payload = _session_payload(request, credentials)
+    if not payload:
         return None
     login = payload.get("sub")
     user = db.query(models.User).filter(models.User.login == login).first() if login else None
     return None if (not user or user.is_banned) else user
 
-def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
-    token = credentials.credentials
-    try:
-        # Rozkodowujemy token za pomocą naszego sekretnego klucza
-        payload = jwt.decode(token, auth.SECRET_KEY, algorithms=[auth.ALGORITHM])
-        login: str = payload.get("sub")
-        if login is None:
-            raise HTTPException(status_code=401, detail="Brak loginu w tokenie")
-    except Exception:
+def get_current_user(request: Request, credentials: Optional[HTTPAuthorizationCredentials] = Depends(optional_security), db: Session = Depends(get_db)):
+    payload = _session_payload(request, credentials)
+    if not payload:
         raise HTTPException(status_code=401, detail="Nieprawidłowy lub wygasły token JWT")
-        
+    login: str = payload.get("sub")
+    if login is None:
+        raise HTTPException(status_code=401, detail="Brak loginu w tokenie")
+
     user = db.query(models.User).filter(models.User.login == login).first()
     if not user:
         raise HTTPException(status_code=401, detail="Użytkownik nie istnieje")
@@ -146,6 +174,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
 
 @app.post("/api/register",tags=["Konta i Uwierzytelnianie (JWT)"])
 def register(user_data: schemas.UserCreate, request: Request, db: Session = Depends(get_db)):
+    security_service.rate_limit(db, "register:" + security_service.client_ip(request), 10, 3600)
     # 1. Sprawdzamy czy login/email zajęty (jak w HotWheels)
     if db.query(models.User).filter(models.User.email == user_data.email).first():
         raise HTTPException(status_code=400, detail="Email już zarejestrowany")
@@ -185,7 +214,9 @@ def register(user_data: schemas.UserCreate, request: Request, db: Session = Depe
     
     return {"message": "Kod weryfikacyjny został wysłany na maila"}
 @app.post("/api/verify",tags=["Konta i Uwierzytelnianie (JWT)"])
-def verify_account(data: schemas.UserVerify, db: Session = Depends(get_db)):
+def verify_account(data: schemas.UserVerify, request: Request, db: Session = Depends(get_db)):
+    security_service.rate_limit(db, "verify-ip:" + security_service.client_ip(request), 30, 900)
+    security_service.rate_limit(db, "verify:" + (data.email or "").lower(), 8, 900)
     # 1. Szukamy użytkownika po emailu
     user = db.query(models.User).filter(models.User.email == data.email).first()
     if not user:
@@ -219,11 +250,12 @@ def verify_account(data: schemas.UserVerify, db: Session = Depends(get_db)):
     return {"message": "Konto zostało zweryfikowane! Możesz się zalogować."}
 
 @app.post("/api/login", response_model=schemas.Token,tags=["Konta i Uwierzytelnianie (JWT)"])
-def login(form_data: schemas.UserCreate, response: Response, db: Session = Depends(get_db)): # <--- Dodano response: Response
+def login(form_data: schemas.UserCreate, request: Request, response: Response, db: Session = Depends(get_db)):
+    security_service.rate_limit(db, "login-ip:" + security_service.client_ip(request), 30, 600)
     user = db.query(models.User).filter(models.User.login == form_data.login).first()
-    
-    if not user:
-        raise HTTPException(status_code=404, detail="Użytkownik nie istnieje")
+
+    if not user:   # v60: ten sam komunikat co przy złym haśle – nie zdradzamy, czy login istnieje
+        raise HTTPException(status_code=401, detail="Błędny login lub hasło")
 
     # 1. Sprawdzanie bana (HotWheels Style)
     if user.is_banned:
@@ -243,7 +275,7 @@ def login(form_data: schemas.UserCreate, response: Response, db: Session = Depen
             db.commit()
             raise HTTPException(status_code=403, detail="Zbyt wiele prób. Blokada na 15 min.")
         db.commit()
-        raise HTTPException(status_code=401, detail=f"Błędne hasło. Pozostało prób: {5 - user.failed_attempts}")
+        raise HTTPException(status_code=401, detail="Błędny login lub hasło")
 
     # Sukces logowania - reset prób
     user.failed_attempts = 0
@@ -252,23 +284,23 @@ def login(form_data: schemas.UserCreate, response: Response, db: Session = Depen
     # Generujemy bilet wstępu (Token JWT) - TO MUSI BYĆ PRZED CIASTECZKIEM
     token = auth.create_access_token(data={"sub": user.login, "role": user.role, "user_id": user.id})
     
-    response.set_cookie(
-        key="esn_access_token",
+    response.set_cookie(          # v60: jedyne miejsce przechowania sesji w przeglądarce (HttpOnly – niedostępne dla skryptów)
+        key=SESSION_COOKIE,
         value=token,
-        # domain=".rs-projects.ovh",  <-- ZAKOMENTOWANE LUB USUNIĘTE
         path="/",
         httponly=True,
         samesite="lax",
-        secure=False  # <-- ZMIENIONE NA FALSE!
+        secure=security_service.cookie_secure(request),
+        max_age=auth.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
     
     return {"access_token": token, "token_type": "bearer"}
 
 
 @app.post("/api/logout", tags=["Konta i Uwierzytelnianie (JWT)"])
-def logout(response: Response):
-    """Wylogowanie: usuwa ciasteczko sesji (używane m.in. przez magazyn). Token w localStorage czyści przeglądarka."""
-    response.delete_cookie(key="esn_access_token", path="/", httponly=True, samesite="lax")
+def logout(request: Request, response: Response):
+    """Wylogowanie: usuwa ciasteczko sesji (portal i magazyn)."""
+    response.delete_cookie(key=SESSION_COOKIE, path="/", httponly=True, samesite="lax", secure=security_service.cookie_secure(request))
     return {"ok": True}
 
 # ==========================================
@@ -351,6 +383,7 @@ def request_action_code(
     current_user: models.User = Depends(get_current_user), 
     db: Session = Depends(get_db)
 ):
+    security_service.rate_limit(db, f"code-send:{current_user.id}", 5, 900)   # v60: najwyżej 5 maili z kodem na 15 min
     # Usuwamy stare kody
     db.query(models.VerificationCode).filter(
         models.VerificationCode.user_id == current_user.id,
@@ -372,6 +405,7 @@ def request_action_code(
     return {"message": "Kod wysłany."}
 
 def verify_action_code(db: Session, user_id: int, code: str, purpose: str):
+    security_service.rate_limit(db, f"code:{user_id}:{purpose}", 6, 900)   # v60: najwyżej 6 prób na 15 min
     db_code = db.query(models.VerificationCode).filter(
         models.VerificationCode.user_id == user_id, 
         models.VerificationCode.code == code, 
@@ -451,6 +485,8 @@ def delete_my_account(data: schemas.AccountDelete, current_user: models.User = D
 
 @app.post("/api/auth/forgot-password",tags=["Konta i Uwierzytelnianie (JWT)"])
 def forgot_password(data: schemas.ForgotPasswordRequest, request: Request, db: Session = Depends(get_db)):
+    security_service.rate_limit(db, "forgot-ip:" + security_service.client_ip(request), 10, 3600)
+    security_service.rate_limit(db, "forgot:" + (data.email or "").lower(), 3, 900)
     user = db.query(models.User).filter(models.User.email == data.email).first()
     if not user:
         # Bezpieczeństwo: Nie zdradzamy hakerom, czy dany email jest w naszej bazie!
@@ -480,7 +516,8 @@ def forgot_password(data: schemas.ForgotPasswordRequest, request: Request, db: S
 
 
 @app.post("/api/auth/reset-password",tags=["Konta i Uwierzytelnianie (JWT)"])
-def reset_password(data: schemas.PasswordReset, db: Session = Depends(get_db)):
+def reset_password(data: schemas.PasswordReset, request: Request, db: Session = Depends(get_db)):
+    security_service.rate_limit(db, "reset-ip:" + security_service.client_ip(request), 20, 900)
     user = db.query(models.User).filter(models.User.email == data.email).first()
     if not user:
         raise HTTPException(status_code=400, detail="Nieprawidłowe dane")
@@ -716,7 +753,8 @@ class ContactFormInput(BaseModel):
     message: str
 
 @app.post("/api/contact",tags=["Formularz Kontaktowy i Zgłoszenia"])
-def submit_contact_form(data: ContactFormInput, db: Session = Depends(get_db)):
+def submit_contact_form(data: ContactFormInput, request: Request, db: Session = Depends(get_db)):
+    security_service.rate_limit(db, "contact:" + security_service.client_ip(request), 5, 3600)
     # 1. Zapis wiadomosci w bazie danych (zabezpieczenie przed utrata)
     new_msg = models.ContactMessage(
         name=data.name,
@@ -746,8 +784,21 @@ def submit_contact_form(data: ContactFormInput, db: Session = Depends(get_db)):
     return {"status": "success", "message": "Wiadomosc zostala zapisana i wyslana."}
 # --- WIDOKI HTML ---
 @app.get("/", response_class=HTMLResponse,tags=["Głowny"])
-async def read_root(request: Request):
-    return templates.TemplateResponse(request=request, name="index.html", context={"request": request})
+async def read_root(request: Request, db: Session = Depends(get_db)):
+    """v60: interfejs dostaje dane zalogowanego (login, rola, id, ważność) w window.ESN_USER – sam token zostaje w ciasteczku HttpOnly."""
+    esn_user = None
+    tok = request.cookies.get(SESSION_COOKIE)
+    if tok:
+        try:
+            p = jwt.decode(tok, auth.SECRET_KEY, algorithms=[auth.ALGORITHM])
+            u = db.query(models.User).filter(models.User.login == p.get("sub")).first()
+            if u and not u.is_banned:
+                esn_user = {"sub": u.login, "role": u.role, "user_id": u.id, "exp": p.get("exp")}
+        except Exception:
+            esn_user = None
+    resp = templates.TemplateResponse(request=request, name="index.html", context={"request": request, "esn_user": esn_user})
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
 
 
 MAX_PROJECT_MD = 100_000

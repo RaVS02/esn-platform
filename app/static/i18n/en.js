@@ -1695,5 +1695,8 @@ ESNI18n.add("en", {
   "calc.sh.otwartyKolektor": "Open-collector comparators (LM393, LM339) need a pull-up resistor on the output; its value affects VOH and slightly the thresholds.",
   "calc.sh.fH": "hysteresis width",
   "calc.sh.petla": "Hysteresis loop: output voltage versus input voltage",
-  "calc.sh.note": "Hysteresis makes a slowly changing or noisy signal switch the output only once. Typical uses: thermostat, level sensor, button reading, cleaning up a signal before an MCU."
+  "calc.sh.note": "Hysteresis makes a slowly changing or noisy signal switch the output only once. Typical uses: thermostat, level sensor, button reading, cleaning up a signal before an MCU.",
+  "api.blednyLoginLubHaslo": "Wrong login or password",
+  "api.zbytWielePrbSprobujPonownie": "Too many attempts. Please try again in a moment.",
+  "api.brakNaglowkaZabezpieczajacego": "Missing request protection header – refresh the page"
 }, { name: "English", locale: "en-GB" });

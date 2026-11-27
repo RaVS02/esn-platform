@@ -228,6 +228,26 @@ def seed_if_empty(session):
         migrate_default_icons(session)
 
 
+# ─── v60: ochrona zapisów (CSRF) i nagłówki bezpieczeństwa ───────────────────
+# Sesja to ciasteczko HttpOnly portalu; zapis przez API wymaga nagłówka X-ESN-Req (dodaje go owinięty fetch w static/i18n.js),
+# którego obca strona nie ustawi bez zgody CORS.
+@app.before_request
+def csrf_guard():
+    if request.method not in ('GET', 'HEAD', 'OPTIONS') and request.path.startswith('/api/') \
+            and request.headers.get('X-ESN-Req') != '1':
+        return jsonify({'error': 'Brak nagłówka zabezpieczającego żądanie'}), 403
+
+
+@app.after_request
+def security_headers(resp):
+    resp.headers.setdefault('X-Content-Type-Options', 'nosniff')
+    resp.headers.setdefault('Referrer-Policy', 'strict-origin-when-cross-origin')
+    resp.headers.setdefault('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=()')
+    resp.headers.setdefault('X-Frame-Options', 'SAMEORIGIN')
+    resp.headers.setdefault('Content-Security-Policy', "frame-ancestors 'self'; base-uri 'self'; object-src 'none'; form-action 'self'")
+    return resp
+
+
 # ─── SESSION (multi-tenant – jedna DB na usera) ───────────────────────────────
 @app.before_request
 def load_user_db():

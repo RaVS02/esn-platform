@@ -19,8 +19,13 @@ Makiety pokazują wygląd i przepływ; nic w nich nie jest zapisywane.
 | Organizacje („klany”) | Luźna sugestia: tagi uczelni / koła naukowego / firmy przy profilu, wyszukiwanie ludzi i projektów po organizacji. Do dopracowania. |
 | Wygląd | Etykiety i tagi z mniejszym zaokrągleniem – **zrobione w v59** (4–6 px zamiast „pigułek”). |
 
-Licznik „Komponenty w katalogu” na profilu z makiety oznaczał komponenty, które użytkownik **dodał do katalogu**
-(wkład w bazę), a nie stan jego magazynu – magazyn zostaje prywatny. Zmieniono nazwę na „Dodane do katalogu”.
+Licznik „Komponenty w katalogu” na profilu z makiety jest **usunięty**: komponenty do katalogu dodaje głównie administracja,
+zwykły użytkownik dodaje projekty (magazyn zostaje prywatny). W jego miejscu: **„Pomocne odpowiedzi”** (komentarze oznaczone
+przez innych jako „Przydatne”) – od etapu komentarzy.
+
+**Wyszukiwarka użytkowników – sortowanie i filtry:** A–Z, Z–A, najaktywniejsi, najwięcej projektów, najnowsi; filtry:
+umiejętności, organizacja, rola (np. weryfikator wiedzy), „przyjmuje zaproszenia do projektów”. Sortowanie A–Z / Z–A także
+w listach projektów i katalogu, jeśli gdzieś go brakuje.
 
 ## Pomysły – ocena
 
@@ -44,7 +49,7 @@ Wartość: co da użytkownikom; Koszt: S (dni), M (tydzień+), L (kilka tygodni)
 
 ## Proponowana kolejność etapów
 
-0. **Bezpieczeństwo przed otwarciem społeczności** (sekcja niżej) – zanim pojawią się publiczne profile i treści użytkowników.
+0. **Bezpieczeństwo przed otwarciem społeczności** – **zrobione w v60** (`docs/BEZPIECZENSTWO.md`, „Etap 0 społeczności”); zostaje ręczne zawężenie portów na serwerze i pełny CSP po usunięciu `onclick`.
 1. **Profil publiczny + ustawienia profilu i prywatności** (+ lista i wyszukiwarka). Zakładki w edycji projektu.
 2. **Współtwórcy** projektów i schematów (zaproszenia, role, historia zmian), zakładki w edycji komponentu.
 3. **Powiadomienia** (centrum powiadomień, ustawienia e-mail) + **obserwowanie**.
@@ -61,7 +66,7 @@ Wartość: co da użytkownikom; Koszt: S (dni), M (tydzień+), L (kilka tygodni)
 - Sekrety tylko w `.env`, test pilnuje, żeby nic nie trafiło do kodu. Odpowiedzi zależne od użytkownika z `no-store`.
 - Treści Wiedzy i opisy: markdown renderowany przez `textContent`/własny renderer; pliki – lista dozwolonych typów, limity.
 
-### Do zrobienia w etapie 0 (przed publicznymi profilami)
+### Etap 0 (zrobione w v60, szczegóły w `docs/BEZPIECZENSTWO.md`)
 1. **Komunikat logowania bez wyliczania kont:** dziś „Użytkownik nie istnieje” zdradza, czy login istnieje. Jeden komunikat „Błędny login lub hasło”.
 2. **Cookie `Secure`** na produkcji (za Cloudflare jest HTTPS) – dziś `secure=False`; sterowane zmienną w `.env`.
 3. **Token poza `localStorage`:** dziś JWT jest też w `localStorage`, więc każda luka XSS może go wykraść. Przejście na samo

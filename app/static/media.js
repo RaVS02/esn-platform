@@ -37,7 +37,7 @@
   function fmtMB(n) { return (n / 1048576).toFixed(n < 10485760 ? 1 : 0) + " MB"; }
 
   /* ── API ─────────────────────────────────────────────────────────────── */
-  function authHeaders() { var t = localStorage.getItem("token"); return t ? { Authorization: "Bearer " + t } : {}; }
+  function authHeaders() { var t = ESNAuth.token(); return t ? { Authorization: "Bearer " + t } : {}; }
   function json(res) {
     return res.json().catch(function () { return {}; }).then(function (d) {
       if (!res.ok) {
@@ -63,7 +63,8 @@
         fd.append("owner_type", type); fd.append("owner_id", id); fd.append("role", role || "gallery");
         fd.append("caption", caption || ""); fd.append("file", file);
         xhr.open("POST", "/api/media");
-        var a = authHeaders(); for (var k in a) xhr.setRequestHeader(k, a[k]);
+        xhr.setRequestHeader("X-ESN-Req", "1");   // v60: sesja w ciasteczku HttpOnly + ochrona CSRF (XHR nie przechodzi przez owinięty fetch)
+        xhr.setRequestHeader("X-ESN-Lang", (window.ESNI18n && ESNI18n.lang) ? ESNI18n.lang() : "pl");
         xhr.upload.onprogress = function (e) { if (e.lengthComputable && onProgress) onProgress(e.loaded / e.total); };
         xhr.onload = function () {
           var d = {}; try { d = JSON.parse(xhr.responseText); } catch (e) {}

@@ -11,7 +11,7 @@
   var GUEST_KEY = "esn-wiring-guest", current = null;
   function _t(k, p) { return global.ESNI18n ? global.ESNI18n.t(k, p) : k; }
   function lang() { return global.ESNI18n ? global.ESNI18n.lang() : "pl"; }
-  function token() { try { return localStorage.getItem("token"); } catch (e) { return null; } }
+  function token() { try { return ESNAuth.token(); } catch (e) { return null; } }
   function h(tag, props, kids) {
     var e = document.createElement(tag);
     for (var k in (props || {})) {

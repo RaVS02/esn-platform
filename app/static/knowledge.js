@@ -29,7 +29,7 @@
   function faIcon(n) { var i = document.createElement("i"); i.className = "fa-solid fa-" + n; i.setAttribute("aria-hidden", "true"); return i; }
   function toast(m, t) { if (typeof global.toast === "function") global.toast(m, t || "info"); else global.alert(m); }
   function askConfirm(msg, title) { return typeof global.customConfirm === "function" ? global.customConfirm(msg, title || _t('kn.potwierdzenie')) : Promise.resolve(global.confirm(msg)); }
-  function authH() { var t = localStorage.getItem("token"); return t ? { Authorization: "Bearer " + t } : {}; }
+  function authH() { var t = ESNAuth.token(); return t ? { Authorization: "Bearer " + t } : {}; }
   function jfetch(url, opts) {
     return fetch(url, opts).then(function (res) {
       return res.json().catch(function () { return {}; }).then(function (d) {
@@ -45,7 +45,7 @@
   function jbody(method, data) { return { method: method, headers: Object.assign({ "Content-Type": "application/json" }, authH()), body: JSON.stringify(data || {}) }; }
   function currentRole() {
     try {
-      var t = localStorage.getItem("token"); if (!t) return "";
+      var t = ESNAuth.token(); if (!t) return "";
       var p = JSON.parse(atob(t.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
       return p.role || "";
     } catch (e) { return ""; }
@@ -927,7 +927,7 @@
     document.title = _t('kn.wiedzaEsn');
     if (!parts[0]) return renderHome(el);
     if (parts[0] === "redakcja") {
-      if (!localStorage.getItem("token")) { errBox(el, new Error(_t('kn.zalogujSieAbyWejsc'))); return; }
+      if (!ESNAuth.token()) { errBox(el, new Error(_t('kn.zalogujSieAbyWejsc'))); return; }
       if (parts[1] === "nowa") return renderEditForm(el, "nowa");
       if (parts[1] === "edytuj" && /^\d+$/.test(parts[2] || "")) return renderEditForm(el, parts[2]);
       return renderEditorHome(el, parts);

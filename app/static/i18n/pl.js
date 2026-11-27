@@ -1695,5 +1695,8 @@ ESNI18n.add("pl", {
   "calc.sh.otwartyKolektor": "Komparatory z otwartym kolektorem (LM393, LM339) potrzebują rezystora podciągającego na wyjściu; jego wartość wpływa na VOH i lekko na progi.",
   "calc.sh.fH": "szerokość histerezy",
   "calc.sh.petla": "Pętla histerezy: napięcie wyjściowe w funkcji wejściowego",
-  "calc.sh.note": "Histereza sprawia, że wolno zmieniający się albo zaszumiony sygnał przełącza wyjście tylko raz. Typowe zastosowania: termostat, czujnik poziomu, odczyt przycisku, czyszczenie sygnału przed MCU."
+  "calc.sh.note": "Histereza sprawia, że wolno zmieniający się albo zaszumiony sygnał przełącza wyjście tylko raz. Typowe zastosowania: termostat, czujnik poziomu, odczyt przycisku, czyszczenie sygnału przed MCU.",
+  "api.blednyLoginLubHaslo": "Błędny login lub hasło",
+  "api.zbytWielePrbSprobujPonownie": "Zbyt wiele prób. Spróbuj ponownie za chwilę.",
+  "api.brakNaglowkaZabezpieczajacego": "Brak nagłówka zabezpieczającego żądanie"
 }, { name: "Polski", locale: "pl-PL" });

@@ -51,8 +51,8 @@
 ### Formularz Kontaktowy
 - [X] Dodanie formularza kontaktowego do zgłaszania błedów,zapytan oraz propozycji współpracy
 ## Rozwój i Społeczność – plan w `docs/SPOLECZNOSC.md` (ustalony 2026-11-27, makiety: artefakt „ESN – makiety społeczności”)
-- [ ] Etap 0: bezpieczeństwo przed publicznymi profilami (komunikat logowania bez wyliczania kont, cookie Secure, token tylko w HttpOnly cookie + CSRF, nagłówki/CSP, limity zapytań w bazie, EXIF ze zdjęć, porty na 127.0.0.1).
-- [ ] Etap 1: profil publiczny + ustawienia profilu i prywatności, lista i wyszukiwarka użytkowników; zakładki w edycji projektu.
+- [x] Etap 0 (v60): sesja tylko w ciasteczku HttpOnly + CSRF (`X-ESN-Req`), logowanie bez wyliczania kont, limity prób w bazie, cookie Secure (auto), nagłówki bezpieczeństwa (portal i magazyn), EXIF – zostaje: porty na 127.0.0.1 na serwerze, pełny CSP po usunięciu onclick. Pierwotny zakres: (komunikat logowania bez wyliczania kont, cookie Secure, token tylko w HttpOnly cookie + CSRF, nagłówki/CSP, limity zapytań w bazie, EXIF ze zdjęć, porty na 127.0.0.1).
+- [ ] Etap 1: profil publiczny + ustawienia profilu i prywatności, lista i wyszukiwarka użytkowników (sortowanie A–Z, Z–A, aktywność, projekty, najnowsi; filtry: umiejętności, organizacja, rola); zakładki w edycji projektu. Na profilu bez licznika „dodane do katalogu” (katalog prowadzi administracja) – zamiast niego „Pomocne odpowiedzi”.
 - [ ] Etap 2: współtwórcy projektów i schematów (zaproszenia, role, historia zmian); zakładki w formularzu komponentu.
 - [ ] Etap 3: powiadomienia (w aplikacji, opcjonalnie e-mail) + obserwowanie.
 - [ ] Etap 4: komentarze pod projektami (wątki, @wzmianki, „Przydatne”, edycja/usuwanie własnych, zgłoszenia, moderacja, limit czasowy).

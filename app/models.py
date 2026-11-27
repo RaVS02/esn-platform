@@ -325,3 +325,11 @@ class WiringShare(Base):
     revoked_at = Column(DateTime(timezone=True), nullable=True)
     last_used_at = Column(DateTime(timezone=True), nullable=True)
     views = Column(Integer, nullable=False, default=0, server_default="0")
+
+
+class RateLimit(Base):
+    """v60: liczniki prób (logowanie, kody, reset hasła…) – wspólne dla wszystkich workerów; security_service.rate_limit()."""
+    __tablename__ = "rate_limits"
+    key = Column(String(200), primary_key=True)
+    window_start = Column(Integer, nullable=False)
+    count = Column(Integer, nullable=False, default=0)

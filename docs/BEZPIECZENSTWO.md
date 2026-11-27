@@ -76,3 +76,43 @@ Nie wolno poluzowywać flag `sandbox` ani dodawać `allow-same-origin` do widget
 - Brak `JWT_SECRET_KEY` powoduje głośne ostrzeżenie w logu (klucz domyślny pozwala podrobić token) – na serwerze zawsze ustaw losowy klucz.
 - Test `tests/test_secrets.py` blokuje wpisanie stałych haseł/kluczy w plikach `*.py`.
 - **Po wycieku** (hasło było kiedyś w historii gita): samo usunięcie z kodu nie wystarcza – unieważnij stare hasło u dostawcy (Google → Hasła aplikacji → usuń) i wygeneruj nowe. Przepisywanie historii gita nie jest potrzebne, jeśli stare hasło jest unieważnione.
+
+## Etap 0 społeczności (v60)
+Przed publicznymi profilami i treściami użytkowników (plan: `docs/SPOLECZNOSC.md`).
+
+- **Sesja tylko w ciasteczku `HttpOnly`** (`esn_access_token`, `SameSite=Lax`, `max-age` = ważność tokenu). Token nie jest już
+  zapisywany w `localStorage` (stary wpis jest usuwany przy wejściu na stronę), więc ewentualna luka XSS nie wykradnie sesji.
+  Interfejs dostaje dane zalogowanego od serwera: `window.ESN_USER` = `{sub, role, user_id, exp}` wstrzykiwane w `GET /`
+  (odpowiedź `no-store`) i obsługiwane przez `static/auth.js` (`ESNAuth`). `ESNAuth.token()` zwraca **pseudo-token**
+  (ten sam kształt co JWT, bez podpisu) tylko po to, żeby istniejący kod mógł odczytać rolę; owinięty `fetch` usuwa go z nagłówka.
+- **Bearer nadal działa** (klienci API, testy, magazyn → portal). Nieprawidłowy Bearer nie blokuje ciasteczka.
+- **CSRF:** zapis (POST/PUT/PATCH/DELETE) uwierzytelniony ciasteczkiem wymaga nagłówka `X-ESN-Req: 1` – dodaje go owinięty
+  `fetch` w `static/i18n.js` (tylko dla własnego serwera), a upload zdjęć (XHR) w `media.js` ręcznie. Obca strona nie ustawi
+  takiego nagłówka bez zgody CORS. To samo sprawdza magazyn (`csrf_guard` w `esn_magazyn/app.py`). Nowe zapytania z
+  przeglądarki muszą iść przez `fetch` albo dodać nagłówek same.
+- **Cookie `Secure`:** `COOKIE_SECURE=auto` (domyślnie) – włączane, gdy żądanie przyszło po HTTPS (`CF-Visitor` od Cloudflare,
+  `X-Forwarded-Proto`); `1`/`0` wymusza. Przy HTTPS dodawany jest też `Strict-Transport-Security`.
+- **Logowanie bez wyliczania kont:** brak konta i złe hasło dają ten sam komunikat „Błędny login lub hasło” (bez licznika prób).
+  Rejestracja nadal mówi, że login/e-mail jest zajęty (inaczej nie da się założyć konta) – chroni ją limit prób.
+- **Limity prób w bazie** (`security_service.rate_limit`, tabela `rate_limits`, wspólne dla workerów; przekroczenie → 429 i `Retry-After`):
+
+  | Akcja | Limit |
+  |---|---|
+  | logowanie | 30 / 10 min na IP (+ blokada konta po 5 złych hasłach, jak dotąd) |
+  | rejestracja | 10 / h na IP |
+  | weryfikacja konta kodem | 8 / 15 min na e-mail, 30 / 15 min na IP |
+  | „Nie pamiętam hasła” | 3 / 15 min na e-mail, 10 / h na IP |
+  | reset hasła, kody jednorazowe (zmiana e-maila, usunięcie konta…) | 6 prób / 15 min na konto i cel, 20 / 15 min na IP |
+  | wysyłka kodu na e-mail | 5 / 15 min na konto |
+  | formularz kontaktowy | 5 / h na IP |
+
+  IP klienta: `CF-Connecting-IP` → `X-Forwarded-For` → `X-Real-IP` (`TRUST_PROXY=1`, domyślnie). Uwaga: kto ma dostęp do portu
+  nginx z sieci lokalnej, może podać własny nagłówek – dlatego porty warto zawęzić (niżej).
+- **Nagłówki bezpieczeństwa** (portal: `security_service.security_headers`, magazyn: `security_headers`): `X-Content-Type-Options`,
+  `Referrer-Policy`, `Permissions-Policy`, `X-Frame-Options`, `Cross-Origin-Opener-Policy`, egzekwowany CSP w bezpiecznym zakresie
+  (`frame-ancestors`, `base-uri`, `object-src`, `form-action`) i pełny CSP w trybie **Report-Only** (naruszenia widać w konsoli
+  przeglądarki; egzekwowanie po usunięciu `onclick` z szablonu).
+- **Zdjęcia:** JPEG tracą EXIF (w tym GPS) przy wgrywaniu – już od wcześniejszych wersji (`media_service`).
+- **Do zrobienia ręcznie na serwerze:** porty bazy (`5432`) i portalu (`8000`) tylko na `127.0.0.1` w
+  `docker-compose.override.yaml`, jeśli nic z sieci lokalnej z nich nie korzysta.
+- Testy: `tests/test_security.py`.

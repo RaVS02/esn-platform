@@ -4,9 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="dark light">
-<script src="{{ url_for('static', path='/i18n.js') }}?v=14"></script>
-<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=30"></script>
-<script src="{{ url_for('static', path='/i18n/en.js') }}?v=30"></script>
+<script>window.ESN_USER = {{ esn_user | tojson }};</script>
+<script src="{{ url_for('static', path='/auth.js') }}?v=1"></script>
+<script src="{{ url_for('static', path='/i18n.js') }}?v=15"></script>
+<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=31"></script>
+<script src="{{ url_for('static', path='/i18n/en.js') }}?v=31"></script>
 <script src="{{ url_for('static', path='/theme.js') }}?v=4"></script>
 <title data-i18n="meta.title">Platforma Systemów Wbudowanych</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -35,16 +37,16 @@
 <script src="{{ url_for('static', path='/wiring/app.js') }}?v=7"></script>
 <script src="{{ url_for('static', path='/wiring-guide.js') }}?v=2"></script>
 <script src="{{ url_for('static', path='/shops.js') }}?v=3"></script>
-<script src="{{ url_for('static', path='/wiring-embed.js') }}?v=11"></script>
+<script src="{{ url_for('static', path='/wiring-embed.js') }}?v=12"></script>
 <link rel="stylesheet" href="{{ url_for('static', path='/media.css') }}?v=1">
-<script src="{{ url_for('static', path='/media.js') }}?v=5"></script>
+<script src="{{ url_for('static', path='/media.js') }}?v=6"></script>
 <script src="{{ url_for('static', path='/ai-local.js') }}?v=2"></script>
-<script src="{{ url_for('static', path='/ai-settings.js') }}?v=1"></script>
+<script src="{{ url_for('static', path='/ai-settings.js') }}?v=2"></script>
 <link rel="stylesheet" href="{{ url_for('static', path='/content.css') }}?v=8">
 <script src="{{ url_for('static', path='/vendor/highlight.min.js') }}?v=11.12.0"></script>
 <script src="{{ url_for('static', path='/vendor/arduino.min.js') }}?v=11.12.0"></script>
 <link rel="stylesheet" href="{{ url_for('static', path='/vendor/vs2015.min.css') }}?v=11.12.0">
-<script src="{{ url_for('static', path='/content.js') }}?v=7"></script>
+<script src="{{ url_for('static', path='/content.js') }}?v=8"></script>
 <link rel="stylesheet" href="{{ url_for('static', path='/knowledge.css') }}?v=14">
 <link rel="stylesheet" href="{{ url_for('static', path='/mobile.css') }}?v=3">
 <script src="{{ url_for('static', path='/knowledge-templates.js') }}?v=2"></script>
@@ -54,7 +56,7 @@
 <script src="{{ url_for('static', path='/knowledge-blocks.js') }}?v=2"></script>
 <script src="{{ url_for('static', path='/knowledge-wizard.js') }}?v=5"></script>
 <script src="{{ url_for('static', path='/langfilter.js') }}?v=3"></script>
-<script src="{{ url_for('static', path='/knowledge.js') }}?v=17"></script>
+<script src="{{ url_for('static', path='/knowledge.js') }}?v=18"></script>
 
 </head>
 <body>
@@ -644,7 +646,7 @@ const app = {
     if (!box || box.dataset.loaded === '1') return;
     box.dataset.loaded = '1';
     box.textContent = 'Ładowanie archiwum…';
-    fetch('/api/archiwum', { headers: { Authorization: 'Bearer ' + localStorage.getItem('token') } })
+    fetch('/api/archiwum', { headers: { Authorization: 'Bearer ' + ESNAuth.token() } })
       .then(r => r.ok ? r.text() : Promise.reject(new Error('Brak dostępu do archiwum')))
       .then(html => { box.innerHTML = html; })   // zaufany plik serwera (admin-only), bez treści użytkowników
       .catch(e => { box.dataset.loaded = ''; box.textContent = e.message; });
@@ -652,7 +654,7 @@ const app = {
   navigate: function(targetId,updateHistory = true) {
     if (targetId === 'theory') {   // archiwum: tylko zalogowany admin (treść pobierana z /api/archiwum)
       let r = '';
-      try { r = JSON.parse(atob(localStorage.getItem('token').split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).role; } catch (e) {}
+      try { r = JSON.parse(atob(ESNAuth.token().split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).role; } catch (e) {}
       if (r !== 'admin') { if (typeof toast === 'function') toast(_t('toast.archAdmin'), 'error'); return app.navigate('knowledge', updateHistory); }
       app.loadArchive();
     }
@@ -761,7 +763,7 @@ async function updateProjectsView(resetLimit = true) {
     
     let loggedUserId = null;
     let isAdmin = false;
-    const token = localStorage.getItem('token');
+    const token = ESNAuth.token();
     if (token) {
         const payload = JSON.parse(atob(token.split('.')[1]));
         loggedUserId = payload.user_id;
@@ -936,7 +938,7 @@ function openFullProjectView(slug) {
 
     let loggedUserId = null;
     let isAdmin = false;
-    const token = localStorage.getItem('token');
+    const token = ESNAuth.token();
     if (token) {
         try {
             const payload = JSON.parse(atob(token.split('.')[1]));
@@ -1410,7 +1412,7 @@ async function deleteProject(id, fromFullView) {
     const isConfirmed = await customConfirm(_t('conf.delProject', { t: p ? p.title : '' }), _t('conf.delProjectTitle'));
     if (!isConfirmed) return;
     try {
-        const res = await fetch(`/api/projects/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
+        const res = await fetch(`/api/projects/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${ESNAuth.token()}` } });
         if (!res.ok) {
             let detail = '';
             try { detail = (await res.json()).detail; } catch (e) { /* brak treści */ }
@@ -1438,7 +1440,7 @@ async function deleteProjectFile(field) {
     try {
         const res = await fetch(`/api/projects/${editingProjectId}/file/${field}`, {
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            headers: { 'Authorization': `Bearer ${ESNAuth.token()}` }
         });
         if (res.ok) {
             editingProjectData[field] = null; 
@@ -1459,7 +1461,7 @@ async function deleteProjectFile(field) {
 // --- WZMOCOIONE WGRYWANIE (z lepszymi błędami) ---
 // --- NOWE LOGICZNE WYSYŁANIE (1. Projekt -> 2. Zdjęcie do folderu) ---
 async function submitProject() {
-    const token = localStorage.getItem('token');
+    const token = ESNAuth.token();
 
     // ETAP 1: Przygotowujemy paczkę z tekstem
     const projectData = {
@@ -1826,7 +1828,7 @@ async function buildDynamicFilters() {
 
 function checkCatalogAdminPanel() {
   try {
-    const token = localStorage.getItem('token');
+    const token = ESNAuth.token();
     if (!token) return;
     const payload = JSON.parse(atob(token.split('.')[1]));
     if (payload.role === 'admin' || payload.role === 'moderator') {
@@ -1837,7 +1839,7 @@ function checkCatalogAdminPanel() {
 
 function getCatalogUserRole() {
   try {
-    const token = localStorage.getItem('token');
+    const token = ESNAuth.token();
     if (!token) return 'guest';
     const payload = JSON.parse(atob(token.split('.')[1]));
     return payload.role || 'user';
@@ -2144,7 +2146,7 @@ async function saveCatalogItem() {
     try {
         const res = await fetch(url, {
             method: method,
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ESNAuth.token()}` },
             body: JSON.stringify(payload)
         });
 
@@ -2193,10 +2195,10 @@ async function deleteCatalogItem() {
   if (!catalogEditingId) return;
   // komponent użyty w schematach połączeń – ostrzeżenie (węzły w schematach pokażą wtedy „Brak części”)
   let usedIn = 0;
-  try { const u = await fetch(`/api/wiring/usage/component/${catalogEditingId}`, { cache: 'no-store', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }); if (u.ok) usedIn = (await u.json()).count || 0; } catch (e) { /* brak modułu schematów */ }
+  try { const u = await fetch(`/api/wiring/usage/component/${catalogEditingId}`, { cache: 'no-store', headers: { 'Authorization': `Bearer ${ESNAuth.token()}` } }); if (u.ok) usedIn = (await u.json()).count || 0; } catch (e) { /* brak modułu schematów */ }
   const isConfirmed = await customConfirm((usedIn ? _tn('wr.uzytyWSchematach', usedIn) + ' ' : '') + _t('conf.delComp'), _t('conf.delCompTitle'));
   if (!isConfirmed) return;
-  const token = localStorage.getItem('token');
+  const token = ESNAuth.token();
   try {
     const res = await fetch(`/api/catalog/${catalogEditingId}`, {
       method: 'DELETE',
@@ -2296,7 +2298,7 @@ const auth = {
 
             const data = await res.json();
             if (res.ok) {
-                localStorage.setItem('token', data.access_token); // Zapisujemy bilet!
+                ESNAuth.setFromJwt(data.access_token);   // v60: sesja tylko w ciasteczku HttpOnly – tokenu nie zapisujemy
                 location.reload(); // Odświeżamy stronę, by pokazać nick
                 toast(_t('toast.loggedIn'), 'success');
             } else {
@@ -2347,7 +2349,7 @@ const auth = {
 
     // 4. WYLOGOWANIE
     logout: function() {
-        try { localStorage.removeItem('token'); } catch (e) { /* tryb prywatny */ }
+        ESNAuth.clear();
         // Ciasteczko sesji (httponly) może usunąć tylko serwer – bez tego magazyn zostawałby otwarty po wylogowaniu.
         const done = () => {
             // zdejmij #profile itp. z adresu, żeby po przeładowaniu nie wrócić do widoku wymagającego logowania
@@ -2360,7 +2362,7 @@ const auth = {
 
 // Funkcja sprawdzająca przy starcie czy jesteśmy zalogowani
 function checkAuth() {
-    const token = localStorage.getItem('token'); // U Ciebie to 'token', nie 'access_token' - bardzo ważna uwaga!
+    const token = ESNAuth.token(); // U Ciebie to 'token', nie 'access_token' - bardzo ważna uwaga!
     if (token) {
         try {
             const payload = JSON.parse(atob(token.split('.')[1]));
@@ -2541,7 +2543,7 @@ function applyAvatarToUI(avatarPath) {
 }
 
 async function loadProfileData() {
-    const token = localStorage.getItem('token');
+    const token = ESNAuth.token();
     if(!token) return;
     
     const res = await fetch('/api/users/me', {
@@ -2595,7 +2597,7 @@ async function uploadAvatar() {
     
     const res = await fetch('/api/users/me/avatar', {
         method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') },
+        headers: { 'Authorization': 'Bearer ' + ESNAuth.token() },
         body: formData
     });
     
@@ -2613,7 +2615,7 @@ async function updateNick() {
     const nick = document.getElementById('prof-nick').value;
     const res = await fetch('/api/users/me/profile', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ESNAuth.token() },
         body: JSON.stringify({ username: nick })
     });
     if(res.ok) { toast(_t('toast.nameUpdated'),"success") }
@@ -2647,7 +2649,7 @@ async function requestCode(purpose) {
 
     const res = await fetch('/api/users/me/request-code', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ESNAuth.token() },
         body: JSON.stringify({ purpose: purpose })
     });
     
@@ -2676,7 +2678,7 @@ async function confirmEmailUpdate() {
     const code = document.getElementById('p-email-code').value;
     const res = await fetch('/api/users/me/email', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ESNAuth.token() },
         body: JSON.stringify({ new_email: email, code: code })
     });
     if(res.ok) { toast(_t('toast.emailChanged')); loadProfileData(); } 
@@ -2689,7 +2691,7 @@ async function confirmPasswordUpdate() {
     const code = document.getElementById('p-pass-code').value;
     const res = await fetch('/api/users/me/password', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ESNAuth.token() },
         body: JSON.stringify({ old_password: oldP, new_password: newP, code: code })
     });
     if(res.ok) { toast(_t('toast.passChanged'), "success"); auth.logout(); }
@@ -2700,7 +2702,7 @@ async function confirmDeleteAccount() {
     const code = document.getElementById('p-del-code').value;
     const res = await fetch('/api/users/me', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ESNAuth.token() },
         body: JSON.stringify({ code: code })
     });
     if(res.ok) { toast(_t('toast.accDeleted'), "success"); auth.logout(); }

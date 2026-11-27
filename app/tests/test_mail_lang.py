@@ -25,11 +25,14 @@ class Sent(list):
         return True
 
 
+IP = {"X-Forwarded-For": "10.%d.%d.%d" % tuple(uuid.uuid4().bytes[:3])}   # v60: osobne IP na uruchomienie – limity prób
+
+
 def _register(headers, monkeypatch):
     sent = Sent()
     monkeypatch.setattr(main, "mailer", sent)
     login = "ml" + uuid.uuid4().hex[:8]
-    r = client.post("/api/register", headers=headers, json={"username": login, "login": login, "email": login + "@example.test", "password": "Haslo123!"})
+    r = client.post("/api/register", headers={**IP, **headers}, json={"username": login, "login": login, "email": login + "@example.test", "password": "Haslo123!"})
     assert r.status_code == 200, r.text
     return login, sent
 
@@ -53,9 +56,9 @@ def test_register_and_reset_mail_language(monkeypatch):
     assert db.query(models.User).filter(models.User.login == login).first().lang == "en"
     db.close()
     # reset bez nagłówka → zapisany język użytkownika; z nagłówkiem → nagłówek
-    r = client.post("/api/auth/forgot-password", json={"email": login + "@example.test"})
+    r = client.post("/api/auth/forgot-password", headers=IP, json={"email": login + "@example.test"})
     assert r.status_code == 200 and sent[-1][1] == "Account recovery - ESN Platform"
-    r = client.post("/api/auth/forgot-password", headers={"X-ESN-Lang": "pl"}, json={"email": login + "@example.test"})
+    r = client.post("/api/auth/forgot-password", headers={**IP, "X-ESN-Lang": "pl"}, json={"email": login + "@example.test"})
     assert sent[-1][1] == "Odzyskiwanie dostępu - ESN Platform"
 
 

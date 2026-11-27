@@ -37,7 +37,7 @@
   function imgSrc(p) { return p ? "/static/" + p : ""; }
 
   /* ── API ─────────────────────────────────────────────────────────────── */
-  function authH() { var t = localStorage.getItem("token"); return t ? { Authorization: "Bearer " + t } : {}; }
+  function authH() { var t = ESNAuth.token(); return t ? { Authorization: "Bearer " + t } : {}; }
   function jfetch(url, opts) {
     return fetch(url, opts).then(function (res) {
       return res.json().catch(function () { return {}; }).then(function (d) {
