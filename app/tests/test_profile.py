@@ -127,3 +127,11 @@ def test_people_search_only_public_with_filters_and_sort():
     za = [x["login"] for x in c.get("/api/people", params={"skills": tag, "sort": "za"}, headers=ip()).json()["items"]]
     assert az == sorted(az) and za == list(reversed(az))
     assert c.get("/api/people", params={"sort": "zle", "page": 0}, headers=ip()).json()["sort"] == "active"
+
+
+def test_public_view_has_schemas_and_activity_toggle():
+    login, me = make_user()
+    c = TestClient(main.app)
+    c.put("/api/users/me/public-profile", headers=me, json={"profile_public": True, "show_activity": False})
+    j = c.get("/api/u/" + login, headers=ip()).json()
+    assert j["stats"]["schemas"] == 0 and j["schemas"] == [] and j["activity"] == [] and j["show_activity"] is False

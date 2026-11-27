@@ -37,6 +37,7 @@ class User(Base):
     show_courses = Column(Boolean, nullable=False, default=False, server_default="false")
     allow_invites = Column(Boolean, nullable=False, default=True, server_default="true")
     profile_updated_at = Column(DateTime, nullable=True)
+    last_login_at = Column(DateTime, nullable=True)       # v64: dashboard administracji (aktywni użytkownicy)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     projects = relationship("Project", back_populates="owner")
@@ -343,3 +344,15 @@ class RateLimit(Base):
     key = Column(String(200), primary_key=True)
     window_start = Column(Integer, nullable=False)
     count = Column(Integer, nullable=False, default=0)
+
+
+class AdminLog(Base):
+    """v64: dziennik akcji administracji (ban, odblokowanie, zmiana roli, obsłużone zgłoszenie) – audyt i odwołania."""
+    __tablename__ = "admin_log"
+    id = Column(Integer, primary_key=True, index=True)
+    admin_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    action = Column(String(30), nullable=False)
+    target_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    target = Column(String(120), nullable=True)
+    note = Column(String(300), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)

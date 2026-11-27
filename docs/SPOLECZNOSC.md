@@ -72,7 +72,7 @@ lista użytkowników i ustawienia ról; sekcje moderacji i bezpieczeństwa rosn�
 ## Proponowana kolejność etapów
 
 0. **Bezpieczeństwo przed otwarciem społeczności** – **zrobione w v60** (`docs/BEZPIECZENSTWO.md`, „Etap 0 społeczności”); zostaje ręczne zawężenie portów na serwerze i pełny CSP po usunięciu `onclick`.
-1. **Profil publiczny + ustawienia profilu i prywatności** (+ lista i wyszukiwarka). Zakładki w edycji projektu. **Dashboard administracji** (pierwsza wersja).
+1. **Profil publiczny + ustawienia profilu i prywatności** (+ lista i wyszukiwarka). Zakładki w edycji projektu. **Dashboard administracji** (pierwsza wersja). – **zrobione w v61–v64**.
 2. **Współtwórcy** projektów i schematów (zaproszenia, role, historia zmian), zakładki w edycji komponentu.
 3. **Powiadomienia** (centrum powiadomień, ustawienia e-mail) + **obserwowanie**.
 4. **Komentarze pod projektami** (wątki, @wzmianki, „Przydatne”, edycja i usuwanie, zgłoszenia, moderacja, limity).
@@ -127,6 +127,28 @@ lista użytkowników i ustawienia ról; sekcje moderacji i bezpieczeństwa rosn�
 - Formularz projektu w zakładkach: **Treść** (tytuł, tagi, opis, język, status), **Podzespoły**, **Notatki i kod**, **Zdjęcia**,
   **Artykuł** (edytor + plik .md), **Zasoby**. Pasek zakładek i przycisk zapisu przyklejone (sticky) w oknie; na telefonie
   pasek przewija się w poziomie. Pusty tytuł przy zapisie przenosi do „Treść”. Zakładka „Współtwórcy” dojdzie w etapie 2.
+
+### Etap 1d (zrobione w v64) – dashboard administracji
+- Widok `#admin` (tylko admin; link-ikona w górnym menu i pozycja „Panel admina” w menu konta), boczne menu:
+  **Przegląd** (kafelki: użytkownicy łącznie / nowi / aktywni 7 i 30 dni / zbanowani / administracja, wykres rejestracji z 30 dni,
+  projekty, komponenty, artykuły i oczekujące na przegląd, schematy, pliki, nieprzeczytane zgłoszenia, limity prób, miejsce na
+  pliki i rozmiar bazy, zapytania AI dziś), **Użytkownicy** (szukaj po loginie/nazwie/e-mailu, filtry roli i statusu, sortowanie;
+  akcje: pokaż profil, zmiana roli, ban na N dni lub bezterminowy z powodem, zdjęcie bana, odblokowanie logowania),
+  **Zgłoszenia** (wiadomości z formularza kontaktowego, obsłużone / nowe, odpowiedź e-mailem), **Bezpieczeństwo** (okna limitów
+  prób z doby, zbanowane i zablokowane konta), **Dziennik** (ostatnie 100 akcji administracji).
+- Nowe: kolumna `users.last_login_at` (ustawiana przy logowaniu), tabela `admin_log`; kod `app/admin_service.py`, `static/admin.js`
+  (teksty `adm.*`). Akcji nie można wykonać na własnym koncie. Wszystkie odpowiedzi `no-store`.
+
+### Poprawki po przeglądzie (v65)
+- Nazwa zakładki: **„Społeczność” / „Community”** (adres `#community`, profil `#community/<login>`) – w tym miejscu dojdą później aktualności i forum.
+- Strona profilu bliżej makiety: liczniki Projekty / Schematy i zakładki **Projekty · Schematy · Aktywność** (aktywność tylko przy
+  włączonym „Pokazuj ostatnią aktywność”). **Schematy publiczne = podpięte do projektów** (projekty są publiczne); schematy
+  z Narzędzi zostają prywatne i można je udostępnić linkiem (`WiringShare`). Osobna „publikacja” samodzielnego schematu – do decyzji później.
+- Formularz komponentu (admin) w zakładkach: Podstawy, Specyfikacja, Pinout, Tłumaczenia, Sklepy, Zdjęcia, Kod, Zasoby.
+- Organizacje: decyzja użytkownika – **później** (etap 7), w pełnej wersji (lista, zgłaszanie, weryfikacja).
+- Co z makiet jeszcze nie jest zrobione i kiedy: zakładka „Współtworzy” i przycisk „Zaproś do projektu” (etap 2), „Obserwuj”
+  i powiadomienia (etap 3), licznik „Pomocne odpowiedzi” i komentarze (etap 4), aktualności w Społeczności (etap 5),
+  postęp kursów na profilu (gdy powstanie zapis postępu), odznaki / XP / organizacje (etap 7).
 
 ### Zasady dla nowych funkcji
 - **Minimum danych i jawność:** e-mail nigdy publiczny; miejscowość, linki, organizacje – opcjonalne. Profil w społeczności

@@ -26,6 +26,7 @@ import ai_service
 import content_service
 import security_service
 import profile_service
+import admin_service
 import knowledge_service
 import wiring_service
 from fastapi.responses import JSONResponse
@@ -56,7 +57,7 @@ with engine.begin() as _conn:
                  "ai_model VARCHAR(80)", "ai_key_enc TEXT", "ai_key_hint VARCHAR(12)"):
         _conn.execute(_sql_text("ALTER TABLE users ADD COLUMN IF NOT EXISTS " + _ddl))
     # Profil publiczny i prywatność (v61)
-    for _ddl in profile_service.DDL:
+    for _ddl in profile_service.DDL + admin_service.DDL:
         _conn.execute(_sql_text("ALTER TABLE users ADD COLUMN IF NOT EXISTS " + _ddl))
 
 app = FastAPI(title="ESN Platform API")
@@ -283,6 +284,7 @@ def login(form_data: schemas.UserCreate, request: Request, response: Response, d
 
     # Sukces logowania - reset prób
     user.failed_attempts = 0
+    user.last_login_at = datetime.utcnow()   # v64: aktywni użytkownicy w dashboardzie
     user.lockout_until = None
     db.commit()
     # Generujemy bilet wstępu (Token JWT) - TO MUSI BYĆ PRZED CIASTECZKIEM
@@ -1350,4 +1352,5 @@ app.include_router(media_service.build_router(get_db, get_current_user))
 app.include_router(content_service.build_router(get_db, get_current_user))   # relacje, kod, zasoby
 app.include_router(knowledge_service.build_router(get_db, get_current_user))
 app.include_router(profile_service.build_router(get_db, get_current_user, get_optional_user))   # profil publiczny (v61)
+app.include_router(admin_service.build_router(get_db, require_admin))   # dashboard administracji (v64)
 app.include_router(wiring_service.build_router(get_db, get_current_user, get_optional_user))   # edytor schematów połączeń (/api/wiring)   # wiedza: niezbędniki, poradniki, artykuły, kursy

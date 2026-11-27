@@ -76,15 +76,31 @@ def public_view(db: Session, u, viewer=None) -> dict:
     preview = not u.profile_public
     projects = db.query(models.Project).filter(models.Project.owner_id == u.id).order_by(models.Project.created_at.desc()).all()
     since = u.created_at.strftime("%Y-%m") if u.created_at else None
+    # schematy publiczne = podpięte do projektów (projekty są publiczne); samodzielne schematy z Narzędzi zostają prywatne
+    by_id = {p.id: p for p in projects}
+    schemas = (db.query(models.WiringSchema).filter(models.WiringSchema.project_id.in_(list(by_id) or [0]))
+               .order_by(models.WiringSchema.updated_at.desc()).all())
+    def iso(d):
+        return d.isoformat() if d else None
+    activity = []
+    if u.show_activity:
+        activity = [{"type": "project", "at": iso(p.created_at), "title": p.title, "slug": p.slug} for p in projects[:20]]
+        activity += [{"type": "schema", "at": iso(w.updated_at or w.created_at), "title": by_id[w.project_id].title, "slug": by_id[w.project_id].slug} for w in schemas[:20]]
+        activity.sort(key=lambda a: a["at"] or "", reverse=True)
+        activity = activity[:20]
     return {
         "login": u.login, "username": u.username, "avatar_path": u.avatar_path,
         "role": _role(u),
         "bio": u.bio or "", "location": u.location or "", "skills": u.skills or [], "links": u.links or [],
         "member_since": since, "allow_invites": bool(u.allow_invites), "show_activity": bool(u.show_activity),
-        "stats": {"projects": len(projects)},
+        "stats": {"projects": len(projects), "schemas": len(schemas)},
         "projects": [{"id": p.id, "slug": p.slug, "title": p.title, "short_desc": p.short_desc, "status": p.status, "lang": p.lang,
                       "image_main": p.image_main, "is_official": bool(p.is_official),
-                      "created_at": p.created_at.isoformat() if p.created_at else None} for p in projects[:24]],
+                      "created_at": iso(p.created_at)} for p in projects[:24]],
+        "schemas": [{"id": w.id, "title": w.title or by_id[w.project_id].title, "project_slug": by_id[w.project_id].slug,
+                     "project_title": by_id[w.project_id].title, "parts": len((w.data or {}).get("nodes") or []),
+                     "updated_at": iso(w.updated_at or w.created_at)} for w in schemas[:24]],
+        "activity": activity,
         "preview": preview,
         "is_me": bool(viewer and viewer.id == u.id),
     }

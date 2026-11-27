@@ -40,10 +40,10 @@
   /* ── dolny pasek zakładek ── */
   .tabbar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 100; height: calc(60px + env(safe-area-inset-bottom, 0px));
     padding-bottom: env(safe-area-inset-bottom, 0px); background: rgba(var(--bg-rgb), .96); backdrop-filter: blur(10px); border-top: 1px solid var(--border); }
-  .tab-item { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; position: relative;
+  .tab-item { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; position: relative;
     background: none; border: 0; padding: 0 2px; color: var(--text3); font-family: var(--mono); font-size: 11px; line-height: 1; cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .tab-item svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-  .tab-item span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .tab-item span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; font-size: 9.5px; letter-spacing: -.06em; }
   .tab-item.active { color: var(--accent); }
   .tab-item.active::before { content: ''; position: absolute; top: 0; left: 26%; right: 26%; height: 2px; border-radius: 0 0 2px 2px; background: var(--accent); }
 

@@ -34,7 +34,7 @@
     return null;
   }
   function since(ym) { if (!ym) return ""; try { return ESNI18n.date(new Date(ym + "-01"), { month: "long", year: "numeric" }); } catch (e) { return ym; } }
-  function go(hash) { history.pushState({ view: "people" }, "", "#" + hash); enter(); window.scrollTo(0, 0); }
+  function go(hash) { history.pushState({ view: "community" }, "", "#" + hash); enter(); window.scrollTo(0, 0); }
 
   /* ── lista ──────────────────────────────────────────────────────────────────────────────────── */
   function chip(label, on, fn, group) {
@@ -70,8 +70,8 @@
     box.appendChild(clr);
   }
   function card(u) {
-    var a = h("a", { class: "ppl-card", href: "#people/" + encodeURIComponent(u.login) });
-    a.addEventListener("click", function (e) { e.preventDefault(); go("people/" + encodeURIComponent(u.login)); });
+    var a = h("a", { class: "ppl-card", href: "#community/" + encodeURIComponent(u.login) });
+    a.addEventListener("click", function (e) { e.preventDefault(); go("community/" + encodeURIComponent(u.login)); });
     var name = h("div", { class: "ppl-name" }, [h("strong", {}, [u.username || u.login]), " ", h("span", { class: "ppl-login" }, ["@" + u.login]), roleBadge(u.role)]);
     var bio = h("p", { class: "ppl-bio" + (u.bio ? "" : " empty") }, [u.bio || t("noBio")]);
     var tags = h("div", { class: "ppl-tags" }, (u.skills || []).slice(0, 5).map(function (s) { return h("span", { class: "ppl-tag" }, [s]); }));
@@ -128,8 +128,8 @@
   function showProfile(login) {
     document.getElementById("ppl-list-view").hidden = true;
     var host = document.getElementById("ppl-profile-view"); host.hidden = false; host.textContent = "";
-    var back = h("a", { class: "ppl-back", href: "#people" }, [ico("fa-arrow-left"), " " + t("back")]);
-    back.addEventListener("click", function (e) { e.preventDefault(); go("people"); });
+    var back = h("a", { class: "ppl-back", href: "#community" }, [ico("fa-arrow-left"), " " + t("back")]);
+    back.addEventListener("click", function (e) { e.preventDefault(); go("community"); });
     host.appendChild(back);
     var box = h("div", { class: "ppl-prof", "aria-busy": "true" }); host.appendChild(box);
     get("/api/u/" + encodeURIComponent(login)).then(function (u) {
@@ -162,12 +162,51 @@
         ]),
         actions.children.length ? actions : null
       ]));
-      box.appendChild(h("section", { class: "ppl-stats" }, [stat(t("statProjects"), u.stats.projects)]));
-      box.appendChild(h("h2", { class: "ppl-sec-h" }, [t("projects")]));
-      var grid = h("section", { class: "ppl-proj-grid" });
-      if (!u.projects.length) grid.appendChild(h("p", { class: "ppl-muted" }, [t("noProjects")]));
-      u.projects.forEach(function (p) { grid.appendChild(projCard(p)); });
-      box.appendChild(grid);
+      box.appendChild(h("section", { class: "ppl-stats" }, [stat(t("statProjects"), u.stats.projects), stat(t("statSchemas"), u.stats.schemas || 0)]));
+      // zakładki jak w makiecie: Projekty · Schematy · Aktywność (gdy włączona); „Współtworzy” dojdzie w etapie 2
+      var tabs = [["projects", t("projects"), u.stats.projects], ["schemas", t("schemas"), u.stats.schemas || 0]];
+      if (u.show_activity) tabs.push(["activity", t("activity"), null]);
+      var bar = h("div", { class: "pe-tabs ppl-tabs", role: "tablist", "aria-label": t("sections") }), panel = h("section", { class: "ppl-tab-panel", role: "tabpanel" });
+      function openTab(k) {
+        [].forEach.call(bar.children, function (b) { var on = b.dataset.k === k; b.classList.toggle("on", on); b.setAttribute("aria-selected", on ? "true" : "false"); b.tabIndex = on ? 0 : -1; });
+        panel.textContent = "";
+        if (k === "projects") {
+          var g = h("div", { class: "ppl-proj-grid" });
+          if (!u.projects.length) g.appendChild(h("p", { class: "ppl-muted" }, [t("noProjects")]));
+          u.projects.forEach(function (p) { g.appendChild(projCard(p)); }); panel.appendChild(g);
+        } else if (k === "schemas") {
+          var gs = h("div", { class: "ppl-sch-grid" });
+          if (!(u.schemas || []).length) gs.appendChild(h("p", { class: "ppl-muted" }, [t("noSchemas")]));
+          (u.schemas || []).forEach(function (w) {
+            var a = h("a", { class: "ppl-sch", href: "#projects" }, [h("div", { class: "ppl-sch-ic", "aria-hidden": "true" }, [ico("fa-diagram-project")]),
+              h("div", { class: "ppl-body" }, [h("strong", {}, [w.title]), h("span", { class: "ppl-meta" }, [t("schemaIn", { p: w.project_title }) + " · " + t("nParts", { n: w.parts })]), h("span", { class: "ppl-meta" }, [t("updated", { d: since(w.updated_at && w.updated_at.slice(0, 7)) })])])]);
+            a.addEventListener("click", function (e) { e.preventDefault(); if (window.openProjectFromComponent) openProjectFromComponent(w.project_slug); });
+            gs.appendChild(a);
+          });
+          panel.appendChild(gs);
+          panel.appendChild(h("p", { class: "ppl-fine" }, [t("schemasNote")]));
+        } else {
+          var ul = h("ul", { class: "ppl-act" });
+          if (!(u.activity || []).length) panel.appendChild(h("p", { class: "ppl-muted" }, [t("noActivity")]));
+          (u.activity || []).forEach(function (a) {
+            var li = h("li", {}, [ico(a.type === "schema" ? "fa-diagram-project" : "fa-folder-plus"), h("span", {}, [t(a.type === "schema" ? "actSchema" : "actProject") + " "]),
+              h("a", { href: "#projects" }, [a.title]), h("time", { datetime: a.at || "" }, [a.at ? ESNI18n.date(new Date(a.at)) : ""])]);
+            li.querySelector("a").addEventListener("click", function (e) { e.preventDefault(); if (window.openProjectFromComponent) openProjectFromComponent(a.slug); });
+            ul.appendChild(li);
+          });
+          panel.appendChild(ul);
+        }
+      }
+      tabs.forEach(function (tb) {
+        var b = h("button", { type: "button", role: "tab", class: "pe-tab", "data-k": tb[0] }, [tb[1], tb[2] != null ? h("span", { class: "ppl-tab-n" }, [String(tb[2])]) : null]);
+        b.addEventListener("click", function () { openTab(tb[0]); }); bar.appendChild(b);
+      });
+      bar.addEventListener("keydown", function (e) {
+        var d = { ArrowRight: 1, ArrowLeft: -1 }[e.key]; if (!d) return; e.preventDefault();
+        var ks = tabs.map(function (x) { return x[0]; }), i = ks.indexOf(bar.querySelector(".on").dataset.k), k = ks[(i + d + ks.length) % ks.length];
+        openTab(k); bar.querySelector('[data-k="' + k + '"]').focus();
+      });
+      box.appendChild(bar); box.appendChild(panel); openTab("projects");
     }).catch(function (e) {
       box.removeAttribute("aria-busy");
       box.appendChild(h("div", { class: "ppl-empty" }, [ico("fa-user-lock"), h("p", {}, [e.message])]));
@@ -175,13 +214,13 @@
   }
 
   function enter() {
-    if (!/^#people\//.test(location.hash) && document.title !== baseTitle && !/#people/.test(location.hash)) document.title = baseTitle;
-    if (!document.getElementById("view-people")) return;
-    var m = location.hash.match(/^#people\/([^/?#]+)/);
-    document.getElementById("view-people").classList.toggle("ppl-on-profile", !!m);
+    if (!/^#community\//.test(location.hash) && document.title !== baseTitle && !/#community/.test(location.hash)) document.title = baseTitle;
+    if (!document.getElementById("view-community")) return;
+    var m = location.hash.match(/^#community\/([^/?#]+)/);
+    document.getElementById("view-community").classList.toggle("ppl-on-profile", !!m);
     if (m) showProfile(decodeURIComponent(m[1])); else { document.title = baseTitle; showList(); }
   }
-  window.ESNPeople = { enter: enter, open: function (login) { app.navigate("people"); go("people/" + encodeURIComponent(login)); } };
+  window.ESNPeople = { enter: enter, open: function (login) { app.navigate("community"); go("community/" + encodeURIComponent(login)); } };
   window.ESNPublicProfile = true;     // przycisk „Podgląd profilu” w Moim koncie
-  document.addEventListener("esn-lang", function () { var v = document.getElementById("view-people"); if (v && v.classList.contains("active")) enter(); });
+  document.addEventListener("esn-lang", function () { var v = document.getElementById("view-community"); if (v && v.classList.contains("active")) enter(); });
 })();
