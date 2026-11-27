@@ -35,7 +35,11 @@ out.rc = K.rc(1e4, 1e-7); out.rcAt = K.rcAt(1e4, 1e-7, 1 / (2 * Math.PI * 1e-3),
 const W = ESNCalcPower, A = ESNCalcAnalog;
 out.bat = W.battery(2.5, 0.08, 2, 20e-6, 600, 0.8); out.ldo = W.ldo(5, 3.3, 0.3, 0.005, 1.1, 90, 25);
 out.tr = W.trace(1, 10, 1, 'ext', 0.05, 25); out.trI = W.trace(1, 10, 1, 'int', 0, 25);
-out.op = [A.opamp('noninv', 47e3, 10e3), A.opamp('inv', 47e3, 10e3)]; out.opPick = A.pickGain('noninv', 11, 'E24', 1e3, 1e5, 3);
+out.op = [A.opamp('noninv', 47e3, 10e3), A.opamp('inv', 47e3, 10e3), A.opamp('buf', 0, 0)];
+out.da = A.diffAmp(10e3, 100e3, 10e3, 100e3, 2.5, 2.52); out.da2 = A.diffAmp(10e3, 100e3, 10.1e3, 100e3, 2.5, 2.5); out.daTol = A.cmrrTol(10, 0.01);
+out.sm = A.summer(10e3, [{v: 1, r: 10e3}, {v: 0.5, r: 5e3}]);
+out.sh = A.schmitt('noninv', 10e3, 100e3, 2.5, 5, 0); out.shi = A.schmitt('inv', 10e3, 100e3, 2.5, 5, 0);
+out.shp = A.schmittPick('noninv', 3, 2, 5, 0); out.shpi = A.schmittPick('inv', 3, 2, 5, 0); out.rails = [A.railsOf(5, 'single', 'rr'), A.railsOf(12, 'dual', 'std')]; out.opPick = A.pickGain('noninv', 11, 'E24', 1e3, 1e5, 3);
 console.log(JSON.stringify(out));
 """
 
@@ -146,3 +150,20 @@ def test_opamp(r):
     assert approx(r["op"][0]["g"], 5.7) and approx(r["op"][1]["g"], -4.7) and approx(r["op"][1]["noise"], 5.7)
     p = r["opPick"][0]
     assert abs(p["err"]) < 0.01 and approx(1 + p["rf"] / p["rg"], p["g"])
+
+
+def test_opamp_v57(r):
+    assert r["op"][2]["g"] == 1
+    d = r["da"]
+    assert approx(d["ad"], 10) and abs(d["acm"]) < 1e-12 and approx(d["vout"], 0.2)
+    assert d["cmrr"] is None                                  # idealnie dopasowany: CMRR = ∞ (w JSON null)
+    assert 30 < r["da2"]["cmrr"] < 80 and abs(r["da2"]["vout"]) > 0          # niedopasowanie → sygnał wspólny przechodzi
+    assert abs(r["daTol"] - 20 * __import__("math").log10(11 / 0.04)) < 1e-9
+    assert approx(r["sm"]["vout"], -2.0) and r["sm"]["gains"] == [-1, -2]
+    sh, shi = r["sh"], r["shi"]
+    assert approx(sh["th"], 2.75) and approx(sh["tl"], 2.25) and approx(sh["hyst"], 0.5)
+    assert approx(shi["th"], (2.5 * 100e3 + 5 * 10e3) / 110e3) and approx(shi["tl"], 2.5 * 100e3 / 110e3)
+    for t, p in (("noninv", r["shp"]), ("inv", r["shpi"])):
+        assert p and p["ratio"] > 0
+    assert approx(r["shp"]["ratio"], 0.2) and approx(r["shp"]["vref"], 2.5)
+    assert r["rails"][0] == {"lo": 0.05, "hi": 4.95} and r["rails"][1] == {"lo": -10.5, "hi": 10.5}

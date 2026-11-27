@@ -1,4 +1,4 @@
-# Kalkulatory (v51–v53)
+# Kalkulatory (v51–v57)
 
 Narzędzia → Kalkulatory (`#tools/calc`), każdy kalkulator ma własny adres `#tools/calc/<id>` (można linkować z Wiedzy i kart komponentów).
 
@@ -8,7 +8,7 @@ Narzędzia → Kalkulatory (`#tools/calc`), każdy kalkulator ma własny adres `
 - `app/static/calc-basic.js` – paczka 1: `ohm`, `divider`, `led`, `rescode` + funkcje `ESNCalcBasic` (ohm, pickDivider, encode/decode kodu paskowego).
 - `app/static/calc-parts.js` (v52) – `rcombo` (łączenie R/C/L szeregowo i równolegle, dobór pary do wartości), `capcode` (kod kondensatora w obie strony); `ESNCalcParts`.
 - `app/static/calc-comm.js` (v52) – `baud` (UART/SPI/I²C, dzielnik UBRR i USARTDIV z błędem), `timer` (preskaler, TOP, PWM, ESP32 LEDC), `rc` (filtr RC, τ, ładowanie, dobór C); `ESNCalcComm`.
-- `app/static/calc-analog.js` (v53) – `opamp` (odwracający/nieodwracający, nasycenie, pasmo z GBW, dobór Rf/Rg); `ESNCalcAnalog`.
+- `app/static/calc-analog.js` (v53, v57) – `opamp` (odwracający/nieodwracający/wtórnik, nasycenie, pasmo z GBW, dobór Rf/Rg), `diffamp` (różnicowy, CMRR i wpływ tolerancji), `summer` (sumujący 2–4 wejść), `schmitt` (komparator z histerezą, pętla na wykresie, dobór R1/R2 i Vref do progów); `ESNCalcAnalog` (+ `railsOf`).
 - `app/static/calc-power.js` (v53) – `battery` (cykl pracy, średni prąd), `ldo` (straty, sprawność, Tj), `trace` (IPC-2221, rezystancja i spadek); `ESNCalcPower`.
 - Filtr RC (v53): schemat dolno-/górnoprzepustowy i wykres Bodego (SVG, klasy `calc-g-*`). Strona główna kalkulatorów: objaśnienie szeregów E, tolerancji, kodów i przedrostków.
 - `app/static/calc.css` – wygląd (tylko zmienne motywu; fizyczne kolory pasków rezystora w JS).
@@ -31,4 +31,4 @@ ESNCalc.add({ id: "baud", icon: "gauge-high", group: "comm", title: "calc.baud.t
 Liczenie na bieżąco, przedrostki w polu lub z listy, wartości z szeregu E z błędem w %, zapas mocy 2×, ostrzeżenia praktyczne (GPIO, ADC, obciążenie).
 
 ## Pomysły na dalej
-Więcej układów ze wzmacniaczem (różnicowy, sumujący, wtórnik, komparator z histerezą), filtry 2. rzędu (Sallen-Key), timer 555, stabilizator na diodzie Zenera, przetwornica buck/boost (cewka, kondensatory).
+Filtry 2. rzędu (Sallen-Key), timer 555, stabilizator na diodzie Zenera, przetwornica buck/boost (cewka, kondensatory).

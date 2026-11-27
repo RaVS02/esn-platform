@@ -121,3 +121,4 @@
 .calc-inrow .text-input { margin: 0; }
 .calc-split { grid-template-columns: minmax(0, 1fr) minmax(220px, 340px); }
 @media (max-width: 640px) { .calc-split { grid-template-columns: minmax(0, 1fr); } }
+.calc-g-thin { stroke-width: 1.5; opacity: .5; }
