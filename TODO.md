@@ -58,6 +58,8 @@
 - [x] Etap 1d (v64): dashboard administracji `#admin` – przegląd (użytkownicy, rejestracje 30 dni, treści, zgłoszenia, limity prób, pliki i baza, AI), lista użytkowników z banem/odblokowaniem/zmianą roli, zgłoszenia z formularza kontaktowego, bezpieczeństwo, dziennik akcji admina. **Etap 1 zakończony.**
 - [x] Dashboard administracji (v64, pierwsza wersja; moderacja komentarzy dojdzie z etapem 4): statystyki użytkowników (łącznie, nowi, aktywni, zbanowani, role), treści, zgłoszenia, bezpieczeństwo (blokady, limity), miejsce na pliki i zużycie AI – zamiast Adminera.
 - [x] v65: „Ludzie” → **„Społeczność”** (`#community`); strona profilu z zakładkami Projekty / Schematy / Aktywność (jak w makiecie; schematy publiczne = podpięte do projektów); formularz komponentu w zakładkach (Podstawy, Specyfikacja, Pinout, Tłumaczenia, Sklepy, Zdjęcia, Kod, Zasoby). Organizacje – zgodnie z decyzją później (etap 7).
+- [x] v66: schemat z poziomu projektu – zakładka „Schemat” w formularzu (podpięcie schematu z Narzędzi albo nowy pusty, podgląd/odpięcie podpiętego) i ten sam wybór na karcie projektu bez schematu.
+- [ ] Później: osobna widoczność schematów samodzielnych (publiczny / tylko link / prywatny), żeby schemat z Narzędzi mógł być publiczny bez projektu – pokazywany na profilu w zakładce „Schematy”.
 - [ ] Etap 2: współtwórcy projektów i schematów (zaproszenia, role, historia zmian); zakładka „Współtworzy” na profilu i „Współtwórcy” w formularzach.
 - [ ] Etap 3: powiadomienia (w aplikacji, opcjonalnie e-mail) + obserwowanie.
 - [ ] Etap 4: komentarze pod projektami (wątki, @wzmianki, „Przydatne”, edycja/usuwanie własnych, zgłoszenia, moderacja, limit czasowy).

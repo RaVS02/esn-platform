@@ -434,13 +434,9 @@
     var sec = h("div", { "class": "wiring-section" }, [h("h3", { "class": "section-title", text: _t("wr.tytul") })]);
     slot.appendChild(sec);
     if (!info.schema) {
-      sec.appendChild(h("div", { "class": "wiring-empty" }, [
-        h("span", { text: _t("wr.brakSchematu") }),
-        h("button", { type: "button", "class": "btn-action", text: _t("wr.dodaj"), onclick: async function (e) {
-          e.currentTarget.disabled = true;
-          try { await req("POST", "/projects", { title: project.title || _t("wr.nowySchemat"), project_id: project.id }); mountProject(slot, project, o); }
-          catch (err) { e.currentTarget.disabled = false; toast(err.data && err.data.detail ? global.ESNI18n.err(String(err.data.detail)) : _t("wr.bladWczytywania"), "error"); }
-        } })]));
+      var pslot = h("div");
+      sec.appendChild(h("div", { "class": "wiring-empty" }, [h("span", { text: _t("wr.brakSchematu") }), pslot]));
+      mountPicker(pslot, project.id, { title: function () { return project.title || _t("wr.nowySchemat"); }, onChange: function () { mountProject(slot, project, o); } });
       return;
     }
     var host = h("div");
@@ -451,7 +447,72 @@
     if (info.schema.can_edit && narrow()) ed.ready.then(function () { ed.setEdit(false); });   // telefon: start w podglądzie (README 10.7)
   }
 
-  global.ESNWiring = { mountProject: mountProject, leave: leave, guestApi: guestApi, _guestKey: GUEST_KEY };
+
+  /* ── 3. Wybór schematu dla projektu (v66): podpięcie istniejącego z Narzędzi albo nowy pusty ──
+     projectId = null (nowy projekt) → wybór zapamiętany i wykonany po zapisie projektu przez flush(pid).
+     projectId podany → akcje od razu; o.onChange() po zmianie (np. odświeżenie karty). */
+  function mountPicker(slot, projectId, o) {
+    o = o || {};
+    var pending = null, alive = true;
+    if (!slot) return { flush: function () { return Promise.resolve(); }, destroy: function () {} };
+    function err(e) { toast(errMsg(e), "error"); }
+    async function draw() {
+      if (!alive) return;
+      slot.textContent = "";
+      if (!token()) { slot.appendChild(h("p", { "class": "wr-pick-note", text: _t("wr.pickLogin") })); return; }
+      var cur = null, canCreate = true;
+      if (projectId) {
+        try { var info = await req("GET", "/by-project/" + encodeURIComponent(projectId)); cur = info.schema; canCreate = info.can_create || !!cur; } catch (e) { return; }
+      }
+      var box = h("div", { "class": "wr-pick" });
+      slot.appendChild(box);
+      if (cur) {
+        var open = h("a", { "class": "btn-action", href: "/#tools/schematic/" + encodeURIComponent(cur.id), target: "_blank", rel: "noopener" }, [_t("wr.pickOpen") + " ↗"]);
+        var un = h("button", { type: "button", "class": "btn-action wr-pick-un", text: _t("wr.pickUnlink"), onclick: async function (e) {
+          e.currentTarget.disabled = true;
+          try { await req("PUT", "/projects/" + encodeURIComponent(cur.id) + "/link", { project_id: null }); toast(_t("wr.pickUnlinked"), "success"); draw(); if (o.onChange) o.onChange(); }
+          catch (x) { e.currentTarget.disabled = false; err(x); }
+        } });
+        box.appendChild(h("div", { "class": "wr-pick-cur" }, [h("strong", { text: cur.title || cur.id }),
+          h("span", { "class": "wr-pick-note", text: _t("wr.pickParts", { n: cur.parts, l: cur.links }) })]));
+        box.appendChild(h("div", { "class": "wr-pick-actions" }, [open, cur.can_edit ? un : null]));
+        box.appendChild(h("p", { "class": "wr-pick-note", text: _t("wr.pickCurNote") }));
+        return;
+      }
+      if (!canCreate) { box.appendChild(h("p", { "class": "wr-pick-note", text: _t("wr.brakSchematu") })); return; }
+      var mine = [];
+      try { mine = (await req("GET", "/projects")).filter(function (x) { return !x.project_id; }); } catch (e) { /* brak listy – zostaje „nowy” */ }
+      var sel = h("select", { "class": "text-input wr-pick-sel", "aria-label": _t("wr.pickLabel") });
+      sel.appendChild(h("option", { value: "", text: projectId ? _t("wr.pickChoose") : _t("wr.pickNone") }));
+      mine.forEach(function (x) { sel.appendChild(h("option", { value: x.id, text: (x.title || x.id) + " · " + _t("wr.pickParts", { n: x.parts, l: x.links }) })); });
+      sel.appendChild(h("option", { value: "__new", text: "+ " + _t("wr.pickNew") }));
+      if (pending) sel.value = pending;
+      box.appendChild(h("label", { "class": "wr-pick-lbl", text: _t("wr.pickLabel") }));
+      box.appendChild(sel);
+      if (projectId) {
+        var go = h("button", { type: "button", "class": "btn-action primary", text: _t("wr.pickApply"), onclick: async function (e) {
+          if (!sel.value) return; e.currentTarget.disabled = true;
+          try { await apply(projectId, sel.value); toast(_t("wr.pickDone"), "success"); draw(); if (o.onChange) o.onChange(); }
+          catch (x) { e.currentTarget.disabled = false; err(x); }
+        } });
+        box.appendChild(h("div", { "class": "wr-pick-actions" }, [go]));
+      } else {
+        sel.addEventListener("change", function () { pending = sel.value || null; });
+      }
+      box.appendChild(h("p", { "class": "wr-pick-note", text: mine.length ? _t("wr.pickTip") : _t("wr.pickEmpty") }));
+    }
+    function apply(pid, choice) {
+      if (choice === "__new") return req("POST", "/projects", { title: o.title ? o.title() : _t("wr.nowySchemat"), project_id: pid });
+      return req("PUT", "/projects/" + encodeURIComponent(choice) + "/link", { project_id: pid });
+    }
+    draw();
+    return {
+      flush: function (pid) { if (!pending || !pid) return Promise.resolve(); var c = pending; pending = null; return apply(pid, c); },
+      destroy: function () { alive = false; slot.textContent = ""; }
+    };
+  }
+
+  global.ESNWiring = { mountProject: mountProject, mountPicker: mountPicker, leave: leave, guestApi: guestApi, _guestKey: GUEST_KEY };
 
   if (global.ESNTools) global.ESNTools.register({ id: "schematic", icon: "fa-solid fa-diagram-project", title: "tools.edytorSchematow",
     desc: "tools.rysowanieSchematowPolaczenZ", status: "ready", mount: mountTool });

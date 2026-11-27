@@ -150,6 +150,14 @@ lista użytkowników i ustawienia ról; sekcje moderacji i bezpieczeństwa rosn�
   i powiadomienia (etap 3), licznik „Pomocne odpowiedzi” i komentarze (etap 4), aktualności w Społeczności (etap 5),
   postęp kursów na profilu (gdy powstanie zapis postępu), odznaki / XP / organizacje (etap 7).
 
+### Schematy w projektach (v66) i plan widoczności
+- Formularz projektu ma zakładkę **„Schemat”**: wybór jednego z własnych schematów z Narzędzi (niepodpiętych), „Nowy pusty schemat”
+  albo „Bez schematu”. Przy nowym projekcie wybór wykonuje się po zapisie. Podpięty schemat: „Otwórz w edytorze” i „Odepnij”
+  (schemat wraca do Narzędzi). Karta projektu bez schematu pokazuje ten sam wybór zamiast samego „Dodaj”. Zalecana kolejność:
+  narysować w Narzędziach → podpiąć w projekcie. Kod: `ESNWiring.mountPicker` (wiring-embed.js), API bez zmian (`/link`, `POST /projects`).
+- **Na przyszłość (decyzja użytkownika):** osobna widoczność schematu samodzielnego – publiczny / tylko link / prywatny, tak żeby
+  schemat „luzem” (bez projektu) mógł być publiczny i widoczny na profilu.
+
 ### Zasady dla nowych funkcji
 - **Minimum danych i jawność:** e-mail nigdy publiczny; miejscowość, linki, organizacje – opcjonalne. Profil w społeczności
   dopiero po zgodzie (przełącznik „Pokazuj mój profil”), osobne przełączniki dla aktywności, postępu w kursach i zaproszeń.

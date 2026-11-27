@@ -7,14 +7,14 @@
 <script>window.ESN_USER = {{ esn_user | tojson }};</script>
 <script src="{{ url_for('static', path='/auth.js') }}?v=1"></script>
 <script src="{{ url_for('static', path='/i18n.js') }}?v=15"></script>
-<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=37"></script>
-<script src="{{ url_for('static', path='/i18n/en.js') }}?v=37"></script>
+<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=38"></script>
+<script src="{{ url_for('static', path='/i18n/en.js') }}?v=38"></script>
 <script src="{{ url_for('static', path='/theme.js') }}?v=4"></script>
 <title data-i18n="meta.title">Platforma Systemów Wbudowanych</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=2.42">
+<link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=2.43">
 <link rel="stylesheet" href="{{ url_for('static', path='/pinout.css') }}?v=12">
 <link rel="stylesheet" href="{{ url_for('static', path='/calc.css') }}?v=7">
 <link rel="stylesheet" href="{{ url_for('static', path='/wiring/style.css') }}?v=4">
@@ -37,7 +37,7 @@
 <script src="{{ url_for('static', path='/wiring/app.js') }}?v=7"></script>
 <script src="{{ url_for('static', path='/wiring-guide.js') }}?v=2"></script>
 <script src="{{ url_for('static', path='/shops.js') }}?v=3"></script>
-<script src="{{ url_for('static', path='/wiring-embed.js') }}?v=12"></script>
+<script src="{{ url_for('static', path='/wiring-embed.js') }}?v=13"></script>
 <link rel="stylesheet" href="{{ url_for('static', path='/media.css') }}?v=1">
 <script src="{{ url_for('static', path='/media.js') }}?v=6"></script>
 <script src="{{ url_for('static', path='/ai-local.js') }}?v=2"></script>
@@ -647,6 +647,7 @@
         <button type="button" role="tab" class="pe-tab" data-pe="parts" aria-controls="pe-parts" aria-selected="false" tabindex="-1"><i class="fa-solid fa-microchip" aria-hidden="true"></i><span data-i18n="pe.parts">Podzespoły</span></button>
         <button type="button" role="tab" class="pe-tab" data-pe="tech" aria-controls="pe-tech" aria-selected="false" tabindex="-1"><i class="fa-solid fa-code" aria-hidden="true"></i><span data-i18n="pe.tech">Notatki i kod</span></button>
         <button type="button" role="tab" class="pe-tab" data-pe="media" aria-controls="pe-media" aria-selected="false" tabindex="-1"><i class="fa-solid fa-images" aria-hidden="true"></i><span data-i18n="pe.media">Zdjęcia</span></button>
+        <button type="button" role="tab" class="pe-tab" data-pe="wiring" aria-controls="pe-wiring" aria-selected="false" tabindex="-1"><i class="fa-solid fa-diagram-project" aria-hidden="true"></i><span data-i18n="pe.wiring">Schemat</span></button>
         <button type="button" role="tab" class="pe-tab" data-pe="article" aria-controls="pe-article" aria-selected="false" tabindex="-1"><i class="fa-solid fa-file-lines" aria-hidden="true"></i><span data-i18n="pe.article">Artykuł</span></button>
         <button type="button" role="tab" class="pe-tab" data-pe="res" aria-controls="pe-res" aria-selected="false" tabindex="-1"><i class="fa-solid fa-paperclip" aria-hidden="true"></i><span data-i18n="pe.res">Zasoby</span></button>
       </div>
@@ -704,6 +705,9 @@
       </section>
       <section class="pe-panel" data-pe="media" role="tabpanel" id="pe-media" hidden>
       <div id="p-media-manager"></div>
+      </section>
+      <section class="pe-panel" data-pe="wiring" role="tabpanel" id="pe-wiring" hidden>
+      <div id="p-wiring-picker"></div>
       </section>
       <section class="pe-panel" data-pe="article" role="tabpanel" id="pe-article" hidden>
       <div id="p-article-editor" style="margin-top: 15px;"></div>
@@ -1416,8 +1420,11 @@ function removeProjectStatus(status) {
 // 3. Pobieranie danych do edycji
 let projMedia = null;   // menedżer zdjęć w oknie projektu
 let projParts = null, projCode = null, projRes = null;   // podzespoły z katalogu, przykłady kodu, zasoby
+let projWiring = null;   // v66: wybór schematu (z Narzędzi albo nowy) – zakładka „Schemat”
 function mountProjectExtras(projectId) {
     destroyProjectExtras();
+    projWiring = window.ESNWiring && ESNWiring.mountPicker ? ESNWiring.mountPicker(document.getElementById('p-wiring-picker'), projectId || null,
+        { title: () => document.getElementById('p-title').value.trim() || _t('wr.nowySchemat') }) : null;
     projParts = ESNContent.componentPicker(document.getElementById('p-parts-picker'), { projectId: projectId });
     projCode = ESNContent.codeEditor(document.getElementById('p-code-editor'), { ownerType: 'project', ownerId: projectId });
     projRes = ESNContent.resourcesManager(document.getElementById('p-res-manager'), { ownerType: 'project', ownerId: projectId, canFiles: true, defaultType: 'repo' });
@@ -1432,8 +1439,8 @@ function mountProjectArticle(value, projectId) {
     });
 }
 function destroyProjectExtras() {
-    [projParts, projCode, projRes].forEach(c => { if (c) c.destroy(); });
-    projParts = projCode = projRes = null;
+    [projParts, projCode, projRes, projWiring].forEach(c => { if (c) c.destroy(); });
+    projParts = projCode = projRes = projWiring = null;
 }
 let catMedia = null;    // menedżer zdjęć w oknie komponentu
 let catCodeEd = null, catResMgr = null;   // przykłady kodu i zasoby komponentu
@@ -1673,6 +1680,7 @@ async function submitProject() {
         try { if (projCode) await projCode.save(savedProjectId); } catch (e) { partialErrors.push('kod: ' + e.message); }
         if (projRes) { const rr = await projRes.flush(savedProjectId); rr.failed.forEach(f => partialErrors.push(`${f.name} (${f.error})`)); }
         if (projMedia) { const r = await projMedia.flush(savedProjectId); r.failed.forEach(f => partialErrors.push(`${f.name} (${f.error})`)); }
+        if (projWiring) { try { await projWiring.flush(savedProjectId); } catch (e) { partialErrors.push(_t('pe.wiring') + ' (' + ((e.data && _E(String(e.data.detail || ''))) || e.message || '') + ')'); } }
         if (partialErrors.length) {
             editingProjectId = savedProjectId;   // projekt już istnieje – kolejne zapisy to edycja
             document.querySelector('#projectModal h2').innerText = _t('projects.edytujProjekt');

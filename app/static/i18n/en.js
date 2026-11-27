@@ -1923,5 +1923,20 @@ ESNI18n.add("en", {
   "pe.pinout": "Pinout",
   "pe.langs": "Translations",
   "pe.shops": "Shops",
-  "pe.code": "Code"
+  "pe.code": "Code",
+  "pe.wiring": "Schematic",
+  "wr.pickLogin": "Sign in to attach a schematic.",
+  "wr.pickOpen": "Open in editor",
+  "wr.pickUnlink": "Detach from project",
+  "wr.pickUnlinked": "Schematic detached – it stays in your schematics in Tools.",
+  "wr.pickParts": "parts: {n}, connections: {l}",
+  "wr.pickCurNote": "The attached schematic is shown on the project card and on your profile. Edit it on the project card or in Tools.",
+  "wr.pickLabel": "Wiring schematic",
+  "wr.pickChoose": "Choose a schematic…",
+  "wr.pickNone": "No schematic (you can add one later)",
+  "wr.pickNew": "New empty schematic",
+  "wr.pickApply": "Attach",
+  "wr.pickDone": "Schematic attached to the project.",
+  "wr.pickTip": "The list shows your schematics from Tools that are not attached to any project yet. It's easiest to draw in Tools and attach here.",
+  "wr.pickEmpty": "You have no free schematics in Tools yet – create an empty one and finish it on the project card."
 }, { name: "English", locale: "en-GB" });

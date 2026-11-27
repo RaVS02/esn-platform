@@ -1923,5 +1923,20 @@ ESNI18n.add("pl", {
   "pe.pinout": "Pinout",
   "pe.langs": "Tłumaczenia",
   "pe.shops": "Sklepy",
-  "pe.code": "Kod"
+  "pe.code": "Kod",
+  "pe.wiring": "Schemat",
+  "wr.pickLogin": "Zaloguj się, aby podpiąć schemat.",
+  "wr.pickOpen": "Otwórz w edytorze",
+  "wr.pickUnlink": "Odepnij od projektu",
+  "wr.pickUnlinked": "Schemat odpięty – zostaje w Twoich schematach w Narzędziach.",
+  "wr.pickParts": "elementy: {n}, połączenia: {l}",
+  "wr.pickCurNote": "Podpięty schemat jest widoczny w karcie projektu i na Twoim profilu. Edytujesz go w karcie projektu albo w Narzędziach.",
+  "wr.pickLabel": "Schemat połączeń",
+  "wr.pickChoose": "Wybierz schemat…",
+  "wr.pickNone": "Bez schematu (możesz dodać później)",
+  "wr.pickNew": "Nowy pusty schemat",
+  "wr.pickApply": "Podepnij",
+  "wr.pickDone": "Schemat podpięty do projektu.",
+  "wr.pickTip": "Na liście są Twoje schematy z Narzędzi, które nie są jeszcze podpięte do żadnego projektu. Najwygodniej narysować schemat w Narzędziach i podpiąć go tutaj.",
+  "wr.pickEmpty": "Nie masz jeszcze wolnych schematów w Narzędziach – możesz utworzyć pusty i dokończyć go w karcie projektu."
 }, { name: "Polski", locale: "pl-PL" });

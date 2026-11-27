@@ -1498,3 +1498,14 @@ a i.fa-arrow-up-right-from-square, small i.fa-arrow-up-right-from-square { font-
 .ppl-act li a:hover { color: var(--accent); }
 .ppl-act li time { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--text3); }
 #catalogModal .pe-tab { padding: 11px 9px; gap: 6px; }
+/* v66: wybór schematu dla projektu (formularz i karta) */
+.wr-pick { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.wr-pick-lbl { font-family: var(--mono); font-size: 11px; color: var(--text3); }
+.wr-pick-sel { width: 100%; box-sizing: border-box; margin: 0; }
+.wr-pick-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.wr-pick-cur { display: flex; flex-direction: column; gap: 3px; padding: 12px 14px; border: 1px solid var(--border2); border-radius: 8px; background: var(--bg2); }
+.wr-pick-cur strong { color: var(--text); overflow-wrap: anywhere; }
+.wr-pick-note { font-size: 12px; color: var(--text3); line-height: 1.5; margin: 0; }
+.wr-pick-un { color: var(--red-t, var(--red)); border-color: rgba(var(--red-rgb), .4); }
+.wiring-empty .wr-pick { flex: 1 1 100%; }
+.wiring-empty > div { flex: 1 1 100%; } .wiring-empty .wr-pick-lbl { display: none; }
