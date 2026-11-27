@@ -180,8 +180,8 @@
 
     // Pasek zapisu
     var save = h("button", { type: "button", class: "btn-action primary" }, [ico("fa-floppy-disk"), " " + t("save")]);
-    var preview = h("a", { class: "btn-action", href: "#u/" + encodeURIComponent(s.login) }, [ico("fa-arrow-up-right-from-square"), " " + t("preview")]);
-    preview.addEventListener("click", function (e) { if (!window.ESNPublicProfile) { e.preventDefault(); note(msg, t("previewSoon")); } });   // strona profilu – v62
+    var preview = h("a", { class: "btn-action", href: "#people/" + encodeURIComponent(s.login) }, [ico("fa-arrow-up-right-from-square"), " " + t("preview")]);
+    preview.addEventListener("click", function (e) { e.preventDefault(); if (window.ESNPeople) ESNPeople.open(s.login); else note(msg, t("previewSoon")); });
     host.appendChild(h("div", { class: "acc-card acc-savebar" }, [
       h("p", {}, [t("saveBar")]), h("div", { class: "ai-set-actions" }, [preview, save])
     ]));

@@ -7,14 +7,14 @@
 <script>window.ESN_USER = {{ esn_user | tojson }};</script>
 <script src="{{ url_for('static', path='/auth.js') }}?v=1"></script>
 <script src="{{ url_for('static', path='/i18n.js') }}?v=15"></script>
-<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=33"></script>
-<script src="{{ url_for('static', path='/i18n/en.js') }}?v=33"></script>
+<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=34"></script>
+<script src="{{ url_for('static', path='/i18n/en.js') }}?v=34"></script>
 <script src="{{ url_for('static', path='/theme.js') }}?v=4"></script>
 <title data-i18n="meta.title">Platforma Systemów Wbudowanych</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=2.35">
+<link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=2.37">
 <link rel="stylesheet" href="{{ url_for('static', path='/pinout.css') }}?v=12">
 <link rel="stylesheet" href="{{ url_for('static', path='/calc.css') }}?v=7">
 <link rel="stylesheet" href="{{ url_for('static', path='/wiring/style.css') }}?v=4">
@@ -42,7 +42,8 @@
 <script src="{{ url_for('static', path='/media.js') }}?v=6"></script>
 <script src="{{ url_for('static', path='/ai-local.js') }}?v=2"></script>
 <script src="{{ url_for('static', path='/ai-settings.js') }}?v=2"></script>
-<script src="{{ url_for('static', path='/profile-settings.js') }}?v=2"></script>
+<script src="{{ url_for('static', path='/profile-settings.js') }}?v=3"></script>
+<script src="{{ url_for('static', path='/people.js') }}?v=2"></script>
 <link rel="stylesheet" href="{{ url_for('static', path='/content.css') }}?v=8">
 <script src="{{ url_for('static', path='/vendor/highlight.min.js') }}?v=11.12.0"></script>
 <script src="{{ url_for('static', path='/vendor/arduino.min.js') }}?v=11.12.0"></script>
@@ -70,6 +71,7 @@
     <a class="nav-link" data-target="projects" data-i18n="nav.projects">Baza Projektów</a>
     <a class="nav-link" data-target="components" data-i18n="nav.components">Katalog Podzespołów</a>
     <a class="nav-link" data-target="tools" data-i18n="nav.tools">Narzędzia</a>
+    <a class="nav-link" data-target="people" data-i18n="nav.people">Ludzie</a>
     <a class="nav-link" href="/magazyn/" id="nav-inventory" style="display: none;" data-i18n="nav.inventory">Magazyn</a>
   </div>
   
@@ -91,6 +93,7 @@
   <button type="button" class="tab-item" data-target="projects" onclick="app.navigate('projects')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg><span data-i18n="tab.projects">Projekty</span></button>
   <button type="button" class="tab-item" data-target="components" onclick="app.navigate('components')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10H7z"/><path d="M9 3v4M15 3v4M9 17v4M15 17v4M3 9h4M3 15h4M17 9h4M17 15h4"/></svg><span data-i18n="tab.components">Katalog</span></button>
   <button type="button" class="tab-item" data-target="tools" onclick="app.navigate('tools')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.1L3 17.7 6.3 21l6.3-6.3a4 4 0 0 0 5.1-5.4l-2.6 2.6-2.4-.6-.6-2.4 2.6-2.6z"/></svg><span data-i18n="tab.tools">Narzędzia</span></button>
+  <button type="button" class="tab-item" data-target="people" onclick="app.navigate('people')"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7"/><path d="M18 14.5a6.5 6.5 0 0 1 3.5 5.5"/></svg><span data-i18n="tab.people">Ludzie</span></button>
 </nav>
 
 <div id="view-home" class="app-view active">
@@ -507,6 +510,35 @@
     </div>
 </div>
 
+<div id="view-people" class="app-view">
+  <section class="hero" style="padding-bottom: 32px;">
+    <div class="hero-tag" data-i18n="ppl.tag">Społeczność</div>
+    <h1><span data-i18n="ppl.title1">Ludzie</span> <em data-i18n="ppl.title2">ESN</em></h1>
+    <p class="hero-sub" data-i18n="ppl.sub">Znajdź osoby z doświadczeniem w konkretnym temacie – i zobacz, nad czym pracują.</p>
+  </section>
+  <div id="ppl-list-view" class="full-wrap projects-layout">
+    <aside>
+      <details class="filter-details" open>
+        <summary class="filter-summary"><i class="fa-solid fa-sliders" aria-hidden="true"></i> <span data-i18n="projects.opcjeFiltrowania">Opcje Filtrowania</span></summary>
+        <div class="filter-content" id="ppl-filters"></div>
+      </details>
+    </aside>
+    <main>
+      <div class="controls-bar">
+        <div class="search-wrap">
+          <span class="search-icon"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
+          <input type="search" id="ppl-q" class="search-input" maxlength="80" placeholder="Szukaj po nazwie, loginie albo umiejętności…" data-i18n-attr="placeholder:ppl.searchPh" aria-label="Szukaj ludzi" >
+        </div>
+      </div>
+      <div id="ppl-count" class="ppl-count" aria-live="polite"></div>
+      <div id="ppl-list" class="ppl-list"></div>
+      <div id="ppl-pages" class="ppl-pages"></div>
+      <div class="ppl-note"><span data-i18n="ppl.note">Na liście są tylko osoby, które w ustawieniach włączyły „Pokazuj mój profil w społeczności”.</span></div>
+    </main>
+  </div>
+  <div id="ppl-profile-view" class="ppl-prof-wrap" hidden></div>
+</div>
+
 <div id="view-contact" class="app-view">
   <section class="hero" style="padding-bottom: 40px; text-align: center;">
     <div class="hero-tag" style="justify-content: center;" data-i18n="contact.wspolpracaIPytania">Współpraca i Pytania</div>
@@ -707,6 +739,9 @@ const app = {
     }
     if (targetId === 'tools' && window.ESNTools) {
       ESNTools.enter();
+    }
+    if (targetId === 'people' && window.ESNPeople) {
+      ESNPeople.enter();
     }
     
     // Ładuj projekty automatycznie przy wejściu w zakładkę!
@@ -2814,7 +2849,7 @@ window.onpopstate = function(event) {
         app.navigate(event.state.view, false);
     } else {
       const hash=window.location.hash.replace('#','').split('/')[0];
-      if (hash && !['home','theory','projects','components','profile','knowledge','tools'].includes(hash))
+      if (hash && !['home','theory','projects','components','profile','knowledge','tools','people'].includes(hash))
         {
           return;
         }
@@ -2836,7 +2871,7 @@ window.addEventListener('load', () => {
     else if (hash && document.getElementById('view-' + hash)) {
         app.navigate(hash);
     }
-    else if(hash && !['home','theory','projects','components','profile','knowledge','tools'].includes(hash))
+    else if(hash && !['home','theory','projects','components','profile','knowledge','tools','people'].includes(hash))
     {
       app.navigate('theory');
     } 

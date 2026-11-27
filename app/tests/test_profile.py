@@ -107,3 +107,23 @@ def test_delete_avatar_sets_initials_mode():
     r = c.delete("/api/users/me/avatar", headers=me)
     assert r.status_code == 200 and r.json() == {"avatar_path": None}
     assert c.get("/api/users/me", headers=me).json().get("avatar_path") is None
+
+
+def test_people_search_only_public_with_filters_and_sort():
+    tag = "Sk" + uuid.uuid4().hex[:6]
+    la, a = make_user(); lb, b = make_user(); lc, c_ = make_user()
+    c = TestClient(main.app)
+    c.put("/api/users/me/public-profile", headers=a, json={"profile_public": True, "skills": [tag, "KiCad"], "bio": "zasilanie bateryjne", "allow_invites": False})
+    c.put("/api/users/me/public-profile", headers=b, json={"profile_public": True, "skills": [tag.lower()]})
+    c.put("/api/users/me/public-profile", headers=c_, json={"profile_public": False, "skills": [tag]})      # prywatny – nie może się pojawić
+    r = c.get("/api/people", params={"skills": tag}, headers=ip()).json()
+    logins = [x["login"] for x in r["items"]]
+    assert set(logins) == {la, lb} and lc not in logins
+    assert any(f["name"].lower() == tag.lower() and f["count"] >= 2 for f in r["skills"])
+    assert all("email" not in x and "_last" not in x for x in r["items"])
+    assert [x["login"] for x in c.get("/api/people", params={"skills": tag, "invites": 1}, headers=ip()).json()["items"]] == [lb]
+    assert [x["login"] for x in c.get("/api/people", params={"skills": tag, "q": "BATERYJNE"}, headers=ip()).json()["items"]] == [la]
+    az = [x["login"] for x in c.get("/api/people", params={"skills": tag, "sort": "az"}, headers=ip()).json()["items"]]
+    za = [x["login"] for x in c.get("/api/people", params={"skills": tag, "sort": "za"}, headers=ip()).json()["items"]]
+    assert az == sorted(az) and za == list(reversed(az))
+    assert c.get("/api/people", params={"sort": "zle", "page": 0}, headers=ip()).json()["sort"] == "active"

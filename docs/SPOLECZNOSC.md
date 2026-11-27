@@ -113,6 +113,16 @@ lista użytkowników i ustawienia ról; sekcje moderacji i bezpieczeństwa rosn�
   **Język i wygląd**. Kod: `static/profile-settings.js`, teksty `pp.*` i `acc.*`; `DELETE /api/users/me/avatar`.
   „Powiadomienia” dojdą do menu w etapie 3. Przycisk „Podgląd profilu” zadziała w v62 (strona `#u/<login>`).
 
+### Etap 1b (zrobione w v62)
+- Zakładka **„Ludzie”** w menu (i w dolnym pasku na telefonie): `#people` – lista tylko profili publicznych i niezablokowanych,
+  boczny panel filtrów jak w Projektach (sortowanie: najaktywniejsi, A–Z, Z–A, najwięcej projektów, najnowsi; umiejętności z
+  licznikami; „Administracja”; „Przyjmują zaproszenia”), wyszukiwarka (nazwa, login, opis, miejscowość, umiejętności), po 24 na stronę.
+- Strona profilu `#people/<login>`: nagłówek (zdjęcie/inicjały, nazwa, rola, @login · miejscowość, opis, umiejętności, linki
+  z `rel="nofollow ugc noopener"`), liczba projektów, siatka projektów (klik otwiera projekt). Właściciel: „Edytuj profil”;
+  „Zaproś do projektu” – nieaktywne do etapu współtwórców. „Najaktywniejsi” = ostatnia zmiana profilu lub nowy projekt.
+- API `GET /api/people?q=&skills=&role=team&invites=1&sort=&page=` (limit 240 / 10 min na IP), kod `profile_service.search_people`,
+  interfejs `static/people.js` (teksty `ppl.*`). Filtrowanie w Pythonie – przy dużej liczbie profili przenieść do SQL / osobnej tabeli umiejętności.
+
 ### Zasady dla nowych funkcji
 - **Minimum danych i jawność:** e-mail nigdy publiczny; miejscowość, linki, organizacje – opcjonalne. Profil w społeczności
   dopiero po zgodzie (przełącznik „Pokazuj mój profil”), osobne przełączniki dla aktywności, postępu w kursach i zaproszeń.
