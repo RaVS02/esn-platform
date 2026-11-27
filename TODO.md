@@ -50,13 +50,16 @@
 - [ ] Stworzyć panel zarządzania zdjęciami: usuwanie, zmiana kolejności.
 ### Formularz Kontaktowy
 - [X] Dodanie formularza kontaktowego do zgłaszania błedów,zapytan oraz propozycji współpracy
-## Rozwój i Społeczność (Priorytet: Niski / Plany na przyszłość)
-*Dodatkowe panele i funkcjonalności budujące społeczność wokół portalu.*
-
-- [ ] Wdrożyć moduł Forum.
-- [ ] Wdrożyć moduł Bloga.
-- [ ] Stworzyć wyszukiwarkę użytkowników.
-- [ ] Zbudować publiczny panel użytkownika (widoczny dla innych) zawierający: Avatar, Bio oraz listę stworzonych projektów.
+## Rozwój i Społeczność – plan w `docs/SPOLECZNOSC.md` (ustalony 2026-11-27, makiety: artefakt „ESN – makiety społeczności”)
+- [ ] Etap 0: bezpieczeństwo przed publicznymi profilami (komunikat logowania bez wyliczania kont, cookie Secure, token tylko w HttpOnly cookie + CSRF, nagłówki/CSP, limity zapytań w bazie, EXIF ze zdjęć, porty na 127.0.0.1).
+- [ ] Etap 1: profil publiczny + ustawienia profilu i prywatności, lista i wyszukiwarka użytkowników; zakładki w edycji projektu.
+- [ ] Etap 2: współtwórcy projektów i schematów (zaproszenia, role, historia zmian); zakładki w formularzu komponentu.
+- [ ] Etap 3: powiadomienia (w aplikacji, opcjonalnie e-mail) + obserwowanie.
+- [ ] Etap 4: komentarze pod projektami (wątki, @wzmianki, „Przydatne”, edycja/usuwanie własnych, zgłoszenia, moderacja, limit czasowy).
+- [ ] Etap 5: zakładka „Społeczność” – aktualności platformy, aktywność obserwowanych, wyszukiwarka osób i umiejętności.
+- [ ] Etap 6: forum / pokoje dyskusyjne (zakładane przez administrację i użytkowników – zasady do ustalenia).
+- [ ] Później: organizacje („klany”: uczelnia, koło naukowe, firma), odznaki / XP / poziomy / tytuły / ramki, komentarze pod Wiedzą i komponentami, blog.
+- [x] v59: mniejsze zaokrąglenie etykiet, tagów i chipów (portal i magazyn).
 ## Tłumaczenia (i18n)
 - [x] (v26) Rdzeń `i18n.js`, słowniki PL/EN, przełącznik, nawigacja, home, AI w profilu, nawigacja magazynu – `docs/I18N.md`.
 - [x] (v27) Projekty, Katalog, Narzędzia, Profil, Kontakt, logowanie/rejestracja, stopka, komunikaty.

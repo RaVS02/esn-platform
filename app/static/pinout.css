@@ -71,7 +71,7 @@
 .pinout td { color: var(--text2); }
 .pinout .po-chip {
   display: inline-block; border: 1px solid var(--c); color: var(--c);
-  border-radius: 99px; padding: 0 8px; font-size: 11px; white-space: nowrap; font-family: var(--mono);
+  border-radius: 4px; padding: 0 8px; font-size: 11px; white-space: nowrap; font-family: var(--mono);
 }
 
 /* stopka */
