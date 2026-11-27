@@ -25,7 +25,14 @@ przez innych jako „Przydatne”) – od etapu komentarzy.
 
 **Wyszukiwarka użytkowników – sortowanie i filtry:** A–Z, Z–A, najaktywniejsi, najwięcej projektów, najnowsi; filtry:
 umiejętności, organizacja, rola (np. weryfikator wiedzy), „przyjmuje zaproszenia do projektów”. Sortowanie A–Z / Z–A także
-w listach projektów i katalogu, jeśli gdzieś go brakuje.
+w listach projektów i katalogu, jeśli gdzieś go brakuje. **Wygląd filtrów** docelowo jak w Projektach i Katalogu
+(boczny panel „Opcje filtrowania” z grupami chipów i wyszukiwarką nad listą), a nie rzędy chipów z makiety.
+
+**Organizacje – gdzie się je wpisuje (propozycja):** w Ustawieniach → Profil publiczny, pole „Organizacje” z wyszukiwaniem
+po liście istniejących organizacji (nie dowolny tekst – żeby nie było „PWr”, „Politechnika Wrocławska” i „pwr” osobno).
+Nowej organizacji nie ma na liście → „Zgłoś organizację” (zatwierdza administracja albo opiekun organizacji). Przynależność:
+dopisana przez użytkownika = „niezweryfikowana”, potwierdzona przez opiekuna (lub e-mail w domenie uczelni/firmy) = „zweryfikowana”.
+Każdą organizację można ukryć na swoim profilu.
 
 ## Pomysły – ocena
 
@@ -47,10 +54,25 @@ Wartość: co da użytkownikom; Koszt: S (dni), M (tydzień+), L (kilka tygodni)
 | Odznaki, XP, poziomy, tytuły, ramki | średnia | M–L | niskie | Po zebraniu zdarzeń (kursy, projekty, komentarze „Przydatne”); reguły ustalimy później. |
 | Komentarze pod Wiedzą i komponentami | średnia | S | średnie | Po komentarzach pod projektami – ten sam kod. |
 
+## Dashboard administracji (pomysł 2026-11-27)
+
+W panelu admina, obok zgłoszeń (wiadomości kontaktowe), zakładka „Przegląd” – zamiast zaglądania do Adminera:
+- **Użytkownicy:** łącznie, nowi (7 / 30 dni, wykres), aktywni (logowanie w 7 / 30 dni), niezweryfikowani, zbanowani,
+  role (admin / moderator / user); lista ostatnich rejestracji z akcjami (podgląd profilu, ban, zmiana roli).
+- **Treści:** projekty (opublikowane / szkice), schematy, komponenty katalogu, artykuły Wiedzy do przeglądu, zasoby i pliki.
+- **Moderacja:** zgłoszenia do obsłużenia, później zgłoszone komentarze i posty z forum, dziennik moderacji.
+- **Bezpieczeństwo:** zablokowane konta i przekroczone limity prób z ostatniej doby (z `rate_limits`), nieudane logowania.
+- **Zasoby serwera:** miejsce zajęte przez pliki i zdjęcia, rozmiar bazy, zużycie AI (dziennie, na użytkownika).
+- Zasady: tylko rola admin (moderator – sama moderacja), dane zagregowane tam, gdzie wystarczą; e-maile widoczne tylko na
+  liście użytkowników dla admina; akcje admina zapisywane w dzienniku.
+
+Ocena: wartość wysoka (codzienna praca administracji), koszt S–M, ryzyko niskie. Dobrze zrobić w etapie 1, bo i tak powstaje
+lista użytkowników i ustawienia ról; sekcje moderacji i bezpieczeństwa rosną z kolejnymi etapami.
+
 ## Proponowana kolejność etapów
 
 0. **Bezpieczeństwo przed otwarciem społeczności** – **zrobione w v60** (`docs/BEZPIECZENSTWO.md`, „Etap 0 społeczności”); zostaje ręczne zawężenie portów na serwerze i pełny CSP po usunięciu `onclick`.
-1. **Profil publiczny + ustawienia profilu i prywatności** (+ lista i wyszukiwarka). Zakładki w edycji projektu.
+1. **Profil publiczny + ustawienia profilu i prywatności** (+ lista i wyszukiwarka). Zakładki w edycji projektu. **Dashboard administracji** (pierwsza wersja).
 2. **Współtwórcy** projektów i schematów (zaproszenia, role, historia zmian), zakładki w edycji komponentu.
 3. **Powiadomienia** (centrum powiadomień, ustawienia e-mail) + **obserwowanie**.
 4. **Komentarze pod projektami** (wątki, @wzmianki, „Przydatne”, edycja i usuwanie, zgłoszenia, moderacja, limity).
@@ -77,6 +99,16 @@ Wartość: co da użytkownikom; Koszt: S (dni), M (tydzień+), L (kilka tygodni)
    nie w pamięci (kilka workerów).
 6. **Zdjęcia profilowe:** ponowne zakodowanie obrazu (usuwa metadane EXIF, np. lokalizację GPS z telefonu), stały rozmiar, limit wagi.
 7. Porty bazy i portalu tylko na `127.0.0.1` (dziś publikowane w sieci lokalnej).
+
+### Etap 1a (zrobione w v61)
+- Nowe kolumny `users`: `bio` (≤300), `location` (≤80), `skills` (JSON, ≤8 tagów po ≤30 znaków), `links` (JSON, ≤4, tylko http/https),
+  `profile_public` (domyślnie **wyłączone**), `show_activity` (wł.), `show_courses` (wył.), `allow_invites` (wł.), `profile_updated_at`.
+  Dodawane automatycznie przy starcie (`ALTER TABLE … ADD COLUMN IF NOT EXISTS`), kod w `app/profile_service.py`.
+- API: `GET/PUT /api/users/me/public-profile` (zapis: limit 30/h), `GET /api/u/{login}` (limit 300 / 10 min na IP).
+  Profil prywatny, zbanowany i nieistniejący dają **tę samą** odpowiedź 404; właściciel i admin dostają podgląd (`preview: true`).
+  E-mail nigdy nie trafia do odpowiedzi; wszystkie odpowiedzi z `Cache-Control: no-store`.
+- Interfejs: karta „Profil publiczny” w Moim koncie (`static/profile-settings.js`, teksty `pp.*`). Przycisk „Podgląd profilu”
+  zadziała w v62 (strona `#u/<login>`).
 
 ### Zasady dla nowych funkcji
 - **Minimum danych i jawność:** e-mail nigdy publiczny; miejscowość, linki, organizacje – opcjonalne. Profil w społeczności

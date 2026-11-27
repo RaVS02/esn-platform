@@ -25,6 +25,7 @@ import media_service
 import ai_service
 import content_service
 import security_service
+import profile_service
 import knowledge_service
 import wiring_service
 from fastapi.responses import JSONResponse
@@ -53,6 +54,9 @@ with engine.begin() as _conn:
     # Asystent AI (limity dzienne + własny klucz)
     for _ddl in ("ai_requests_today INTEGER NOT NULL DEFAULT 0", "last_ai_request_date DATE", "ai_provider VARCHAR(20)",
                  "ai_model VARCHAR(80)", "ai_key_enc TEXT", "ai_key_hint VARCHAR(12)"):
+        _conn.execute(_sql_text("ALTER TABLE users ADD COLUMN IF NOT EXISTS " + _ddl))
+    # Profil publiczny i prywatność (v61)
+    for _ddl in profile_service.DDL:
         _conn.execute(_sql_text("ALTER TABLE users ADD COLUMN IF NOT EXISTS " + _ddl))
 
 app = FastAPI(title="ESN Platform API")
@@ -1337,4 +1341,5 @@ def set_user_role(
 app.include_router(media_service.build_router(get_db, get_current_user))
 app.include_router(content_service.build_router(get_db, get_current_user))   # relacje, kod, zasoby
 app.include_router(knowledge_service.build_router(get_db, get_current_user))
+app.include_router(profile_service.build_router(get_db, get_current_user, get_optional_user))   # profil publiczny (v61)
 app.include_router(wiring_service.build_router(get_db, get_current_user, get_optional_user))   # edytor schematów połączeń (/api/wiring)   # wiedza: niezbędniki, poradniki, artykuły, kursy

@@ -1257,3 +1257,27 @@ a i.fa-arrow-up-right-from-square, small i.fa-arrow-up-right-from-square { font-
   .kv-val { text-align: left; font-size: 13px; }
   .cat-desc-grid { padding: 16px !important; gap: 24px !important; }
 }
+
+/* ── Profil publiczny (Moje konto, v61) ───────────────────────────────────────────────────────────── */
+.pp-state { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 12px; padding: 5px 10px; border-radius: 4px; border: 1px solid var(--border2); color: var(--text2); margin: 2px 0 4px; }
+.pp-state.on { color: var(--green-t, var(--green)); border-color: var(--green); background: rgba(var(--green-rgb), .08); }
+.pp-bio { width: 100%; box-sizing: border-box; resize: vertical; min-height: 76px; font-family: inherit; }
+.pp-count, .pp-hint { display: block; font-size: 11px; color: var(--text3); margin-top: 4px; }
+.pp-count { text-align: right; margin: -6px 0 8px; }
+.pp-chips { display: flex; flex-wrap: wrap; gap: 6px; min-height: 4px; }
+.pp-chip { font-family: var(--mono); font-size: 11px; padding: 3px 8px; border-radius: 4px; background: var(--bg3); border: 1px solid var(--border2); color: var(--text2); max-width: 100%; overflow-wrap: anywhere; }
+.pp-links { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.pp-link-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto; gap: 8px; align-items: center; }
+.pp-link-row .text-input { width: 100%; box-sizing: border-box; margin: 0; min-width: 0; }
+.pp-link-del { padding: 0 12px; min-height: 40px; color: var(--red-t, var(--red)); }
+.pp-toggles { display: flex; flex-direction: column; gap: 2px; }
+.pp-toggle { align-items: flex-start; }
+.pp-toggle input { margin-top: 3px; flex: none; }
+.pp-toggle span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pp-toggle strong { font-weight: 500; }
+.pp-toggle small { font-size: 12px; color: var(--text3); line-height: 1.45; }
+.pp-save { margin-top: 16px; }
+@media (max-width: 600px) {
+  .pp-link-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .pp-link-row .text-input:first-child { grid-column: 1 / -1; }
+}

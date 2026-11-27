@@ -27,6 +27,16 @@ class User(Base):
     # Profil
     avatar_path = Column(String(255), nullable=True)
     lang = Column(String(5), nullable=True)   # ostatni znany język interfejsu (do wiadomości e-mail)
+    # Profil publiczny (v61, profile_service.py) – widoczny dla innych dopiero po włączeniu profile_public
+    bio = Column(Text, nullable=True)
+    location = Column(String(80), nullable=True)
+    skills = Column(JSON, nullable=True)
+    links = Column(JSON, nullable=True)
+    profile_public = Column(Boolean, nullable=False, default=False, server_default="false")
+    show_activity = Column(Boolean, nullable=False, default=True, server_default="true")
+    show_courses = Column(Boolean, nullable=False, default=False, server_default="false")
+    allow_invites = Column(Boolean, nullable=False, default=True, server_default="true")
+    profile_updated_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     projects = relationship("Project", back_populates="owner")
