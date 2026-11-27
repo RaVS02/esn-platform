@@ -107,8 +107,11 @@ lista użytkowników i ustawienia ról; sekcje moderacji i bezpieczeństwa rosn�
 - API: `GET/PUT /api/users/me/public-profile` (zapis: limit 30/h), `GET /api/u/{login}` (limit 300 / 10 min na IP).
   Profil prywatny, zbanowany i nieistniejący dają **tę samą** odpowiedź 404; właściciel i admin dostają podgląd (`preview: true`).
   E-mail nigdy nie trafia do odpowiedzi; wszystkie odpowiedzi z `Cache-Control: no-store`.
-- Interfejs: karta „Profil publiczny” w Moim koncie (`static/profile-settings.js`, teksty `pp.*`). Przycisk „Podgląd profilu”
-  zadziała w v62 (strona `#u/<login>`).
+- Interfejs: „Mój profil” ma nagłówek jak dotąd, a pod nim boczne menu z zakładkami (na telefonie – przewijany pasek):
+  **Profil publiczny** (zdjęcie / „Użyj inicjałów”, nazwa, login, o mnie, miejscowość, umiejętności, GitHub, www, inne linki,
+  przełączniki prywatności, jeden przycisk „Zapisz”), **Dane konta** (e-mail, hasło, usuwanie konta), **Asystent AI**,
+  **Język i wygląd**. Kod: `static/profile-settings.js`, teksty `pp.*` i `acc.*`; `DELETE /api/users/me/avatar`.
+  „Powiadomienia” dojdą do menu w etapie 3. Przycisk „Podgląd profilu” zadziała w v62 (strona `#u/<login>`).
 
 ### Zasady dla nowych funkcji
 - **Minimum danych i jawność:** e-mail nigdy publiczny; miejscowość, linki, organizacje – opcjonalne. Profil w społeczności

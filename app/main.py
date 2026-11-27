@@ -443,6 +443,14 @@ async def upload_avatar(file: UploadFile = File(...), current_user: models.User 
     db.commit()
     return {"avatar_path": current_user.avatar_path}
 
+@app.delete("/api/users/me/avatar",tags=["Konta i Uwierzytelnianie (JWT)"])
+def delete_avatar(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Usuwa zdjęcie profilowe – interfejs pokazuje wtedy inicjały (v61)."""
+    media_service.remove_static_file(current_user.avatar_path)
+    current_user.avatar_path = None
+    db.commit()
+    return {"avatar_path": None}
+
 @app.put("/api/users/me/password",tags=["Konta i Uwierzytelnianie (JWT)"])
 def change_password(data: schemas.PasswordChange, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     verify_action_code(db, current_user.id, data.code, "password")

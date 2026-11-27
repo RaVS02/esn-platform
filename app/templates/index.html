@@ -7,14 +7,14 @@
 <script>window.ESN_USER = {{ esn_user | tojson }};</script>
 <script src="{{ url_for('static', path='/auth.js') }}?v=1"></script>
 <script src="{{ url_for('static', path='/i18n.js') }}?v=15"></script>
-<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=32"></script>
-<script src="{{ url_for('static', path='/i18n/en.js') }}?v=32"></script>
+<script src="{{ url_for('static', path='/i18n/pl.js') }}?v=33"></script>
+<script src="{{ url_for('static', path='/i18n/en.js') }}?v=33"></script>
 <script src="{{ url_for('static', path='/theme.js') }}?v=4"></script>
 <title data-i18n="meta.title">Platforma Systemów Wbudowanych</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=2.34">
+<link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=2.35">
 <link rel="stylesheet" href="{{ url_for('static', path='/pinout.css') }}?v=12">
 <link rel="stylesheet" href="{{ url_for('static', path='/calc.css') }}?v=7">
 <link rel="stylesheet" href="{{ url_for('static', path='/wiring/style.css') }}?v=4">
@@ -42,7 +42,7 @@
 <script src="{{ url_for('static', path='/media.js') }}?v=6"></script>
 <script src="{{ url_for('static', path='/ai-local.js') }}?v=2"></script>
 <script src="{{ url_for('static', path='/ai-settings.js') }}?v=2"></script>
-<script src="{{ url_for('static', path='/profile-settings.js') }}?v=1"></script>
+<script src="{{ url_for('static', path='/profile-settings.js') }}?v=2"></script>
 <link rel="stylesheet" href="{{ url_for('static', path='/content.css') }}?v=8">
 <script src="{{ url_for('static', path='/vendor/highlight.min.js') }}?v=11.12.0"></script>
 <script src="{{ url_for('static', path='/vendor/arduino.min.js') }}?v=11.12.0"></script>
@@ -414,40 +414,46 @@
 </div>
 
 <div id="view-profile" class="app-view">
-    <section class="hero" style="padding-bottom: 40px;">
+    <section class="hero" style="padding-bottom: 32px;">
         <div class="hero-tag" data-i18n="profile.ustawieniaSystemowe">Ustawienia Systemowe</div>
         <h1><span data-i18n="profile.title1">Twój</span> <em data-i18n="profile.profil">Profil</em></h1>
         <p class="hero-sub" data-i18n="profile.zarzadzajUstawieniamiTozsamosciaI">Zarządzaj ustawieniami, tożsamością i bezpieczeństwem.</p>
     </section>
 
-    <div class="page-wrap" style="max-width: 700px; margin: 0 auto; display: block;">
-        
-        <div style="background: var(--card); border: 1px solid var(--border); padding: 25px; border-radius: 12px; margin-bottom: 20px; display: flex; gap: 20px; align-items: center;">
-    <div style="text-align: center;">
-        <img id="prof-avatar-img" src="" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); display: none;">
-        <div id="prof-avatar-placeholder" style="width: 100px; height: 100px; border-radius: 50%; background: var(--bg2); display: flex; align-items: center; justify-content: center; font-size: 30px; margin: 0 auto; border: 2px dashed var(--border);"><i class="fa-solid fa-user"></i></div>
-        
-        <input type="file" id="p-avatar-input" accept="image/*" style="display: none;" onchange="uploadAvatar()">
-        <button class="btn-action" style="margin-top: 10px; font-size: 11px;" onclick="document.getElementById('p-avatar-input').click()" data-i18n="profile.zmienZdjecie">Zmień zdjęcie</button>
-    </div>
-    <div style="flex: 1;">
-        <div style="margin-bottom: 10px;">
-            <label style="font-size: 11px; color: var(--text3); font-family: var(--mono);" data-i18n="profile.loginId">Login ID</label>
-            <input type="text" id="prof-login" class="text-input" disabled style="opacity: 0.5;">
-        </div>
-        <div>
-            <label style="font-size: 11px; color: var(--text3); font-family: var(--mono);" data-i18n="profile.twojaNazwaNick">Twoja nazwa (Nick)</label>
-            <div style="display: flex; gap: 10px;">
-                <input type="text" id="prof-nick" class="text-input" style="flex: 1;">
-                <button class="btn-action primary" onclick="updateNick()" data-i18n="profile.zapisz">Zapisz</button>
-            </div>
-        </div>
-    </div>
-</div>
+    <div class="acc-wrap">
+        <nav class="acc-nav" role="tablist" aria-label="Sekcje konta" data-i18n-attr="aria-label:acc.navLabel">
+            <button type="button" role="tab" class="acc-tab" data-acc="public" aria-controls="acc-public"><i class="fa-solid fa-id-card" aria-hidden="true"></i><span data-i18n="acc.public">Profil publiczny</span></button>
+            <button type="button" role="tab" class="acc-tab" data-acc="account" aria-controls="acc-account"><i class="fa-solid fa-user-shield" aria-hidden="true"></i><span data-i18n="acc.account">Dane konta</span></button>
+            <button type="button" role="tab" class="acc-tab" data-acc="ai" aria-controls="acc-ai"><i class="fa-solid fa-robot" aria-hidden="true"></i><span data-i18n="acc.ai">Asystent AI</span></button>
+            <button type="button" role="tab" class="acc-tab" data-acc="look" aria-controls="acc-look"><i class="fa-solid fa-language" aria-hidden="true"></i><span data-i18n="acc.look">Język i wygląd</span></button>
+        </nav>
 
-        <div style="display: flex; flex-direction: column; gap: 20px;">
-            <div style="background: var(--card); border: 1px solid var(--border); padding: 25px; border-radius: 12px;">
-                <h3 style="font-family: var(--mono); color: var(--accent); margin-bottom: 10px;" data-i18n="profile.zmienAdresEMail">Zmień adres E-mail</h3>
+        <div class="acc-panels">
+            <section id="acc-public" class="acc-panel" role="tabpanel" data-acc="public">
+                <div class="acc-card">
+                    <h3 class="acc-h" data-i18n="acc.public">Profil publiczny</h3>
+                    <div class="acc-avatar-row">
+                        <div class="acc-avatar">
+                            <img id="prof-avatar-img" src="" alt="" style="display: none;">
+                            <div id="prof-avatar-placeholder" aria-hidden="true"><i class="fa-solid fa-user"></i></div>
+                        </div>
+                        <input type="file" id="p-avatar-input" accept="image/*" style="display: none;" onchange="uploadAvatar()">
+                        <button type="button" class="btn-action" onclick="document.getElementById('p-avatar-input').click()" data-i18n="profile.zmienZdjecie">Zmień zdjęcie</button>
+                        <button type="button" class="btn-action" id="prof-avatar-del" onclick="removeAvatar()" data-i18n="acc.useInitials">Użyj inicjałów</button>
+                        <small class="acc-hint" data-i18n="acc.avatarHint">JPG / PNG / WebP, do 2 MB, kadr kwadratowy</small>
+                    </div>
+                    <div class="ai-set-grid">
+                        <label class="ai-set-field"><span data-i18n="acc.displayName">Wyświetlana nazwa</span><input type="text" id="prof-nick" class="text-input" maxlength="50"></label>
+                        <label class="ai-set-field"><span data-i18n="acc.loginLabel">Login (adres profilu)</span><input type="text" id="prof-login" class="text-input" disabled></label>
+                    </div>
+                    <div id="pp-about"></div>
+                </div>
+                <div id="profile-public-card"></div>
+            </section>
+
+            <section id="acc-account" class="acc-panel" role="tabpanel" data-acc="account" hidden>
+                <div class="acc-card">
+                <h3 class="acc-h" data-i18n="profile.zmienAdresEMail">Zmień adres E-mail</h3>
                 <p style="font-size: 13px; color: var(--text2); margin-bottom: 15px;"><span data-i18n="profile.current">Aktualny:</span> <strong id="prof-current-email" style="color:var(--text);" data-i18n="profile.ladowanie">ładowanie...</strong></p>
                 <input type="email" id="p-new-email" placeholder="Wpisz nowy e-mail" data-i18n-attr="placeholder:profile.wpiszNowyEMail" class="text-input" style="margin-bottom: 10px;">
                 <div id="email-verify-box" style="display: none; gap: 10px; margin-bottom: 10px;">
@@ -455,10 +461,10 @@
                     <button class="btn-action primary" onclick="confirmEmailUpdate()" data-i18n="profile.zatwierdzKod">Zatwierdź Kod</button>
                 </div>
                 <button id="btn-email-req" class="btn-action" style="width: 100%; justify-content: center;" onclick="requestCode('email')" data-i18n="profile.wyslijKodAutoryzacyjny">Wyślij kod autoryzacyjny</button>
-            </div>
+                </div>
 
-            <div style="background: var(--card); border: 1px solid var(--border); padding: 25px; border-radius: 12px;">
-                <h3 style="font-family: var(--mono); color: var(--accent); margin-bottom: 10px;" data-i18n="profile.zmianaHasla">Zmiana Hasła</h3>
+                <div class="acc-card">
+                <h3 class="acc-h" data-i18n="profile.zmianaHasla">Zmiana Hasła</h3>
                 <div style="position: relative; width: 100%; margin-bottom: 10px;">
                     <input type="password" id="p-old-pass" placeholder="Stare hasło" data-i18n-attr="placeholder:contact.stareHaslo" class="text-input" style="width: 100%; padding-right: 40px; margin-bottom: 0;">
                     <span onclick="togglePassword('p-old-pass')" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; opacity: 0.7;"><i class="fa-regular fa-eye"></i></span>
@@ -472,21 +478,31 @@
                     <button class="btn-action primary" onclick="confirmPasswordUpdate()" data-i18n="profile.zatwierdzKod">Zatwierdź Kod</button>
                 </div>
                 <button id="btn-pass-req" class="btn-action" style="width: 100%; justify-content: center;" onclick="requestCode('password')" data-i18n="profile.wyslijKodAutoryzacyjny">Wyślij kod autoryzacyjny</button>
-            </div>
+                </div>
 
-            <div id="profile-public-card" class="ai-set-card pp-card"></div>
-
-            <div id="ai-settings-card" class="ai-set-card"></div>
-
-            <div style="border: 1px solid var(--red); padding: 25px; border-radius: 12px; background: rgba(var(--red-rgb), 0.05);">
-                <h3 style="color: var(--red); font-family: var(--mono); margin-bottom: 10px;" data-i18n="profile.usuwanieKonta">Usuwanie Konta</h3>
+                <div class="acc-card acc-danger">
+                <h3 class="acc-h" data-i18n="profile.usuwanieKonta">Usuwanie Konta</h3>
                 <p style="font-size: 13px; color: var(--text2); margin-bottom: 20px;" data-i18n="profile.wymagaWeryfikacjiUsuniecieKonta">Wymaga weryfikacji. Usunięcie konta jest nieodwracalne i kasuje Twoje projekty.</p>
                 <div id="del-verify-box" style="display: none; gap: 10px; margin-bottom: 10px;">
                     <input type="text" id="p-del-code" placeholder="6-cyfrowy kod z maila" data-i18n-attr="placeholder:contact.6CyfrowyKodZ" class="text-input" style="flex: 1; border-color: var(--red); text-align: center; letter-spacing: 4px;">
                     <button class="btn-action" style="background: var(--red); color: white; border: none;" onclick="confirmDeleteAccount()" data-i18n="profile.trwaleUsunKonto">Trwale usuń konto</button>
                 </div>
                 <button id="btn-del-req" class="btn-action" style="border-color: var(--red); color: var(--red); width: 100%; justify-content: center;" onclick="requestCode('delete')" data-i18n="profile.poprosOKodUsuniecia">Poproś o kod usunięcia</button>
-            </div>
+                </div>
+            </section>
+
+            <section id="acc-ai" class="acc-panel" role="tabpanel" data-acc="ai" hidden>
+                <div id="ai-settings-card" class="ai-set-card"></div>
+            </section>
+
+            <section id="acc-look" class="acc-panel" role="tabpanel" data-acc="look" hidden>
+                <div class="acc-card">
+                    <h3 class="acc-h" data-i18n="acc.look">Język i wygląd</h3>
+                    <div class="ai-set-field"><span data-i18n="acc.langLabel">Język interfejsu</span><div class="acc-opts" id="acc-lang-opts"></div></div>
+                    <div class="ai-set-field"><span data-i18n="acc.themeLabel">Motyw</span><div class="acc-opts" id="acc-theme-opts"></div></div>
+                    <p class="ai-set-note" data-i18n="acc.lookNote">Ustawienia są zapamiętane w tej przeglądarce. Język zmienisz też przełącznikiem w górnym pasku.</p>
+                </div>
+            </section>
         </div>
     </div>
 </div>
@@ -2531,6 +2547,7 @@ function applyAvatarToUI(avatarPath) {
         profileImg.src = fullUrl;
         profileImg.style.display = 'block';
         profilePlaceholder.style.display = 'none';
+        const delBtn = document.getElementById('prof-avatar-del'); if (delBtn) delBtn.hidden = false;
     }
 
     // 2. Aktualizacja w Pasku Nawigacji (góra strony)

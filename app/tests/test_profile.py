@@ -98,3 +98,12 @@ def test_requires_login_and_csrf():
     no_csrf = {k: v for k, v in me.items() if k != "X-ESN-Req"}
     assert c.put("/api/users/me/public-profile", headers=no_csrf, json={"bio": "x"}).status_code == 200   # Bearer: CSRF nie dotyczy
     assert c.get("/api/u/x", headers=ip()).headers.get("cache-control") == "no-store"
+
+
+def test_delete_avatar_sets_initials_mode():
+    login, me = make_user()
+    db = SessionLocal(); u = db.query(models.User).filter(models.User.login == login).first(); u.avatar_path = "avatars/nie-ma-takiego.png"; db.commit(); db.close()
+    c = TestClient(main.app)
+    r = c.delete("/api/users/me/avatar", headers=me)
+    assert r.status_code == 200 and r.json() == {"avatar_path": None}
+    assert c.get("/api/users/me", headers=me).json().get("avatar_path") is None
